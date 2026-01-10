@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manuscript - Open-Source Writing App for iOS & macOS</title>
+    <meta name="description" content="Manuscript is an open-source, native writing app for iOS and macOS. Own your files, free CloudKit sync, optional AI assistance.">
+    <meta name="keywords" content="writing app, markdown, iOS, macOS, open source, Scrivener alternative, CloudKit sync, AI writing">
+    <link rel="canonical" href="https://manuscriptapp.github.io/manuscript">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Manuscript - Open-Source Writing App">
+    <meta property="og:description" content="Own your files. Free CloudKit sync. Optional AI assistance.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://manuscriptapp.github.io/manuscript">
+    <meta property="og:image" content="https://manuscriptapp.github.io/manuscript/assets/screenshot.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Manuscript - Open-Source Writing App">
+    <meta name="twitter:description" content="Own your files. Free CloudKit sync. Optional AI assistance.">
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --text: #333;
+            --text-light: #666;
+            --bg: #ffffff;
+            --bg-alt: #f8f9fa;
+            --border: #e9ecef;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #ecf0f1;
+                --accent: #3498db;
+                --text: #ecf0f1;
+                --text-light: #bdc3c7;
+                --bg: #1a1a2e;
+                --bg-alt: #16213e;
+                --border: #2c3e50;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        /* Hero */
+        .hero {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .hero .tagline {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-alt);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            transform: translateY(-2px);
+        }
+
+        /* Screenshot */
+        .screenshot {
+            margin: 60px 0;
+            text-align: center;
+        }
+
+        .screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .screenshot-placeholder {
+            background: var(--bg-alt);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 100px 40px;
+            color: var(--text-light);
+        }
+
+        /* Features */
+        .features {
+            padding: 80px 0;
+            background: var(--bg-alt);
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 50px;
+            color: var(--primary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: var(--bg);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .feature-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+        }
+
+        /* Philosophy */
+        .philosophy {
+            padding: 80px 0;
+        }
+
+        .philosophy h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 50px;
+            color: var(--primary);
+        }
+
+        .philosophy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 40px;
+            text-align: center;
+        }
+
+        .philosophy-item h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .philosophy-item p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* AI Section */
+        .ai-section {
+            padding: 80px 0;
+            background: var(--bg-alt);
+        }
+
+        .ai-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .ai-section .subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 50px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .ai-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .ai-option {
+            background: var(--bg);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .ai-option h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .ai-option p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .ai-option .badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .cta-section p {
+            color: var(--text-light);
+            margin-bottom: 30px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .copyright {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero .tagline {
+                font-size: 1.1rem;
+            }
+
+            .nav-links {
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="/" class="logo">Manuscript</a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#ai">AI</a></li>
+                <li><a href="https://github.com/manuscriptapp/manuscript">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Manuscript</h1>
+                <p class="tagline">Open-source long-form writing for iOS & macOS. Own your files. Free CloudKit sync. Optional AI assistance.</p>
+                <div class="cta-buttons">
+                    <a href="https://testflight.apple.com/join/XXXX" class="btn btn-primary">Download Beta</a>
+                    <a href="https://github.com/manuscriptapp/manuscript" class="btn btn-secondary">View Source</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="screenshot">
+            <div class="container">
+                <div class="screenshot-placeholder">
+                    <p>App screenshot coming soon</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">Add your screenshot to website/assets/screenshot.png</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="features" id="features">
+            <div class="container">
+                <h2>Key Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>Project-Based Writing</h3>
+                        <p>Organize chapters, notes, and research in one place. Keep everything together like Scrivener, but open-source.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Markdown Support</h3>
+                        <p>Flexible formatting with portable files. Your writing stays readable and accessible forever.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Snapshots & History</h3>
+                        <p>Safe writing environment with undo history and snapshots. Never lose your work.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Cross-Platform</h3>
+                        <p>Native apps for iOS and macOS. Write anywhere on your Apple devices.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Free CloudKit Sync</h3>
+                        <p>Keep your projects synchronized across all your devices. No subscription required.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Open File Format</h3>
+                        <p>.manuscript files are portable, version-control friendly, and designed to be extensible.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="philosophy">
+            <div class="container">
+                <h2>Our Philosophy</h2>
+                <div class="philosophy-grid">
+                    <div class="philosophy-item">
+                        <h3>Files First</h3>
+                        <p>Your writing belongs to you, not the cloud. Full control over your data.</p>
+                    </div>
+                    <div class="philosophy-item">
+                        <h3>Open Source</h3>
+                        <p>All code is visible and modifiable. No secrets, no lock-in.</p>
+                    </div>
+                    <div class="philosophy-item">
+                        <h3>Privacy First</h3>
+                        <p>CloudKit sync is optional and secure. No accounts required.</p>
+                    </div>
+                    <div class="philosophy-item">
+                        <h3>Community Driven</h3>
+                        <p>Feedback and contributions shape the project's future.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="ai-section" id="ai">
+            <div class="container">
+                <h2>AI-Assisted Writing</h2>
+                <p class="subtitle">Optional AI features to help with suggestions, rephrasing, and inspiration. You choose how and when to use them.</p>
+                <div class="ai-options">
+                    <div class="ai-option">
+                        <span class="badge">Free & Private</span>
+                        <h3>Apple Foundation Models</h3>
+                        <p>On-device AI that's free, fast, and completely private. Your writing never leaves your device.</p>
+                    </div>
+                    <div class="ai-option">
+                        <span class="badge">Flexible</span>
+                        <h3>Bring Your Own AI</h3>
+                        <p>Use your own API keys to integrate OpenAI or other models. Full control over your AI setup.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container">
+                <h2>Ready to Start Writing?</h2>
+                <p>Join the beta and help shape the future of open-source writing tools.</p>
+                <div class="cta-buttons">
+                    <a href="https://testflight.apple.com/join/XXXX" class="btn btn-primary">Join TestFlight Beta</a>
+                    <a href="https://github.com/manuscriptapp/manuscript" class="btn btn-secondary">Star on GitHub</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/manuscriptapp/manuscript">GitHub</a>
+                <a href="https://github.com/manuscriptapp/manuscript/issues">Issues</a>
+                <a href="https://github.com/manuscriptapp/manuscript/blob/main/LICENSE">License (MPL-2.0)</a>
+                <a href="https://github.com/manuscriptapp/manuscript/blob/main/CONTRIBUTING.md">Contributing</a>
+            </div>
+            <p class="copyright">Made with love in SwiftUI. Fully open-source.</p>
+        </div>
+    </footer>
+</body>
+</html>
