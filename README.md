@@ -21,7 +21,7 @@ Own your files. Free CloudKit sync. Optional AI assistance.
 
 Manuscript is a **native, open-source writing app** designed for writers who want **full control over their files**. Built with SwiftUI for iOS and macOS, it supports project-based writing, Markdown editing, snapshots, and optional AI-assisted writing.
 
-**Our goal**: Provide a Scrivener-like experience without lock-in—fully open-source and free to use.
+**Our goal**: Provide a Scrivener/Ulysses-like experience without lock-in—fully open-source and free to use.
 
 ## Features
 

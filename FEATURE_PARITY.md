@@ -1,6 +1,6 @@
-# Scrivener Feature Parity
+# Feature Parity
 
-This document tracks Manuscript's feature parity with [Scrivener 3](https://www.literatureandlatte.com/scrivener/overview), the industry-standard long-form writing application. Our goal is to provide a Scrivener-like experience that is fully open-source, free to use, and without vendor lock-in.
+This document tracks Manuscript's feature parity with [Scrivener 3](https://www.literatureandlatte.com/scrivener/overview) and [Ulysses](https://ulysses.app/), the leading long-form writing applications for Apple platforms. Our goal is to provide a Scrivener/Ulysses-like experience that is fully open-source, free to use, and without vendor lock-in.
 
 **Legend:**
 - ✅ Implemented
@@ -12,14 +12,14 @@ This document tracks Manuscript's feature parity with [Scrivener 3](https://www.
 
 ## Overview
 
-| Aspect | Scrivener | Manuscript |
-|--------|-----------|------------|
-| **Price** | $49-59 (one-time) | Free |
-| **License** | Proprietary | MPL-2.0 (Open Source) |
-| **Platforms** | macOS, Windows, iOS | macOS, iOS |
-| **File Format** | Proprietary (.scriv) | Standard (Markdown) |
-| **Sync** | Dropbox (manual) | Free CloudKit sync |
-| **AI Features** | None | Built-in (optional) |
+| Aspect | Scrivener | Ulysses | Manuscript |
+|--------|-----------|---------|------------|
+| **Price** | $49-59 (one-time) | $50/year (subscription) | Free |
+| **License** | Proprietary | Proprietary | MPL-2.0 (Open Source) |
+| **Platforms** | macOS, Windows, iOS | macOS, iOS | macOS, iOS |
+| **File Format** | Proprietary (.scriv) | Proprietary (library-based) | Standard (Markdown) |
+| **Sync** | Dropbox (manual) | iCloud (built-in) | Free CloudKit sync |
+| **AI Features** | None | Paid add-on | Built-in (optional) |
 
 ---
 
@@ -380,6 +380,7 @@ Want to help close the gap? Check out our [Contributing Guide](CONTRIBUTING.md) 
 
 - [Scrivener Overview](https://www.literatureandlatte.com/scrivener/overview)
 - [Scrivener 3 Manual (PDF)](https://www.literatureandlatte.com/docs/Scrivener_Manual-Mac.pdf)
+- [Ulysses](https://ulysses.app/)
 - [Manuscript README](README.md)
 - [Manuscript Contributing Guide](CONTRIBUTING.md)
 
