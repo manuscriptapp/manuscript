@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd Ulysses to documentation alongside Scrivener\n\n- Update README.md and CLAUDE.md to mention both Scrivener and Ulysses\n- Rename SCRIVENER_PARITY.md to FEATURE_PARITY.md\n- Add Ulysses column to feature comparison overview table\n- Add Ulysses alternative to website meta keywords\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(gh api:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nUpdate GitHub links to manuscriptapp organization\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(git remote set-url:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(git mv:*)",
+      "Bash(curl:*)",
+      "Skill(frontend-design)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)"
+    ]
+  }
+}

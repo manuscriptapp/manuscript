@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manuscript — Open-Source Writing App for iOS & macOS</title>
+    <meta name="description" content="Free, open-source writing app. Native SwiftUI, iCloud sync, on-device AI. No subscription, no lock-in.">
+    <link rel="canonical" href="https://manuscriptapp.github.io/manuscript">
+
+    <meta property="og:title" content="Manuscript — Open-Source Writing App">
+    <meta property="og:description" content="Native SwiftUI app with iCloud sync and AI tools. MPL-2.0 licensed.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://manuscriptapp.github.io/manuscript">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Manuscript — Open-Source Writing App">
+    <meta name="twitter:description" content="Native SwiftUI app with iCloud sync and AI tools. MPL-2.0 licensed.">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>M</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ink: #1a1915;
+            --ink-light: #3d3a33;
+            --ink-muted: #6b6760;
+            --paper: #f9f7f3;
+            --paper-dark: #f0ede6;
+            --paper-darker: #e6e2d9;
+            --accent: #c45d3a;
+            --rule: #d4d0c7;
+            --serif: 'Cormorant Garamond', Georgia, serif;
+            --sans: 'Source Sans 3', -apple-system, sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --ink: #e8e4dc;
+                --ink-light: #c9c4b8;
+                --ink-muted: #8a857a;
+                --paper: #1a1915;
+                --paper-dark: #232019;
+                --paper-darker: #2c2922;
+                --accent: #d4795c;
+                --rule: #3d3a33;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; font-size: 18px; }
+
+        body {
+            font-family: var(--sans);
+            line-height: 1.7;
+            color: var(--ink);
+            background: var(--paper);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        h1, h2, h3 {
+            font-family: var(--serif);
+            font-weight: 500;
+            line-height: 1.25;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Header */
+        header {
+            padding: 1.25rem 0;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--serif);
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--ink-muted);
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--ink);
+            text-decoration: none;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 5rem 0 4rem;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3rem);
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+            max-width: 700px;
+        }
+
+        .hero-text {
+            font-size: 1.15rem;
+            color: var(--ink-light);
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: var(--ink);
+            color: var(--paper);
+            font-size: 0.95rem;
+            font-weight: 500;
+            border: 1px solid var(--ink);
+            transition: all 0.15s;
+        }
+
+        .hero-cta:hover {
+            background: var(--ink-light);
+            border-color: var(--ink-light);
+            text-decoration: none;
+        }
+
+        .hero-cta svg { width: 1.1rem; height: 1.1rem; }
+
+        /* Section */
+        section {
+            padding: 4rem 0;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .section-label {
+            font-family: var(--sans);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--ink-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.6rem, 4vw, 2rem);
+            margin-bottom: 1rem;
+        }
+
+        .section-intro {
+            color: var(--ink-light);
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Key points grid */
+        .points-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem 3rem;
+        }
+
+        .point-icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .point h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .point p {
+            font-size: 0.95rem;
+            color: var(--ink-muted);
+        }
+
+        /* Features list */
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem 3rem;
+        }
+
+        .feature-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .feature-item strong {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-item span {
+            font-size: 0.9rem;
+            color: var(--ink-muted);
+        }
+
+        /* Comparison table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .comparison-table th {
+            font-family: var(--serif);
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .comparison-table td:first-child {
+            color: var(--ink-muted);
+        }
+
+        .comparison-table .yes {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .comparison-table .no {
+            color: var(--ink-muted);
+        }
+
+        /* AI section */
+        .ai-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .ai-card {
+            padding: 1.5rem;
+            background: var(--paper-dark);
+            border-left: 3px solid var(--accent);
+        }
+
+        .ai-card-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 0.75rem;
+            color: var(--accent);
+        }
+
+        .ai-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-card p {
+            font-size: 0.9rem;
+            color: var(--ink-muted);
+        }
+
+        /* File format */
+        .file-format-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .file-format-text p {
+            color: var(--ink-light);
+            margin-bottom: 1rem;
+        }
+
+        .code-block {
+            background: var(--paper-dark);
+            border: 1px solid var(--rule);
+            padding: 1.5rem;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: var(--ink-muted);
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        /* CTA */
+        .cta-section {
+            padding: 5rem 0;
+            text-align: center;
+            border-bottom: none;
+        }
+
+        .cta-section .section-title {
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            color: var(--ink-muted);
+            margin-bottom: 2rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 2.5rem 0;
+            border-top: 1px solid var(--rule);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-content p {
+            font-size: 0.85rem;
+            color: var(--ink-muted);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .footer-links a {
+            font-size: 0.85rem;
+            color: var(--ink-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            html { font-size: 16px; }
+
+            .points-grid,
+            .features-list,
+            .ai-grid,
+            .file-format-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-table { font-size: 0.85rem; }
+            .comparison-table th,
+            .comparison-table td { padding: 0.75rem 0.5rem; }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="#" class="logo">Manuscript</a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#compare">Compare</a></li>
+                <li><a href="https://github.com/manuscriptapp/manuscript">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>An open-source writing app for people who care about their files</h1>
+                <p class="hero-text">Manuscript is a native iOS and macOS app for long-form writing. It's free, the source code is available under MPL-2.0, and your work stays in standard Markdown files you control.</p>
+                <a href="https://github.com/manuscriptapp/manuscript" class="hero-cta">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View on GitHub
+                </a>
+            </div>
+        </section>
+
+        <section>
+            <div class="container">
+                <div class="section-label">Why Manuscript</div>
+                <h2 class="section-title">Built for writers who value ownership</h2>
+                <p class="section-intro">Scrivener and Ulysses are good tools, but they're closed-source and cost money. Manuscript gives you similar capabilities without the license fees or vendor lock-in.</p>
+
+                <div class="points-grid">
+                    <div class="point">
+                        <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
+                        </svg>
+                        <h3>Open source</h3>
+                        <p>The entire codebase is public under MPL-2.0. Read it, modify it, contribute to it. No black boxes.</p>
+                    </div>
+                    <div class="point">
+                        <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/>
+                        </svg>
+                        <h3>Free forever</h3>
+                        <p>No purchase price, no subscription, no in-app purchases. The app is free and will stay that way.</p>
+                    </div>
+                    <div class="point">
+                        <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/>
+                        </svg>
+                        <h3>Your files, your way</h3>
+                        <p>Projects are folders of Markdown files. Open them in any text editor, version them with Git, back them up however you want.</p>
+                    </div>
+                    <div class="point">
+                        <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z"/>
+                        </svg>
+                        <h3>iCloud sync included</h3>
+                        <p>CloudKit keeps your projects in sync across Mac, iPhone, and iPad. No account to create, no extra cost.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features">
+            <div class="container">
+                <div class="section-label">Capabilities</div>
+                <h2 class="section-title">What you can do with it</h2>
+                <p class="section-intro">Manuscript handles the core workflows that matter for long-form writing: organizing, drafting, revising, and exporting.</p>
+
+                <div class="features-list">
+                    <div class="feature-item">
+                        <strong>Project binder</strong>
+                        <span>Organize chapters, scenes, notes, and research in a sidebar</span>
+                    </div>
+                    <div class="feature-item">
+                        <strong>Markdown editing</strong>
+                        <span>Write in plain Markdown with live preview</span>
+                    </div>
+                    <div class="feature-item">
+                        <strong>Snapshots</strong>
+                        <span>Automatic version history so you can always go back</span>
+                    </div>
+                    <div class="feature-item">
+                        <strong>Split editor</strong>
+                        <span>View two documents side by side</span>
+                    </div>
+                    <div class="feature-item">
+                        <strong>Composition mode</strong>
+                        <span>Distraction-free fullscreen writing</span>
+                    </div>
+                    <div class="feature-item">
+                        <strong>Export</strong>
+                        <span>PDF, DOCX, EPUB, HTML, LaTeX</span>
+                    </div>
+                    <div class="feature-item">
+                        <strong>Writing targets</strong>
+                        <span>Set word count goals for sessions and projects</span>
+                    </div>
+                    <div class="feature-item">
+                        <strong>Tags and labels</strong>
+                        <span>Organize and filter documents your way</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="compare">
+            <div class="container">
+                <div class="section-label">Comparison</div>
+                <h2 class="section-title">How it stacks up</h2>
+                <p class="section-intro">A straightforward look at Manuscript alongside the two apps it's designed to replace.</p>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Manuscript</th>
+                            <th>Scrivener</th>
+                            <th>Ulysses</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Price</td>
+                            <td class="yes">Free</td>
+                            <td>$49+</td>
+                            <td>$50/year</td>
+                        </tr>
+                        <tr>
+                            <td>Source code</td>
+                            <td class="yes">Open (MPL-2.0)</td>
+                            <td class="no">Closed</td>
+                            <td class="no">Closed</td>
+                        </tr>
+                        <tr>
+                            <td>File format</td>
+                            <td class="yes">Markdown</td>
+                            <td class="no">Proprietary</td>
+                            <td>Markdown</td>
+                        </tr>
+                        <tr>
+                            <td>Cloud sync</td>
+                            <td class="yes">Free (CloudKit)</td>
+                            <td class="no">Manual (Dropbox)</td>
+                            <td class="no">Requires subscription</td>
+                        </tr>
+                        <tr>
+                            <td>On-device AI</td>
+                            <td class="yes">Yes</td>
+                            <td class="no">No</td>
+                            <td class="no">Paid add-on</td>
+                        </tr>
+                        <tr>
+                            <td>Framework</td>
+                            <td>SwiftUI</td>
+                            <td>AppKit</td>
+                            <td>AppKit</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="ai">
+            <div class="container">
+                <div class="section-label">AI assistance</div>
+                <h2 class="section-title">Optional, private, flexible</h2>
+                <p class="section-intro">AI features are there if you want them. They're not required, and you control how they work.</p>
+
+                <div class="ai-grid">
+                    <div class="ai-card">
+                        <svg class="ai-card-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/>
+                        </svg>
+                        <h3>Apple Foundation Models</h3>
+                        <p>On-device AI through Apple Intelligence. Your text never leaves your Mac or iPhone. No API costs.</p>
+                    </div>
+                    <div class="ai-card">
+                        <svg class="ai-card-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/>
+                        </svg>
+                        <h3>Bring your own keys</h3>
+                        <p>Connect to OpenAI, Anthropic, or other providers using your own API keys. Configure per-project.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="container">
+                <div class="section-label">File format</div>
+                <h2 class="section-title">Plain folders, plain files</h2>
+
+                <div class="file-format-grid">
+                    <div class="file-format-text">
+                        <p>A Manuscript project is just a folder. Inside are Markdown files for your writing and JSON files for metadata. Nothing proprietary.</p>
+                        <p>You can open any document in another editor, commit the whole project to Git, or write scripts to process your files. The format is documented and won't change in breaking ways.</p>
+                    </div>
+                    <div class="code-block">MyNovel.manuscript/
+├── project.json
+├── contents/
+│   ├── draft/
+│   │   ├── 01-chapter-one.md
+│   │   └── 02-chapter-two.md
+│   ├── notes/
+│   └── research/
+├── snapshots/
+└── assets/</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container">
+                <h2 class="section-title">Get involved</h2>
+                <p>Manuscript is early-stage and actively developed. Star the repo, open an issue, or submit a pull request.</p>
+                <a href="https://github.com/manuscriptapp/manuscript" class="hero-cta">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub Repository
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <p>MPL-2.0 License</p>
+                <ul class="footer-links">
+                    <li><a href="https://github.com/manuscriptapp/manuscript">Source</a></li>
+                    <li><a href="https://github.com/manuscriptapp/manuscript/issues">Issues</a></li>
+                    <li><a href="https://github.com/manuscriptapp/manuscript/discussions">Discussions</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

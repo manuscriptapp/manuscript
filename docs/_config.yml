@@ -1,0 +1,19 @@
+# GitHub Pages Configuration
+title: Manuscript
+description: Open-source long-form writing for iOS & macOS
+url: https://manuscriptapp.github.io
+baseurl: /manuscript
+
+# Theme (optional - we're using custom HTML)
+# theme: minima
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Exclude files from build
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - .gitignore
