@@ -101,6 +101,8 @@ manuscript/
 - [ ] Apple Foundation Models integration
 - [ ] Custom API key support (OpenAI, Anthropic)
 - [ ] Export to common formats (PDF, DOCX, EPUB)
+- [ ] Import from Scrivener and Word
+- [ ] Export to Scrivener and Word
 
 ## Contributing
 
