@@ -78,15 +78,6 @@ Build and run using Xcode's standard workflow (⌘+R).
 
 ## Documentation
 
-### File Format
-
-Manuscript uses the `.manuscript` file format:
-
-- **Portable** — Move projects between devices and apps
-- **Version-control friendly** — Works great with Git
-- **Extensible** — Designed to grow with new features
-- **Human-readable** — Based on standard formats (JSON, Markdown)
-
 ### Project Structure
 
 ```
@@ -94,7 +85,7 @@ manuscript/
 ├── iOS/                    # iOS application
 ├── macOS/                  # macOS application
 ├── Shared/                 # Cross-platform shared code
-├── Examples/               # Sample .manuscript projects
+├── Examples/               # Sample projects
 ├── Docs/                   # Additional documentation
 └── website/                # GitHub Pages marketing site
 ```
