@@ -11,7 +11,7 @@ Own your files. Free CloudKit sync. Optional AI assistance.
 [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[Features](#features) · [Installation](#installation) · [Documentation](#documentation) · [Contributing](#contributing) · [License](#license)
+[Features](#features) · [Installation](#installation) · [Documentation](#documentation) · [Roadmap](#roadmap) · [Contributing](#contributing) · [License](#license)
 
 </div>
 
@@ -89,6 +89,18 @@ manuscript/
 ├── Docs/                   # Additional documentation
 └── website/                # GitHub Pages marketing site
 ```
+
+## Roadmap
+
+- [ ] Core editor with markdown support
+- [ ] Project structure (chapters, scenes, notes)
+- [ ] Snapshots and version history
+- [ ] macOS app
+- [ ] iOS app
+- [ ] CloudKit sync
+- [ ] Apple Foundation Models integration
+- [ ] Custom API key support (OpenAI, Anthropic)
+- [ ] Export to common formats (PDF, DOCX, EPUB)
 
 ## Contributing
 
