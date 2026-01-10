@@ -78,7 +78,31 @@ Build and run using Xcode's standard workflow (⌘+R).
 
 ## Documentation
 
-### Project Structure
+### File Format
+
+Manuscript uses a folder-based `.manuscript` format—plain Markdown, JSON, and assets that are human-readable, Git-friendly, and fully portable.
+
+```
+MyNovel.manuscript/
+├── project.json            # Project metadata and settings
+├── contents/
+│   ├── draft/
+│   │   ├── 01-chapter-one.md
+│   │   ├── 02-chapter-two.md
+│   │   └── folder.json     # Folder metadata (order, titles)
+│   ├── notes/
+│   └── research/
+├── snapshots/              # Automatic version history
+│   ├── 2026-01-10T15-30-00.json
+│   └── 2026-01-10T16-10-00.json
+└── assets/                 # Images, PDFs, and other media
+```
+
+**Version Control:**
+- **Phase 1**: Automatic snapshots for undo/history (internal, simple timeline UI)
+- **Phase 2**: Optional Git integration for power users (branching, merging, push to GitHub)
+
+### Repository Structure
 
 ```
 manuscript/
