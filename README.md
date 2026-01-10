@@ -1,103 +1,147 @@
+<div align="center">
+
 # Manuscript
 
 **Open-source long-form writing for iOS & macOS**
+
 Own your files. Free CloudKit sync. Optional AI assistance.
 
-![Screenshot](website/assets/screenshot.png)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+[![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20macOS-blue.svg)](https://github.com/manuscriptapp/manuscript)
+[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+[Features](#features) · [Installation](#installation) · [Documentation](#documentation) · [Contributing](#contributing) · [License](#license)
+
+</div>
 
 ---
 
 ## Overview
 
-Manuscript is a **native, open-source writing app** designed for writers who want **full control over their files**. It works on iOS and macOS, supports project-based writing, Markdown editing, snapshots, and optional AI-assisted writing.
+Manuscript is a **native, open-source writing app** designed for writers who want **full control over their files**. Built with SwiftUI for iOS and macOS, it supports project-based writing, Markdown editing, snapshots, and optional AI-assisted writing.
 
-The goal: provide a Scrivener-like experience **without lock-in**, fully open-source, and free to use.
+**Our goal**: Provide a Scrivener-like experience without lock-in—fully open-source and free to use.
 
----
+## Features
 
-## Key Features
+### Core Writing Experience
+- **Project-based writing** — Organize chapters, notes, and research in one place
+- **Markdown support** — Flexible formatting with portable files
+- **Snapshots & undo history** — Never lose your work with built-in version tracking
+- **Cross-platform** — Native apps for iOS and macOS with shared architecture
 
-- **Project-based writing**: Organize chapters, notes, and research in one place
-- **Markdown support**: Flexible formatting, portable files
-- **Snapshots & undo history**: Safe writing environment
-- **Cross-platform**: iOS and macOS
-- **Free CloudKit sync**: Keep your projects synchronized across devices
-- **AI-assisted writing (optional)**:
-  - **Apple Foundation Models** — free, on-device, secure
-  - **Bring Your Own AI** — use your own API keys (OpenAI, etc.)
+### Sync & Storage
+- **Files first** — Your writing is stored in standard, portable formats you own
+- **Free CloudKit sync** — Keep projects synchronized across all your Apple devices
+- **No account required** — Everything works offline; sync is optional
 
----
+### AI Integration (Optional)
+- **Apple Foundation Models** — Free, on-device AI for suggestions, rephrasing, and inspiration
+- **Bring Your Own AI** — Use your own API keys (OpenAI, Anthropic, etc.)
+- **Per-project configuration** — Enable AI features only where you want them
 
 ## Philosophy
 
-- **Files first**: Your writing belongs to you, not the cloud
-- **Open-source**: All code is visible and modifiable
-- **Privacy-first**: CloudKit sync is optional and secure, no accounts required
-- **Community-driven**: Feedback and contributions shape the project
+| Principle | Description |
+|-----------|-------------|
+| **Files First** | Your writing belongs to you, not the cloud. Full file ownership always. |
+| **Privacy First** | No accounts, no tracking. CloudKit sync is optional and encrypted. |
+| **Open Source** | All code is visible, auditable, and modifiable under MPL-2.0. |
+| **Community Driven** | Feedback and contributions shape the project's direction. |
 
----
+## Installation
 
-## Getting Started
+### Requirements
 
-### Download / TestFlight
-- iOS & macOS beta: [TestFlight Link](https://testflight.apple.com/join/XXXX) *(replace with your link)*
+- **iOS**: iOS 17.0 or later
+- **macOS**: macOS 14.0 (Sonoma) or later
+- **Xcode**: 15.0 or later (for building from source)
 
-### Build from source
-1. Clone the repo:
+### Download
+
+Coming soon to the App Store and TestFlight.
+
+### Build from Source
+
 ```bash
+# Clone the repository
 git clone https://github.com/manuscriptapp/manuscript.git
+cd manuscript
+
+# Open in Xcode
+open iOS/Manuscript.xcodeproj   # For iOS
+open macOS/Manuscript.xcodeproj # For macOS
 ```
 
-2. Open `iOS/Manuscript.xcodeproj` or `macOS/Manuscript.xcodeproj`
-3. Build and run in Xcode
+Build and run using Xcode's standard workflow (⌘+R).
 
-### Example Projects
-- `Examples/MyNovel.manuscript`
-- `Examples/SampleNotes.manuscript`
+## Documentation
 
----
+### File Format
 
-## File Format
+Manuscript uses the `.manuscript` file format:
 
-- Manuscript uses `.manuscript` files
-- Fully portable and version-control friendly
-- Stores projects, chapters, notes, snapshots, and metadata
-- Open format designed to be extensible
+- **Portable** — Move projects between devices and apps
+- **Version-control friendly** — Works great with Git
+- **Extensible** — Designed to grow with new features
+- **Human-readable** — Based on standard formats (JSON, Markdown)
 
----
+### Project Structure
 
-## AI Integration
-
-- **Apple Foundation Models**: Free, on-device AI for suggestions, rephrasing, and inspiration
-- **Bring Your Own AI**: Use your own API keys to integrate OpenAI or other models
-- Configurable per project or globally
-
----
+```
+manuscript/
+├── iOS/                    # iOS application
+├── macOS/                  # macOS application
+├── Shared/                 # Cross-platform shared code
+├── Examples/               # Sample .manuscript projects
+├── Docs/                   # Additional documentation
+└── website/                # GitHub Pages marketing site
+```
 
 ## Contributing
 
-Manuscript is built for the community. You can help by:
+We welcome contributions of all kinds! Here's how you can help:
 
-- Reporting bugs or feature requests via [GitHub Issues](https://github.com/manuscriptapp/manuscript/issues)
-- Suggesting improvements or workflows
-- Contributing code, scripts, or example projects
+- **Report bugs** — Found an issue? [Open a bug report](https://github.com/manuscriptapp/manuscript/issues/new?template=bug_report.md)
+- **Suggest features** — Have an idea? [Request a feature](https://github.com/manuscriptapp/manuscript/issues/new?template=feature_request.md)
+- **Submit code** — Ready to code? Check out our [Contributing Guide](CONTRIBUTING.md)
+- **Improve docs** — Help us make documentation clearer
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 
----
+## Security
+
+Found a security vulnerability? Please report it responsibly. See our [Security Policy](SECURITY.md) for details on how to report security issues.
+
+## Community
+
+- **GitHub Issues** — [Report bugs and request features](https://github.com/manuscriptapp/manuscript/issues)
+- **Discussions** — [Join the conversation](https://github.com/manuscriptapp/manuscript/discussions)
+- **Website** — [manuscriptapp.github.io/manuscript](https://manuscriptapp.github.io/manuscript)
 
 ## License
 
-This project is licensed under the MPL-2.0 License. See [LICENSE](LICENSE) for details.
+Manuscript is licensed under the [Mozilla Public License 2.0](LICENSE).
+
+```
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+```
+
+## Acknowledgments
+
+- Built with [SwiftUI](https://developer.apple.com/xcode/swiftui/)
+- Inspired by the writing app community's desire for open, file-first tools
+- Thanks to all [contributors](https://github.com/manuscriptapp/manuscript/graphs/contributors)
 
 ---
 
-## Stay Updated
+<div align="center">
 
-- Star the repo to follow updates
-- Discuss & provide feedback: [GitHub Issues](https://github.com/manuscriptapp/manuscript/issues)
-- Marketing / landing page: [GitHub Pages](https://manuscriptapp.github.io/manuscript)
+Made with care for writers who value ownership and privacy.
 
----
+**[Star this repo](https://github.com/manuscriptapp/manuscript)** to follow updates
 
-Made with love in SwiftUI, fully open-source, and designed to put writers first.
+</div>
