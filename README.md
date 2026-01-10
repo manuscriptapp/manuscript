@@ -92,17 +92,41 @@ manuscript/
 
 ## Roadmap
 
-- [ ] Core editor with markdown support
-- [ ] Project structure (chapters, scenes, notes)
-- [ ] Snapshots and version history
+Our goal is feature parity with Scrivener, delivered in phases.
+
+### Phase 1: Foundation
+- [ ] Core markdown editor
+- [ ] Project structure (binder with folders and documents)
 - [ ] macOS app
+
+### Phase 2: Core Writing
 - [ ] iOS app
+- [ ] Split editor
+- [ ] Snapshots and version history
+- [ ] Composition mode (distraction-free writing)
+- [ ] Project and document notes
+
+### Phase 3: Organization
+- [ ] Cork board view
+- [ ] Outliner view
+- [ ] Labels, status, and keywords
+- [ ] Collections
+- [ ] Search and filtering
+
+### Phase 4: Sync & Export
 - [ ] CloudKit sync
-- [ ] Apple Foundation Models integration
-- [ ] Custom API key support (OpenAI, Anthropic)
-- [ ] Export to common formats (PDF, DOCX, EPUB, RTF, HTML, LaTeX, Fountain)
+- [ ] Compile with customizable templates
+- [ ] Export formats (PDF, DOCX, EPUB, RTF, HTML, LaTeX, Fountain)
 - [ ] Import from Scrivener and Word
 - [ ] Export to Scrivener and Word
+
+### Phase 5: Advanced Features
+- [ ] Research folder (images, PDFs, web pages)
+- [ ] Writing targets and statistics
+- [ ] Scriptwriting mode
+- [ ] Project templates
+- [ ] Apple Foundation Models integration
+- [ ] Custom AI API keys (OpenAI, Anthropic)
 
 ## Contributing
 
