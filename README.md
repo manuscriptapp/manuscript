@@ -100,7 +100,7 @@ manuscript/
 - [ ] CloudKit sync
 - [ ] Apple Foundation Models integration
 - [ ] Custom API key support (OpenAI, Anthropic)
-- [ ] Export to common formats (PDF, DOCX, EPUB)
+- [ ] Export to common formats (PDF, DOCX, EPUB, RTF, HTML, LaTeX, Fountain)
 - [ ] Import from Scrivener and Word
 - [ ] Export to Scrivener and Word
 
