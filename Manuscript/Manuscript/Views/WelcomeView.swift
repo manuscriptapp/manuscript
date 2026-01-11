@@ -82,7 +82,7 @@ struct WelcomeView: View {
             }
             .fileImporter(
                 isPresented: $isShowingFileImporter,
-                allowedContentTypes: [UTType(filenameExtension: "literati") ?? .data],
+                allowedContentTypes: [.manuscriptDocument],
                 allowsMultipleSelection: false
             ) { result in
                 switch result {
@@ -298,7 +298,7 @@ struct WelcomeView: View {
         do {
             let data = try encoder.encode(document)
             let temporaryDirectoryURL = FileManager.default.temporaryDirectory
-            let fileURL = temporaryDirectoryURL.appendingPathComponent(UUID().uuidString).appendingPathExtension("literati")
+            let fileURL = temporaryDirectoryURL.appendingPathComponent(UUID().uuidString).appendingPathExtension("manuscript")
             try data.write(to: fileURL)
             openExistingDocument(at: fileURL)
         } catch {

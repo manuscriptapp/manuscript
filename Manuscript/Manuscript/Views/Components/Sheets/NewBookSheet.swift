@@ -76,7 +76,7 @@ struct NewBookSheet: View {
             .fileExporter(
                 isPresented: $showingSavePanel,
                 document: document != nil ? ManuscriptDocumentWrapper(document: document!) : nil,
-                contentType: UTType(filenameExtension: "literati") ?? .data,
+                contentType: .manuscriptDocument,
                 defaultFilename: title.isEmpty ? "Untitled" : title
             ) { result in
                 switch result {
@@ -312,7 +312,7 @@ struct NewBookSheet: View {
 struct ManuscriptDocumentWrapper: FileDocument {
     var document: ManuscriptDocument
     
-    static var readableContentTypes: [UTType] { [UTType(filenameExtension: "literati") ?? .data] }
+    static var readableContentTypes: [UTType] { [.manuscriptDocument] }
     
     init(document: ManuscriptDocument) {
         self.document = document

@@ -6,7 +6,7 @@ class LoggingService {
     private let logger: Logger
     
     private init() {
-        self.logger = Logger(subsystem: "com.literati.ai", category: "api")
+        self.logger = Logger(subsystem: "com.dahlsjoo.manuscript", category: "api")
     }
     
     func logAPIError(_ error: Error, endpoint: String, context: [String: Any] = [:]) {
