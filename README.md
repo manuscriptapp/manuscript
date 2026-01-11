@@ -10,7 +10,7 @@ Free, open-source writing app for iOS and macOS.
 
 A native SwiftUI writing app with:
 
-- **Free forever** — No purchase, no subscription, no in-app purchases
+- **Free forever** — No purchase, no subscription
 - **Open source** — MPL-2.0 licensed, full source code available
 - **iCloud sync** — CloudKit sync across all Apple devices, no account required
 - **On-device AI** — Apple Foundation Models integration, plus bring-your-own API keys
