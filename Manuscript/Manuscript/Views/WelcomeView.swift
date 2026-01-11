@@ -10,11 +10,13 @@ struct WelcomeView: View {
     #endif
     @State private var isShowingNewProjectSheet = false
     @State private var isShowingFileImporter = false
+    @State private var isShowingScrivenerImporter = false
     @State private var selectedTemplate: BookTemplate?
     @State private var isShowingTemplateDetail = false
 
     var onOpenDocument: (URL) -> Void
     var onCreateNewDocument: () -> Void
+    var onImportDocument: ((ManuscriptDocument) -> Void)?
     
     var body: some View {
         NavigationStack {
@@ -94,6 +96,11 @@ struct WelcomeView: View {
                     print("Error importing file: \(error.localizedDescription)")
                 }
             }
+            .sheet(isPresented: $isShowingScrivenerImporter) {
+                ScrivenerImportView { importedDocument in
+                    onImportDocument?(importedDocument)
+                }
+            }
         }
     }
     
@@ -112,6 +119,12 @@ struct WelcomeView: View {
                 title: "Open Project",
                 systemImage: "folder",
                 action: { isShowingFileImporter = true }
+            )
+
+            quickActionButton(
+                title: "Import Scrivener",
+                systemImage: "square.and.arrow.down",
+                action: { isShowingScrivenerImporter = true }
             )
         }
         .padding(.bottom, 8)
@@ -133,6 +146,12 @@ struct WelcomeView: View {
                     title: "Open Project",
                     systemImage: "folder",
                     action: { isShowingFileImporter = true }
+                )
+
+                quickActionButton(
+                    title: "Import Scrivener",
+                    systemImage: "square.and.arrow.down",
+                    action: { isShowingScrivenerImporter = true }
                 )
             }
         }
@@ -408,7 +427,8 @@ struct BlankTemplateCard: View {
 #Preview {
     WelcomeView(
         onOpenDocument: { _ in },
-        onCreateNewDocument: { }
+        onCreateNewDocument: { },
+        onImportDocument: { _ in }
     )
     .environmentObject(RecentDocumentsManager())
 } 
