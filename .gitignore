@@ -61,3 +61,6 @@ codecov.yml
 # Crashlytics
 crashlytics-build.properties
 crashlytics.properties
+
+# Claude Code
+.claude/settings.local.json

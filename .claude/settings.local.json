@@ -13,7 +13,25 @@
       "Bash(curl:*)",
       "Skill(frontend-design)",
       "Bash(git checkout:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(git rm:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:www.xcodebuildmcp.com)",
+      "mcp__XcodeBuildMCP__discover_projs",
+      "mcp__XcodeBuildMCP__session-set-defaults",
+      "mcp__XcodeBuildMCP__list_schemes",
+      "mcp__XcodeBuildMCP__list_sims",
+      "mcp__XcodeBuildMCP__build_run_sim",
+      "Bash(xcodebuild:*)",
+      "mcp__XcodeBuildMCP__screenshot",
+      "mcp__XcodeBuildMCP__build_sim"
+    ],
+    "additionalDirectories": [
+      "/Users/jonasdalesjo/code/literati-swift"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "XcodeBuildMCP"
+  ]
 }
