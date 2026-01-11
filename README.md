@@ -41,15 +41,10 @@ Think Scrivener or Ulysses, but free and open source.
 ```bash
 git clone https://github.com/manuscriptapp/manuscript.git
 cd manuscript
-
-# iOS
-open iOS/Manuscript.xcodeproj
-
-# macOS
-open macOS/Manuscript.xcodeproj
+open Manuscript/Manuscript.xcodeproj
 ```
 
-Build and run with ⌘R.
+The project is a multi-platform SwiftUI app that supports both iOS and macOS from a single codebase. Select your target platform (iOS or macOS) from the Xcode scheme selector, then build and run with ⌘R.
 
 ## File Format
 
