@@ -17,7 +17,7 @@ enum ManuscriptCharacterGender: String, Codable, CaseIterable {
 }
 
 // Core document structure that represents a Manuscript project
-struct ManuscriptDocument: FileDocument, Equatable {
+struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // Document properties
     var title: String
     var author: String
