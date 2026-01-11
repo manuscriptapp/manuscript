@@ -16,6 +16,10 @@ final class ScrivenerImporter {
     private var importedDocuments = 0
     private var importedFolders = 0
 
+    // Mapping tables built during import
+    private var labelMap: [Int: ManuscriptLabel] = [:]
+    private var statusMap: [Int: ManuscriptStatus] = [:]
+
     // MARK: - Initialization
 
     init() {
@@ -27,13 +31,10 @@ final class ScrivenerImporter {
     // MARK: - Public Methods
 
     /// Validate a Scrivener project without importing
-    /// - Parameter url: URL to the .scriv bundle
-    /// - Returns: Validation result with any warnings/errors
     func validateProject(at url: URL) -> ScrivenerValidationResult {
         var warnings: [String] = []
         var errors: [String] = []
 
-        // Check bundle structure
         guard fileManager.fileExists(atPath: url.path) else {
             return ScrivenerValidationResult(
                 isValid: false,
@@ -50,7 +51,6 @@ final class ScrivenerImporter {
             )
         }
 
-        // Check for project.scrivx
         let scrivxPath = url.appendingPathComponent("project.scrivx")
         guard fileManager.fileExists(atPath: scrivxPath.path) else {
             return ScrivenerValidationResult(
@@ -59,10 +59,8 @@ final class ScrivenerImporter {
             )
         }
 
-        // Detect version
         let version = detectVersion(at: url)
 
-        // Check for content directory
         let hasV3Data = fileManager.fileExists(atPath: url.appendingPathComponent("Files/Data").path)
         let hasV2Docs = fileManager.fileExists(atPath: url.appendingPathComponent("Files/Docs").path)
 
@@ -70,7 +68,6 @@ final class ScrivenerImporter {
             warnings.append("No content directory found - documents may be empty")
         }
 
-        // Try to parse the project to count items
         var projectTitle = ""
         var itemCount = 0
 
@@ -83,7 +80,6 @@ final class ScrivenerImporter {
                 warnings.append("Large project (\(itemCount) items) - import may take a while")
             }
 
-            // Check for media content
             if hasMediaContent(project.binderItems) {
                 warnings.append("Some media files (images, PDFs) will be referenced but not embedded")
             }
@@ -102,11 +98,6 @@ final class ScrivenerImporter {
     }
 
     /// Import a Scrivener project from URL
-    /// - Parameters:
-    ///   - url: URL to the .scriv bundle
-    ///   - options: Import configuration options
-    ///   - progress: Progress callback (progress 0.0-1.0, status message)
-    /// - Returns: ImportResult containing the document and any warnings
     func importProject(
         from url: URL,
         options: ScrivenerImportOptions = .default,
@@ -117,35 +108,70 @@ final class ScrivenerImporter {
         skippedItems = 0
         importedDocuments = 0
         importedFolders = 0
+        labelMap = [:]
+        statusMap = [:]
 
-        // 1. Validate bundle structure
+        // 1. Validate
         progress?(0.05, "Validating Scrivener project...")
         try validateBundle(at: url)
 
-        // 2. Parse project.scrivx
+        // 2. Parse
         progress?(0.10, "Reading project structure...")
         let scrivxURL = url.appendingPathComponent("project.scrivx")
         let scrivProject = try xmlParser.parse(projectURL: scrivxURL)
 
-        // 3. Detect version and content location
+        // 3. Detect version
         let version = detectVersion(at: url)
         let contentPath = version == .v3 ? "Files/Data" : "Files/Docs"
 
-        // 4. Create Manuscript document
+        // 4. Create manuscript and map Scrivener metadata
         var manuscript = ManuscriptDocument()
+        manuscript.formatVersion = .current
         manuscript.title = scrivProject.title
         manuscript.creationDate = Date()
+        manuscript.modifiedDate = Date()
 
-        // 5. Create label and status maps for reference
-        let labelMap = Dictionary(uniqueKeysWithValues: scrivProject.labels.map { ($0.id, $0) })
-        let statusMap = Dictionary(uniqueKeysWithValues: scrivProject.statuses.map { ($0.id, $0) })
+        // 5. Map labels from Scrivener
+        manuscript.labels = scrivProject.labels.map { scrivLabel in
+            let label = ManuscriptLabel(
+                id: "scriv-label-\(scrivLabel.id)",
+                name: scrivLabel.name,
+                color: colorToHex(scrivLabel.color)
+            )
+            labelMap[scrivLabel.id] = label
+            return label
+        }
+        if manuscript.labels.isEmpty {
+            manuscript.labels = ManuscriptLabel.defaults
+        }
 
-        // 6. Convert binder items to folders/documents
+        // 6. Map statuses from Scrivener
+        manuscript.statuses = scrivProject.statuses.map { scrivStatus in
+            let status = ManuscriptStatus(
+                id: "scriv-status-\(scrivStatus.id)",
+                name: scrivStatus.name
+            )
+            statusMap[scrivStatus.id] = status
+            return status
+        }
+        if manuscript.statuses.isEmpty {
+            manuscript.statuses = ManuscriptStatus.defaults
+        }
+
+        // 7. Map targets
+        if let targets = scrivProject.targets {
+            manuscript.targets = ManuscriptTargets(
+                draftWordCount: targets.draftWordCount,
+                draftDeadline: targets.deadline,
+                sessionWordCount: targets.sessionWordCount
+            )
+        }
+
+        // 8. Convert binder items
         progress?(0.20, "Converting documents...")
         let totalItems = countBinderItems(scrivProject.binderItems)
         var convertedCount = 0
 
-        // Find the draft folder
         var draftFolder: ManuscriptFolder?
         var researchFolder: ManuscriptFolder?
         var trashFolder: ManuscriptFolder?
@@ -162,8 +188,6 @@ final class ScrivenerImporter {
                 projectURL: url,
                 contentPath: contentPath,
                 version: version,
-                labelMap: labelMap,
-                statusMap: statusMap,
                 options: options,
                 onProgress: progressCallback
             )
@@ -180,44 +204,28 @@ final class ScrivenerImporter {
                     trashFolder = folder
                 }
             default:
-                // Add other root items as subfolders of draft
                 if draftFolder != nil {
                     draftFolder?.subfolders.append(folder)
                 }
             }
         }
 
-        // 7. Build the final structure
+        // 9. Build final structure
         if let draft = draftFolder {
             manuscript.rootFolder = draft
-
-            // Add research as a subfolder if imported
-            if let research = researchFolder {
-                manuscript.rootFolder.subfolders.append(research)
-            }
-
-            // Add trash as a subfolder if imported
-            if let trash = trashFolder {
-                manuscript.rootFolder.subfolders.append(trash)
-            }
+            manuscript.rootFolder.folderType = .draft
         } else {
-            // No draft folder found - create one from root items
-            manuscript.rootFolder = ManuscriptFolder(title: scrivProject.title)
-            for binderItem in scrivProject.binderItems {
-                let folder = try await convertBinderItem(
-                    binderItem,
-                    projectURL: url,
-                    contentPath: contentPath,
-                    version: version,
-                    labelMap: labelMap,
-                    statusMap: statusMap,
-                    options: options,
-                    onProgress: { _ in }
-                )
-                if binderItem.type == .folder || binderItem.children.isEmpty == false {
-                    manuscript.rootFolder.subfolders.append(folder)
-                }
-            }
+            manuscript.rootFolder = ManuscriptFolder(title: scrivProject.title, folderType: .draft)
+        }
+
+        if let research = researchFolder {
+            manuscript.researchFolder = research
+            manuscript.researchFolder?.folderType = .research
+        }
+
+        if let trash = trashFolder {
+            manuscript.trashFolder = trash
+            manuscript.trashFolder?.folderType = .trash
         }
 
         progress?(1.0, "Import complete!")
@@ -234,14 +242,12 @@ final class ScrivenerImporter {
     // MARK: - Private Methods
 
     private func validateBundle(at url: URL) throws {
-        // Check it's a directory
         var isDirectory: ObjCBool = false
         guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
               isDirectory.boolValue else {
             throw ImportError.notABundle
         }
 
-        // Check for project.scrivx
         let scrivxPath = url.appendingPathComponent("project.scrivx")
         guard fileManager.fileExists(atPath: scrivxPath.path) else {
             throw ImportError.missingProjectFile
@@ -278,32 +284,27 @@ final class ScrivenerImporter {
         projectURL: URL,
         contentPath: String,
         version: ScrivenerVersion,
-        labelMap: [Int: ScrivenerLabel],
-        statusMap: [Int: ScrivenerStatus],
         options: ScrivenerImportOptions,
         onProgress: (Int) -> Void
     ) async throws -> ManuscriptFolder {
         var folder = ManuscriptFolder(
             title: item.title,
+            folderType: .subfolder,
             creationDate: item.created ?? Date()
         )
 
         importedFolders += 1
 
-        // Convert children recursively
         for (index, child) in item.children.enumerated() {
             switch child.type {
             case .text:
-                // Convert to document
                 do {
                     let document = try await convertTextItem(
                         child,
                         projectURL: projectURL,
                         contentPath: contentPath,
                         version: version,
-                        order: index,
-                        labelMap: labelMap,
-                        statusMap: statusMap
+                        order: index
                     )
                     folder.documents.append(document)
                     importedDocuments += 1
@@ -319,21 +320,17 @@ final class ScrivenerImporter {
                 }
 
             case .folder, .draftFolder, .researchFolder:
-                // Convert to subfolder
                 let subfolder = try await convertBinderItem(
                     child,
                     projectURL: projectURL,
                     contentPath: contentPath,
                     version: version,
-                    labelMap: labelMap,
-                    statusMap: statusMap,
                     options: options,
                     onProgress: onProgress
                 )
                 folder.subfolders.append(subfolder)
 
             case .pdf, .image, .webPage:
-                // Skip media items for now, add warning
                 warnings.append(ImportWarning(
                     message: "Media item skipped (not yet supported)",
                     itemTitle: child.title,
@@ -343,15 +340,12 @@ final class ScrivenerImporter {
                 onProgress(1)
 
             case .trashFolder:
-                // Only include if option is set
                 if options.importTrash {
                     let subfolder = try await convertBinderItem(
                         child,
                         projectURL: projectURL,
                         contentPath: contentPath,
                         version: version,
-                        labelMap: labelMap,
-                        statusMap: statusMap,
                         options: options,
                         onProgress: onProgress
                     )
@@ -361,14 +355,11 @@ final class ScrivenerImporter {
                 }
 
             case .root, .other:
-                // Try to convert as a generic folder
                 let subfolder = try await convertBinderItem(
                     child,
                     projectURL: projectURL,
                     contentPath: contentPath,
                     version: version,
-                    labelMap: labelMap,
-                    statusMap: statusMap,
                     options: options,
                     onProgress: onProgress
                 )
@@ -384,11 +375,8 @@ final class ScrivenerImporter {
         projectURL: URL,
         contentPath: String,
         version: ScrivenerVersion,
-        order: Int,
-        labelMap: [Int: ScrivenerLabel],
-        statusMap: [Int: ScrivenerStatus]
+        order: Int
     ) async throws -> ManuscriptDocument.Document {
-        // Determine content file path
         let contentURL: URL
         let notesURL: URL
         let synopsisURL: URL
@@ -407,7 +395,7 @@ final class ScrivenerImporter {
             synopsisURL = docsFolder.appendingPathComponent("\(item.id)_synopsis.txt")
         }
 
-        // Load and convert content
+        // Load content
         var markdownContent = ""
         if fileManager.fileExists(atPath: contentURL.path) {
             do {
@@ -421,30 +409,38 @@ final class ScrivenerImporter {
             }
         }
 
-        // Load notes if available
+        // Load notes
         var notes = ""
         if fileManager.fileExists(atPath: notesURL.path) {
             do {
                 notes = try rtfConverter.convert(rtfURL: notesURL)
             } catch {
-                // Non-critical - just skip notes
+                // Non-critical
             }
         }
 
-        // Load synopsis - prefer from file, fallback to XML
+        // Load synopsis
         var synopsis = item.synopsis ?? ""
         if fileManager.fileExists(atPath: synopsisURL.path) {
             do {
                 synopsis = try rtfConverter.convertPlainText(from: synopsisURL)
             } catch {
-                // Use XML synopsis as fallback
+                // Use XML synopsis
             }
         }
 
-        // Map label to color
-        var colorName = "Brown"  // Default
-        if let labelID = item.labelID, let label = labelMap[labelID] {
-            colorName = mapLabelToColorName(label)
+        // Map label and status using our built mappings
+        var labelId: String? = nil
+        var statusId: String? = nil
+        var colorName = "Brown"
+
+        if let scrivLabelID = item.labelID, let label = labelMap[scrivLabelID] {
+            labelId = label.id
+            colorName = mapLabelColorName(label)
+        }
+
+        if let scrivStatusID = item.statusID, let status = statusMap[scrivStatusID] {
+            statusId = status.id
         }
 
         return ManuscriptDocument.Document(
@@ -457,15 +453,38 @@ final class ScrivenerImporter {
             creationDate: item.created ?? Date(),
             order: order,
             colorName: colorName,
-            iconName: "doc.text"
+            iconName: "doc.text",
+            labelId: labelId,
+            statusId: statusId,
+            keywords: [],
+            includeInCompile: item.includeInCompile,
+            characterIds: [],
+            locationIds: []
         )
     }
 
-    private func mapLabelToColorName(_ label: ScrivenerLabel) -> String {
-        // Map Scrivener label colors to Manuscript color names
-        // This is a simplified mapping based on label name keywords
-        let name = label.name.lowercased()
+    private func colorToHex(_ color: SwiftUI.Color) -> String {
+        // Convert SwiftUI Color to hex string
+        // This is a simplified implementation
+        #if canImport(AppKit)
+        guard let nsColor = NSColor(color).usingColorSpace(.deviceRGB) else {
+            return "#808080"
+        }
+        let r = Int(nsColor.redComponent * 255)
+        let g = Int(nsColor.greenComponent * 255)
+        let b = Int(nsColor.blueComponent * 255)
+        return String(format: "#%02X%02X%02X", r, g, b)
+        #else
+        // iOS fallback - return gray
+        return "#808080"
+        #endif
+    }
 
+    private func mapLabelColorName(_ label: ManuscriptLabel) -> String {
+        let name = label.name.lowercased()
+        let color = label.color.lowercased()
+
+        // Check by name first
         if name.contains("red") || name.contains("urgent") || name.contains("critical") {
             return "Red"
         } else if name.contains("orange") || name.contains("important") {
@@ -480,17 +499,17 @@ final class ScrivenerImporter {
             return "Purple"
         } else if name.contains("pink") {
             return "Pink"
-        } else {
-            return "Brown"
         }
-    }
-}
 
-// MARK: - UTType Extension for Scrivener
+        // Check by color hex
+        if color.hasPrefix("#ff") && !color.hasPrefix("#ff0") && !color.hasPrefix("#fff") {
+            return "Red"
+        } else if color.hasPrefix("#00ff") || color.hasPrefix("#0f0") {
+            return "Green"
+        } else if color.hasPrefix("#0000ff") || color.hasPrefix("#00f") {
+            return "Blue"
+        }
 
-extension UTType {
-    /// Scrivener project bundle type
-    static var scrivenerProject: UTType {
-        UTType(filenameExtension: "scriv") ?? .folder
+        return "Brown"
     }
 }

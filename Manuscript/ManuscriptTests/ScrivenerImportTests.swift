@@ -14,7 +14,6 @@ struct ScrivenerImportTests {
     // MARK: - XML Parser Tests
 
     @Test func parserHandlesSimpleProject() async throws {
-        // Create a simple test XML
         let xml = """
         <?xml version="1.0" encoding="UTF-8"?>
         <ScrivenerProject Version="2.0">
@@ -91,7 +90,6 @@ struct ScrivenerImportTests {
 
         #expect(project.title == "Nested Project")
 
-        // Navigate to the deeply nested item
         let draft = project.binderItems[0]
         let partOne = draft.children[0]
         let chapterOne = partOne.children[0]
@@ -191,7 +189,6 @@ struct ScrivenerImportTests {
     // MARK: - RTF Converter Tests
 
     @Test func rtfConverterHandlesPlainText() async throws {
-        // Simple RTF with plain text
         let rtf = "{\\rtf1\\ansi Hello World}"
         let data = rtf.data(using: .utf8)!
 
@@ -255,7 +252,6 @@ struct ScrivenerImportTests {
     }
 
     @Test func validatorAcceptsValidBundle() async throws {
-        // Create a minimal valid Scrivener bundle
         let bundleURL = FileManager.default.temporaryDirectory.appendingPathComponent("Valid.scriv")
         try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
 
@@ -274,7 +270,6 @@ struct ScrivenerImportTests {
         let scrivxURL = bundleURL.appendingPathComponent("project.scrivx")
         try xml.write(to: scrivxURL, atomically: true, encoding: .utf8)
 
-        // Create Files/Docs directory
         let docsURL = bundleURL.appendingPathComponent("Files/Docs")
         try FileManager.default.createDirectory(at: docsURL, withIntermediateDirectories: true)
 
@@ -292,7 +287,6 @@ struct ScrivenerImportTests {
     }
 
     @Test func validatorDetectsV3Format() async throws {
-        // Create a Scrivener 3 bundle
         let bundleURL = FileManager.default.temporaryDirectory.appendingPathComponent("V3Project.scriv")
         try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
 
@@ -307,7 +301,6 @@ struct ScrivenerImportTests {
         let scrivxURL = bundleURL.appendingPathComponent("project.scrivx")
         try xml.write(to: scrivxURL, atomically: true, encoding: .utf8)
 
-        // Create Files/Data directory (V3 indicator)
         let dataURL = bundleURL.appendingPathComponent("Files/Data")
         try FileManager.default.createDirectory(at: dataURL, withIntermediateDirectories: true)
 
@@ -368,10 +361,68 @@ struct ScrivenerImportTests {
         #expect(rtfError.errorDescription?.contains("conversion issue") == true)
     }
 
+    // MARK: - New Format Tests
+
+    @Test func manuscriptDocumentSupportsLabels() {
+        var doc = ManuscriptDocument()
+        doc.labels = [
+            ManuscriptLabel(id: "test-1", name: "Test Label", color: "#FF0000")
+        ]
+
+        #expect(doc.labels.count == 1)
+        #expect(doc.labels[0].name == "Test Label")
+        #expect(doc.labels[0].color == "#FF0000")
+    }
+
+    @Test func manuscriptDocumentSupportsStatuses() {
+        var doc = ManuscriptDocument()
+        doc.statuses = [
+            ManuscriptStatus(id: "status-1", name: "Draft")
+        ]
+
+        #expect(doc.statuses.count == 1)
+        #expect(doc.statuses[0].name == "Draft")
+    }
+
+    @Test func manuscriptDocumentSupportsTargets() {
+        var doc = ManuscriptDocument()
+        doc.targets = ManuscriptTargets(
+            draftWordCount: 50000,
+            sessionWordCount: 1000
+        )
+
+        #expect(doc.targets.draftWordCount == 50000)
+        #expect(doc.targets.sessionWordCount == 1000)
+    }
+
+    @Test func manuscriptFolderSupportsTypes() {
+        let draftFolder = ManuscriptFolder(title: "Draft", folderType: .draft)
+        let notesFolder = ManuscriptFolder(title: "Notes", folderType: .notes)
+        let researchFolder = ManuscriptFolder(title: "Research", folderType: .research)
+
+        #expect(draftFolder.folderType == .draft)
+        #expect(notesFolder.folderType == .notes)
+        #expect(researchFolder.folderType == .research)
+    }
+
+    @Test func documentSupportsScrivenerMetadata() {
+        let doc = ManuscriptDocument.Document(
+            title: "Test",
+            labelId: "label-1",
+            statusId: "status-1",
+            keywords: ["test", "demo"],
+            includeInCompile: false
+        )
+
+        #expect(doc.labelId == "label-1")
+        #expect(doc.statusId == "status-1")
+        #expect(doc.keywords.count == 2)
+        #expect(doc.includeInCompile == false)
+    }
+
     // MARK: - Integration Test
 
     @Test func fullImportWorkflow() async throws {
-        // Create a complete test Scrivener bundle
         let bundleURL = FileManager.default.temporaryDirectory.appendingPathComponent("FullTest.scriv")
         try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
 
@@ -401,17 +452,25 @@ struct ScrivenerImportTests {
                     </Children>
                 </BinderItem>
             </Binder>
+            <LabelSettings>
+                <Labels>
+                    <Label ID="1" Color="1.0 0.0 0.0">Important</Label>
+                </Labels>
+            </LabelSettings>
+            <StatusSettings>
+                <StatusItems>
+                    <Status ID="1">Draft</Status>
+                </StatusItems>
+            </StatusSettings>
         </ScrivenerProject>
         """
 
         let scrivxURL = bundleURL.appendingPathComponent("project.scrivx")
         try xml.write(to: scrivxURL, atomically: true, encoding: .utf8)
 
-        // Create Files/Docs directory
         let docsURL = bundleURL.appendingPathComponent("Files/Docs")
         try FileManager.default.createDirectory(at: docsURL, withIntermediateDirectories: true)
 
-        // Create RTF content files
         let rtf1 = "{\\rtf1\\ansi This is chapter one content.}"
         try rtf1.write(to: docsURL.appendingPathComponent("2.rtf"), atomically: true, encoding: .utf8)
 
@@ -427,13 +486,23 @@ struct ScrivenerImportTests {
 
         #expect(result.document.title == "Full Test Project")
         #expect(result.document.rootFolder.title == "Draft")
+        #expect(result.document.rootFolder.folderType == .draft)
         #expect(result.document.rootFolder.documents.count == 2)
         #expect(result.document.rootFolder.documents[0].title == "Chapter One")
         #expect(result.document.rootFolder.documents[0].outline == "The story begins.")
         #expect(result.document.rootFolder.documents[0].content.contains("chapter one content"))
 
+        // Check that labels were imported
+        #expect(result.document.labels.count >= 1)
+        #expect(result.document.labels.first?.name == "Important")
+
+        // Check that statuses were imported
+        #expect(result.document.statuses.count >= 1)
+        #expect(result.document.statuses.first?.name == "Draft")
+
         // Check that research folder was imported
-        #expect(result.document.rootFolder.subfolders.count > 0)
+        #expect(result.document.researchFolder != nil)
+        #expect(result.document.researchFolder?.folderType == .research)
 
         // Check import statistics
         #expect(result.importedDocuments >= 2)
