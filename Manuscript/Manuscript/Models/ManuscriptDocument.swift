@@ -17,7 +17,6 @@ extension UTType {
 
 enum ManuscriptFormatVersion: String, Codable {
     case v1_0 = "1.0"
-    case legacy = "legacy"  // Old single-file JSON format
 
     static var current: ManuscriptFormatVersion { .v1_0 }
 }
@@ -197,15 +196,11 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // MARK: - FileDocument Implementation
 
     init(configuration: ReadConfiguration) throws {
-        // Check if it's a package (directory) or a single file
-        if configuration.file.isDirectory {
-            try self.init(fromPackage: configuration.file)
-        } else if let data = configuration.file.regularFileContents {
-            // Legacy single-file JSON format
-            try self.init(fromLegacyData: data)
-        } else {
-            throw CocoaError(.fileReadCorruptFile)
+        // Only support package (directory) format
+        guard configuration.file.isDirectory else {
+            throw CocoaError(.fileReadUnsupportedScheme)
         }
+        try self.init(fromPackage: configuration.file)
     }
 
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
@@ -535,68 +530,6 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         return content
     }
 
-    // MARK: - Legacy Format Support
-
-    private init(fromLegacyData data: Data) throws {
-        let decoder = JSONDecoder()
-
-        do {
-            let legacyData = try decoder.decode(LegacyDocumentData.self, from: data)
-            self.formatVersion = .legacy
-            self.title = legacyData.title
-            self.author = legacyData.author
-            self.metaDescription = legacyData.metaDescription
-            self.style = legacyData.style
-            self.genre = legacyData.genre
-            self.synopsis = legacyData.synopsis
-            self.creationDate = legacyData.creationDate
-            self.modifiedDate = Date()
-            self.rootFolder = Self.migrateLegacyFolder(legacyData.rootFolder)
-            self.notesFolder = ManuscriptFolder(title: "Notes", folderType: .notes)
-            self.researchFolder = ManuscriptFolder(title: "Research", folderType: .research)
-            self.trashFolder = ManuscriptFolder(title: "Trash", folderType: .trash)
-            self.characters = legacyData.characters
-            self.locations = legacyData.locations
-            self.labels = ManuscriptLabel.defaults
-            self.statuses = ManuscriptStatus.defaults
-            self.targets = ManuscriptTargets()
-            self.settings = ManuscriptSettings()
-            self.compileSettings = ManuscriptCompileSettings(title: title, author: author)
-        } catch {
-            throw CocoaError(.fileReadCorruptFile)
-        }
-    }
-
-    private static func migrateLegacyFolder(_ legacy: LegacyFolder) -> ManuscriptFolder {
-        var folder = ManuscriptFolder(
-            id: legacy.id,
-            title: legacy.title,
-            folderType: .draft,
-            creationDate: legacy.creationDate,
-            order: legacy.order
-        )
-
-        folder.documents = legacy.documents.map { legacyDoc in
-            ManuscriptDocument.Document(
-                id: legacyDoc.id,
-                title: legacyDoc.title,
-                outlinePrompt: legacyDoc.outlinePrompt,
-                outline: legacyDoc.outline,
-                notes: legacyDoc.notes,
-                content: legacyDoc.content,
-                creationDate: legacyDoc.creationDate,
-                order: legacyDoc.order,
-                colorName: legacyDoc.colorName,
-                iconName: legacyDoc.iconName,
-                characterIds: legacyDoc.characterIds,
-                locationIds: legacyDoc.locationIds
-            )
-        }
-
-        folder.subfolders = legacy.subfolders.map { migrateLegacyFolder($0) }
-
-        return folder
-    }
 }
 
 // MARK: - Folder Type
@@ -835,44 +768,6 @@ private struct FolderItem: Codable {
     var includeInCompile: Bool?
     var created: Date?
     var modified: Date?
-}
-
-/// Legacy document data format (for backward compatibility)
-private struct LegacyDocumentData: Codable {
-    var title: String
-    var author: String
-    var metaDescription: String
-    var style: String
-    var genre: String
-    var synopsis: String
-    var creationDate: Date
-    var rootFolder: LegacyFolder
-    var characters: [ManuscriptCharacter]
-    var locations: [ManuscriptLocation]
-}
-
-private struct LegacyFolder: Codable {
-    var id: UUID
-    var title: String
-    var creationDate: Date
-    var order: Int
-    var subfolders: [LegacyFolder]
-    var documents: [LegacyDocument]
-}
-
-private struct LegacyDocument: Codable {
-    var id: UUID
-    var title: String
-    var outlinePrompt: String
-    var outline: String
-    var notes: String
-    var content: String
-    var creationDate: Date
-    var order: Int
-    var colorName: String
-    var iconName: String
-    var characterIds: [UUID]
-    var locationIds: [UUID]
 }
 
 // MARK: - String Extension
