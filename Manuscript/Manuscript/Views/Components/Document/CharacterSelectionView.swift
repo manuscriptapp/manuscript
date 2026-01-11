@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct CharacterSelectionView: View {
-    let characters: [LiteratiCharacter]?
+    let characters: [ManuscriptCharacter]?
     @Binding var selectedCharacters: Set<UUID>
     @Binding var isExpanded: Bool
     
@@ -67,8 +67,8 @@ struct CharacterSelectionView: View {
 #Preview {
     CharacterSelectionView(
         characters: [
-            LiteratiCharacter(name: "Aria", age: 17, gender: .female),
-            LiteratiCharacter(name: "Master Chen", age: 55, gender: .male)
+            ManuscriptCharacter(name: "Aria", age: 17, gender: .female),
+            ManuscriptCharacter(name: "Master Chen", age: 55, gender: .male)
         ],
         selectedCharacters: .constant(Set<UUID>()),
         isExpanded: .constant(true)

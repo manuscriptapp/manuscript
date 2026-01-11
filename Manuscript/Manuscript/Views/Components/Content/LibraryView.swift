@@ -2,11 +2,11 @@ import SwiftUI
 import SwiftData
 
 struct LibraryView: View {
-    @ObservedObject var viewModel: LiteratiViewModel
+    @ObservedObject var viewModel: ManuscriptViewModel
     @State private var isSettingsPresented = false
     @Binding var detailSelection: DetailSelection?
     
-    init(viewModel: LiteratiViewModel, detailSelection: Binding<DetailSelection?>) {
+    init(viewModel: ManuscriptViewModel, detailSelection: Binding<DetailSelection?>) {
         self.viewModel = viewModel
         self._detailSelection = detailSelection
     }
@@ -72,9 +72,9 @@ struct LibraryView: View {
 }
 
 // Extension to get document count
-extension LiteratiDocument {
+extension ManuscriptDocument {
     var documentCount: Int {
-        func countDocuments(in folder: LiteratiFolder) -> Int {
+        func countDocuments(in folder: ManuscriptFolder) -> Int {
             let documentsInFolder = folder.documents.count
             let documentsInSubfolders = folder.subfolders.reduce(0) { count, subfolder in
                 count + countDocuments(in: subfolder)

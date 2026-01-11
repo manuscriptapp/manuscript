@@ -61,7 +61,7 @@ struct WelcomeView: View {
                 }
             }
             .sheet(isPresented: $isShowingNewProjectSheet) {
-                NewBookSheet(literatiViewModel: LiteratiViewModel(document: LiteratiDocument())) { document in
+                NewBookSheet(manuscriptViewModel: ManuscriptViewModel(document: ManuscriptDocument())) { document in
                     // Create a new document and open it
                     #if os(macOS)
                     // On macOS, the document is already saved by the NewBookSheet
@@ -293,7 +293,7 @@ struct WelcomeView: View {
 
     // Helper method to save a document on iOS
     #if os(iOS)
-    private func saveDocument(_ document: LiteratiDocument) {
+    private func saveDocument(_ document: ManuscriptDocument) {
         let encoder = JSONEncoder()
         do {
             let data = try encoder.encode(document)

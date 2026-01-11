@@ -1,11 +1,9 @@
 import SwiftUI
 import SwiftData
-import Combine
 
 struct ManuscriptProjectView: View {
     @Binding var document: ManuscriptDocument
-    @StateObject private var documentManager: DocumentManager
-    @StateObject private var manuscriptViewModel: ManuscriptViewModel
+    @StateObject private var viewModel = DocumentViewModel()
     @State private var detailSelection: DetailSelection?
     @State private var isAddDocumentSheetPresented = false
     @State private var isAddFolderSheetPresented = false
@@ -13,18 +11,11 @@ struct ManuscriptProjectView: View {
     @State private var isAddLocationSheetPresented = false
     @State private var showOnboarding = false
 
-    init(document: Binding<ManuscriptDocument>) {
-        self._document = document
-        self._documentManager = StateObject(wrappedValue: DocumentManager(document: document.wrappedValue))
-        self._manuscriptViewModel = StateObject(wrappedValue: ManuscriptViewModel(document: document.wrappedValue))
-    }
-
     var body: some View {
         NavigationSplitView {
             // Sidebar with project structure
             ProjectSidebar(
-                documentManager: documentManager,
-                literatiViewModel: manuscriptViewModel,
+                viewModel: viewModel,
                 detailSelection: $detailSelection,
                 isAddDocumentSheetPresented: $isAddDocumentSheetPresented,
                 isAddFolderSheetPresented: $isAddFolderSheetPresented,
@@ -41,37 +32,25 @@ struct ManuscriptProjectView: View {
             // Detail view based on selection
             if let selection = detailSelection {
                 DetailContentView(
-                    documentManager: documentManager,
+                    viewModel: viewModel,
                     selection: selection
                 )
             } else {
                 // Default empty state or project overview
-                ProjectOverview(documentManager: documentManager)
+                ProjectOverview(viewModel: viewModel)
             }
         }
         .sheet(isPresented: $isAddDocumentSheetPresented) {
-            AddDocumentSheet(
-                document: documentManager.document,
-                initialFolder: documentManager.currentFolder,
-                literatiViewModel: manuscriptViewModel
-            )
+            AddDocumentSheet(viewModel: viewModel)
         }
         .sheet(isPresented: $isAddFolderSheetPresented) {
-            AddFolderSheet(
-                document: documentManager.document,
-                initialFolder: documentManager.currentFolder,
-                literatiViewModel: manuscriptViewModel
-            )
+            AddFolderSheet(viewModel: viewModel)
         }
         .sheet(isPresented: $isAddCharacterSheetPresented) {
-            AddCharacterSheet(
-                literatiViewModel: manuscriptViewModel
-            )
+            AddCharacterSheet(viewModel: viewModel)
         }
         .sheet(isPresented: $isAddLocationSheetPresented) {
-            AddLocationSheet(
-                literatiViewModel: manuscriptViewModel
-            )
+            AddLocationSheet(viewModel: viewModel)
         }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView()
@@ -81,19 +60,20 @@ struct ManuscriptProjectView: View {
                 }
         }
         .onAppear {
+            viewModel.bind(to: $document)
             checkOnboarding()
         }
-        .onChange(of: document) { newDocument in
-            documentManager.document = newDocument
-            manuscriptViewModel.document = newDocument
-            documentManager.navigateToRootFolder()
+        .onChange(of: document) { _, newDocument in
+            viewModel.syncWithDocument(newDocument)
         }
-        .onReceive(manuscriptViewModel.objectWillChange) { _ in
-            // Sync changes to DocumentManager (triggers sidebar refresh) and DocumentGroup binding
-            DispatchQueue.main.async {
-                documentManager.objectWillChange.send()
-                document = manuscriptViewModel.document
+        .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
+            TextField("Name", text: $viewModel.newItemName)
+            Button("Cancel", role: .cancel) { }
+            Button("Rename") {
+                viewModel.performRename()
             }
+        } message: {
+            Text("Enter new name")
         }
     }
 
@@ -111,7 +91,7 @@ struct ManuscriptProjectView: View {
 // Helper extension to create a sample document for previews
 extension ManuscriptDocument {
     static var sampleDocument: ManuscriptDocument {
-        let document = ManuscriptDocument()
+        var document = ManuscriptDocument()
         document.title = "Sample Project"
         document.author = "Sample Author"
         document.metaDescription = "This is a sample project for previews"
@@ -161,5 +141,4 @@ extension ManuscriptDocument {
     }
 }
 
-// Type alias for backward compatibility
-typealias LiteratiProjectView = ManuscriptProjectView
+// Note: LiteratiProjectView alias has been removed. Use ManuscriptProjectView directly.

@@ -2,49 +2,49 @@ import SwiftUI
 import SwiftData
 
 struct DocumentDetailView: View {
-    @StateObject private var viewModel: DocumentDetailViewModel
+    @StateObject private var detailViewModel: DocumentDetailViewModel
     @State private var isInspectorPresented = false
     @State private var inspectorDetent: PresentationDetent = .medium
-    
-    let document: LiteratiDocument.Document
-    let literatiViewModel: LiteratiViewModel
-    
-    init(document: LiteratiDocument.Document, literatiViewModel: LiteratiViewModel) {
+
+    let document: ManuscriptDocument.Document
+    @ObservedObject var viewModel: DocumentViewModel
+
+    init(document: ManuscriptDocument.Document, viewModel: DocumentViewModel) {
         self.document = document
-        self.literatiViewModel = literatiViewModel
-        self._viewModel = StateObject(wrappedValue: DocumentDetailViewModel(document: document, literatiViewModel: literatiViewModel))
+        self.viewModel = viewModel
+        self._detailViewModel = StateObject(wrappedValue: DocumentDetailViewModel(document: document, documentViewModel: viewModel))
     }
-    
+
     var body: some View {
         // Create the inspector view separately to reduce complexity
         let inspectorView = DocumentInspectorView(
             document: document,
-            literatiViewModel: literatiViewModel,
-            editedTitle: $viewModel.editedTitle,
-            editedOutline: $viewModel.editedOutline,
-            isPromptExpanded: $viewModel.isPromptExpanded,
+            documentViewModel: viewModel,
+            editedTitle: $detailViewModel.editedTitle,
+            editedOutline: $detailViewModel.editedOutline,
+            isPromptExpanded: $detailViewModel.isPromptExpanded,
             selectedCharacters: Binding(
-                get: { Set(viewModel.selectedCharacters) },
-                set: { viewModel.selectedCharacters = Array($0) }
+                get: { Set(detailViewModel.selectedCharacters) },
+                set: { detailViewModel.selectedCharacters = Array($0) }
             ),
             selectedLocations: Binding(
-                get: { Set(viewModel.selectedLocations) },
-                set: { viewModel.selectedLocations = Array($0) }
+                get: { Set(detailViewModel.selectedLocations) },
+                set: { detailViewModel.selectedLocations = Array($0) }
             ),
-            isGenerating: $viewModel.isGenerating,
-            generationType: $viewModel.generationType,
-            isGenerateSheetPresented: $viewModel.isGenerateSheetPresented,
-            generatedText: $viewModel.generatedText,
-            generationError: $viewModel.generationError,
+            isGenerating: $detailViewModel.isGenerating,
+            generationType: $detailViewModel.generationType,
+            isGenerateSheetPresented: $detailViewModel.isGenerateSheetPresented,
+            generatedText: $detailViewModel.generatedText,
+            generationError: $detailViewModel.generationError,
             isInspectorPresented: $isInspectorPresented,
             inspectorDetent: $inspectorDetent,
-            selectedText: $viewModel.selectedText,
-            hasTextSelection: $viewModel.hasTextSelection,
+            selectedText: $detailViewModel.selectedText,
+            hasTextSelection: $detailViewModel.hasTextSelection,
             generateAction: { type, prompt in
-                await viewModel.generateText(type: type, prompt: prompt ?? "")
+                await detailViewModel.generateText(type: type, prompt: prompt ?? "")
             },
             applyAction: {
-                viewModel.applyGeneratedText(viewModel.generatedText)
+                detailViewModel.applyGeneratedText(detailViewModel.generatedText)
             },
             applyToSelectionAction: { text in
                 // Implement this method if needed
@@ -52,7 +52,7 @@ struct DocumentDetailView: View {
             }
         )
         .presentationDetents([.medium, .large], selection: $inspectorDetent)
-        
+
         // Extract each tab into a separate variable
         let writeTabView = writeTab
             .inspector(isPresented: $isInspectorPresented) {
@@ -62,43 +62,43 @@ struct DocumentDetailView: View {
                 Label("Write", systemImage: "pencil")
             }
             .tag(1)
-        
+
         let readTabView = readTab
             .tabItem {
                 Label("Read", systemImage: "book")
             }
             .tag(2)
-        
+
         let notesTabView = notesTab
             .tabItem {
                 Label("Notes", systemImage: "note.text")
             }
             .tag(3)
-        
-        return TabView(selection: $viewModel.selectedTab) {
+
+        return TabView(selection: $detailViewModel.selectedTab) {
             writeTabView
             readTabView
             notesTabView
         }
-        .onChange(of: viewModel.editedTitle) { _, newValue in
-            literatiViewModel.updateDocument(document, title: newValue)
+        .onChange(of: detailViewModel.editedTitle) { _, newValue in
+            viewModel.updateDocument(document, title: newValue)
         }
-        .onChange(of: viewModel.editedOutline) { _, newValue in
-            literatiViewModel.updateDocument(document, outline: newValue)
+        .onChange(of: detailViewModel.editedOutline) { _, newValue in
+            viewModel.updateDocument(document, outline: newValue)
         }
-        .onChange(of: viewModel.editedNotes) { _, newValue in
-            literatiViewModel.updateDocument(document, notes: newValue)
+        .onChange(of: detailViewModel.editedNotes) { _, newValue in
+            viewModel.updateDocument(document, notes: newValue)
         }
-        .onChange(of: viewModel.editedContent) { _, newValue in
-            literatiViewModel.updateDocument(document, content: newValue)
+        .onChange(of: detailViewModel.editedContent) { _, newValue in
+            viewModel.updateDocument(document, content: newValue)
         }
-        .onChange(of: viewModel.selectedCharacters) { _, newValue in
-            literatiViewModel.updateDocument(document, characterIds: newValue)
+        .onChange(of: detailViewModel.selectedCharacters) { _, newValue in
+            viewModel.updateDocument(document, characterIds: newValue)
         }
-        .onChange(of: viewModel.selectedLocations) { _, newValue in
-            literatiViewModel.updateDocument(document, locationIds: newValue)
+        .onChange(of: detailViewModel.selectedLocations) { _, newValue in
+            viewModel.updateDocument(document, locationIds: newValue)
         }
-        .navigationTitle(viewModel.editedTitle)
+        .navigationTitle(detailViewModel.editedTitle)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -109,29 +109,29 @@ struct DocumentDetailView: View {
             }
         }
     }
-    
+
     private var writeTab: some View {
-        WriteTab(viewModel: viewModel)
+        WriteTab(viewModel: detailViewModel)
     }
-    
+
     private var readTab: some View {
-        ReadTab(viewModel: viewModel)
+        ReadTab(viewModel: detailViewModel)
     }
-    
+
     private var notesTab: some View {
-        NotesTab(viewModel: viewModel)
+        NotesTab(viewModel: detailViewModel)
     }
 }
 
 #if DEBUG
 struct DocumentDetailViewPreview: PreviewProvider {
     static var previews: some View {
-        let document = LiteratiDocument()
+        var document = ManuscriptDocument()
         document.title = "Sample Project"
         document.author = "Sample Author"
-        let docItem = LiteratiDocument.Document(id: UUID(), title: "Sample Document", notes: "Sample notes", content: "Sample content")
-        
-        return DocumentDetailView(document: docItem, literatiViewModel: LiteratiViewModel(document: document))
+        let docItem = ManuscriptDocument.Document(id: UUID(), title: "Sample Document", notes: "Sample notes", content: "Sample content")
+
+        return DocumentDetailView(document: docItem, viewModel: DocumentViewModel())
     }
 }
-#endif 
+#endif

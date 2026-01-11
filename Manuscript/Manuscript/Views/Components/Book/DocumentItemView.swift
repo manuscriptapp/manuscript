@@ -2,8 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct DocumentItemView: View {
-    let document: LiteratiDocument.Document
-    @ObservedObject var literatiViewModel: LiteratiViewModel
+    let document: ManuscriptDocument.Document
+    @ObservedObject var viewModel: DocumentViewModel
     @Binding var detailSelection: DetailSelection?
     
     private let iconOptions: [(String, String)] = [
@@ -29,7 +29,7 @@ struct DocumentItemView: View {
         ("Target", "target")
     ]
     
-    private func colorForDocument(_ document: LiteratiDocument.Document) -> Color {
+    private func colorForDocument(_ document: ManuscriptDocument.Document) -> Color {
         let colorMap: [String: Color] = [
             "Yellow": .yellow,
             "Mint": .mint,
@@ -46,7 +46,7 @@ struct DocumentItemView: View {
     }
     
     private func updateIcon(_ iconName: String) {
-        literatiViewModel.updateDocumentIcon(document, iconName: iconName)
+        viewModel.updateDocumentIcon(document, iconName: iconName)
     }
     
     var body: some View {
@@ -60,14 +60,14 @@ struct DocumentItemView: View {
         #if !os(macOS)
         .swipeActions(edge: .trailing) {
             Button {
-                literatiViewModel.showRenameAlert(for: document)
+                viewModel.showRenameAlert(for: document)
             } label: {
                 Label("Rename", systemImage: "pencil")
             }
             .tint(.blue)
             
             Button(role: .destructive, action: {
-                literatiViewModel.deleteDocument(document)
+                viewModel.deleteDocument(document)
             }) {
                 Label("Delete", systemImage: "trash")
             }
@@ -95,13 +95,13 @@ struct DocumentItemView: View {
             Divider()
             
             Button(action: {
-                literatiViewModel.showRenameAlert(for: document)
+                viewModel.showRenameAlert(for: document)
             }) {
                 Label("Rename Document", systemImage: "pencil")
             }
             
             Button(role: .destructive, action: {
-                literatiViewModel.deleteDocument(document)
+                viewModel.deleteDocument(document)
             }) {
                 Label("Delete Document", systemImage: "trash")
             }
@@ -132,6 +132,6 @@ struct DocumentItemView: View {
     
     private func updateNoteColor(_ newColor: Color) {
         let colorName = colorOptions.first { $0.1 == newColor }?.0 ?? "Brown"
-        literatiViewModel.updateDocumentColor(document, colorName: colorName)
+        viewModel.updateDocumentColor(document, colorName: colorName)
     }
 }

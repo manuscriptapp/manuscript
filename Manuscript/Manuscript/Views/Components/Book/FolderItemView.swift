@@ -1,27 +1,27 @@
 import SwiftUI
 
 struct FolderItemView: View {
-    let folder: LiteratiFolder
-    @ObservedObject var literatiViewModel: LiteratiViewModel
+    let folder: ManuscriptFolder
+    @ObservedObject var viewModel: DocumentViewModel
     @Binding var detailSelection: DetailSelection?
-    
+
     private struct RecursiveFolderView: View {
-        let folder: LiteratiFolder
-        @ObservedObject var literatiViewModel: LiteratiViewModel
+        let folder: ManuscriptFolder
+        @ObservedObject var viewModel: DocumentViewModel
         @Binding var detailSelection: DetailSelection?
         @State private var isAddFolderSheetPresented = false
         @State private var isAddDocumentSheetPresented = false
         @State private var isExpanded: Bool
-        
-        init(folder: LiteratiFolder, literatiViewModel: LiteratiViewModel, detailSelection: Binding<DetailSelection?>) {
+
+        init(folder: ManuscriptFolder, viewModel: DocumentViewModel, detailSelection: Binding<DetailSelection?>) {
             self.folder = folder
-            self.literatiViewModel = literatiViewModel
+            self.viewModel = viewModel
             self._detailSelection = detailSelection
             // Only auto-expand if this is the root folder
-            _isExpanded = State(initialValue: folder.id == literatiViewModel.document.rootFolder.id)
+            _isExpanded = State(initialValue: folder.id == viewModel.document.rootFolder.id)
         }
         
-        private func colorForDocument(_ document: LiteratiDocument.Document) -> Color {
+        private func colorForDocument(_ document: ManuscriptDocument.Document) -> Color {
             let colorMap: [String: Color] = [
                 "Yellow": .yellow,
                 "Mint": .mint,
@@ -37,9 +37,9 @@ struct FolderItemView: View {
             return colorMap[document.colorName] ?? .brown
         }
         
-        private func dominantColor(for folder: LiteratiFolder) -> Color {
+        private func dominantColor(for folder: ManuscriptFolder) -> Color {
             // If it's the root folder, use accent color
-            if folder.id == literatiViewModel.document.rootFolder.id {
+            if folder.id == viewModel.document.rootFolder.id {
                 return .accent
             }
             
@@ -66,7 +66,7 @@ struct FolderItemView: View {
         }
         
         // Helper computed property to check if this folder is selected
-        private func isFolderSelected(_ folder: LiteratiFolder) -> Bool {
+        private func isFolderSelected(_ folder: ManuscriptFolder) -> Bool {
             if case .folder(let selectedFolder) = detailSelection, selectedFolder.id == folder.id {
                 return true
             }
@@ -79,7 +79,7 @@ struct FolderItemView: View {
                 ForEach(folder.documents) { document in
                     DocumentItemView(
                         document: document,
-                        literatiViewModel: literatiViewModel,
+                        viewModel: viewModel,
                         detailSelection: $detailSelection
                     )
                 }
@@ -88,7 +88,7 @@ struct FolderItemView: View {
                 ForEach(folder.subfolders) { subfolder in
                     RecursiveFolderView(
                         folder: subfolder,
-                        literatiViewModel: literatiViewModel,
+                        viewModel: viewModel,
                         detailSelection: $detailSelection
                     )
                 }
@@ -107,14 +107,14 @@ struct FolderItemView: View {
                 #if os(macOS)
                 .contextMenu {
                     Button(action: {
-                        literatiViewModel.showRenameAlert(for: folder)
+                        viewModel.showRenameAlert(for: folder)
                     }) {
                         Label("Rename Folder", systemImage: "pencil")
                     }
                     
-                    if folder.id != literatiViewModel.document.rootFolder.id {
+                    if folder.id != viewModel.document.rootFolder.id {
                         Button(role: .destructive, action: {
-                            literatiViewModel.deleteFolder(folder)
+                            viewModel.deleteFolder(folder)
                         }) {
                             Label("Delete Folder", systemImage: "trash")
                         }
@@ -143,14 +143,14 @@ struct FolderItemView: View {
                     Divider()
                     
                     Button(action: {
-                        literatiViewModel.showRenameAlert(for: folder)
+                        viewModel.showRenameAlert(for: folder)
                     }) {
                         Label("Rename Folder", systemImage: "pencil")
                     }
                     
-                    if folder.id != literatiViewModel.document.rootFolder.id {
+                    if folder.id != viewModel.document.rootFolder.id {
                         Button(role: .destructive, action: {
-                            literatiViewModel.deleteFolder(folder)
+                            viewModel.deleteFolder(folder)
                         }) {
                             Label("Delete Folder", systemImage: "trash")
                         }
@@ -158,15 +158,15 @@ struct FolderItemView: View {
                 }
                 .swipeActions(edge: .trailing) {
                     Button(action: {
-                        literatiViewModel.showRenameAlert(for: folder)
+                        viewModel.showRenameAlert(for: folder)
                     }) {
                         Label("Rename Folder", systemImage: "pencil")
                     }
                     .tint(.blue)
                     
-                    if folder.id != literatiViewModel.document.rootFolder.id {
+                    if folder.id != viewModel.document.rootFolder.id {
                         Button(role: .destructive, action: {
-                            literatiViewModel.deleteFolder(folder)
+                            viewModel.deleteFolder(folder)
                         }) {
                             Label("Delete", systemImage: "trash")
                         }
@@ -175,16 +175,14 @@ struct FolderItemView: View {
                 #endif
                 .sheet(isPresented: $isAddFolderSheetPresented) {
                     AddFolderSheet(
-                        document: literatiViewModel.document,
-                        initialFolder: folder,
-                        literatiViewModel: literatiViewModel
+                        viewModel: viewModel,
+                        initialFolder: folder
                     )
                 }
                 .sheet(isPresented: $isAddDocumentSheetPresented) {
                     AddDocumentSheet(
-                        document: literatiViewModel.document,
-                        initialFolder: folder,
-                        literatiViewModel: literatiViewModel
+                        viewModel: viewModel,
+                        initialFolder: folder
                     )
                 }
             }
@@ -194,7 +192,7 @@ struct FolderItemView: View {
     var body: some View {
         RecursiveFolderView(
             folder: folder,
-            literatiViewModel: literatiViewModel,
+            viewModel: viewModel,
             detailSelection: $detailSelection
         )
     }

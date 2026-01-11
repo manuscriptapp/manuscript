@@ -41,8 +41,8 @@ struct ChatMessage: Identifiable {
 }
 
 struct DocumentInspectorView: View {
-    let document: LiteratiDocument.Document
-    let literatiViewModel: LiteratiViewModel
+    let document: ManuscriptDocument.Document
+    let documentViewModel: DocumentViewModel
     @Binding var editedTitle: String
     @Binding var editedOutline: String
     @Binding var isPromptExpanded: Bool
@@ -209,12 +209,12 @@ struct DocumentInspectorView: View {
             stylePrompt += "\n\nInclude: "
             
             if !selectedCharacters.isEmpty {
-                let characterNames = literatiViewModel.document.characters.filter { selectedCharacters.contains($0.id) }.map { $0.name }.joined(separator: ", ")
+                let characterNames = documentViewModel.document.characters.filter { selectedCharacters.contains($0.id) }.map { $0.name }.joined(separator: ", ")
                 stylePrompt += "Characters: \(characterNames). "
             }
             
             if !selectedLocations.isEmpty {
-                let locationNames = literatiViewModel.document.locations.filter { selectedLocations.contains($0.id) }.map { $0.name }.joined(separator: ", ")
+                let locationNames = documentViewModel.document.locations.filter { selectedLocations.contains($0.id) }.map { $0.name }.joined(separator: ", ")
                 stylePrompt += "Locations: \(locationNames)."
             }
         }
@@ -236,21 +236,21 @@ struct DocumentInspectorView: View {
         case "Dialogue":
             prompt = "Write realistic dialogue between characters that reveals personality and advances the plot."
             if !selectedCharacters.isEmpty {
-                let characterNames = literatiViewModel.document.characters.filter { selectedCharacters.contains($0.id) }.map { $0.name }.joined(separator: ", ")
+                let characterNames = documentViewModel.document.characters.filter { selectedCharacters.contains($0.id) }.map { $0.name }.joined(separator: ", ")
                 prompt += "\n\nInclude these characters in the conversation: \(characterNames)."
             }
             
         case "Environment":
             prompt = "Create a vivid, sensory description of the environment that establishes mood and atmosphere."
             if !selectedLocations.isEmpty {
-                let locationNames = literatiViewModel.document.locations.filter { selectedLocations.contains($0.id) }.map { $0.name }.joined(separator: ", ")
+                let locationNames = documentViewModel.document.locations.filter { selectedLocations.contains($0.id) }.map { $0.name }.joined(separator: ", ")
                 prompt += "\n\nDescribe this location in detail: \(locationNames)."
             }
             
         case "Character Development":
             prompt = "Develop character depth through internal thoughts, motivations, and emotional reactions."
             if !selectedCharacters.isEmpty {
-                let characterNames = literatiViewModel.document.characters.filter { selectedCharacters.contains($0.id) }.map { $0.name }.joined(separator: ", ")
+                let characterNames = documentViewModel.document.characters.filter { selectedCharacters.contains($0.id) }.map { $0.name }.joined(separator: ", ")
                 prompt += "\n\nFocus on developing these characters: \(characterNames)."
             }
             
@@ -666,13 +666,13 @@ struct DocumentInspectorView: View {
                 // Characters and Locations
                 VStack(alignment: .leading, spacing: 12) {
                     CharacterSelectionView(
-                        characters: literatiViewModel.document.characters.sorted(by: { $0.name < $1.name }),
+                        characters: documentViewModel.document.characters.sorted(by: { $0.name < $1.name }),
                         selectedCharacters: $selectedCharacters,
                         isExpanded: .constant(true)
                     )
                     
                     LocationSelectionView(
-                        locations: literatiViewModel.document.locations.sorted(by: { $0.name < $1.name }),
+                        locations: documentViewModel.document.locations.sorted(by: { $0.name < $1.name }),
                         selectedLocations: $selectedLocations,
                         isExpanded: .constant(true)
                     )
@@ -725,34 +725,34 @@ struct ChatBubbleView: View {
 }
 
 #if DEBUG
-struct DocumentInspectorViewPreview: PreviewProvider {
-    static var previews: some View {
-        let document = LiteratiDocument()
-        document.title = "Sample Project"
-        document.author = "Sample Author"
-        let docItem = LiteratiDocument.Document(id: UUID(), title: "Sample Document", notes: "Sample notes", content: "Sample content")
-        
-        return DocumentInspectorView(
-            document: docItem,
-            literatiViewModel: LiteratiViewModel(document: document),
-            editedTitle: .constant("Sample Title"),
-            editedOutline: .constant("Sample Outline"),
-            isPromptExpanded: .constant(false),
-            selectedCharacters: .constant(Set<UUID>()),
-            selectedLocations: .constant(Set<UUID>()),
-            isGenerating: .constant(false),
-            generationType: .constant(.content),
-            isGenerateSheetPresented: .constant(false),
-            generatedText: .constant(""),
-            generationError: .constant(nil),
-            isInspectorPresented: .constant(true),
-            inspectorDetent: .constant(.medium),
-            selectedText: .constant(""),
-            hasTextSelection: .constant(false),
-            generateAction: { _, _ in print("hej") },
-            applyAction: { print("apply") },
-            applyToSelectionAction: { _ in }
-        )
-    }
+#Preview {
+    let docItem = ManuscriptDocument.Document(
+        title: "Sample Document",
+        notes: "Sample notes",
+        content: "Sample content"
+    )
+    let viewModel = DocumentViewModel()
+
+    DocumentInspectorView(
+        document: docItem,
+        documentViewModel: viewModel,
+        editedTitle: .constant("Sample Title"),
+        editedOutline: .constant("Sample Outline"),
+        isPromptExpanded: .constant(false),
+        selectedCharacters: .constant(Set<UUID>()),
+        selectedLocations: .constant(Set<UUID>()),
+        isGenerating: .constant(false),
+        generationType: .constant(.content),
+        isGenerateSheetPresented: .constant(false),
+        generatedText: .constant(""),
+        generationError: .constant(nil),
+        isInspectorPresented: .constant(true),
+        inspectorDetent: .constant(.medium),
+        selectedText: .constant(""),
+        hasTextSelection: .constant(false),
+        generateAction: { _, _ in print("generate") },
+        applyAction: { print("apply") },
+        applyToSelectionAction: { _ in }
+    )
 }
 #endif 

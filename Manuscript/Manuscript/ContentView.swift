@@ -4,9 +4,9 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     @StateObject private var viewModel: AppViewModel
-    @State private var document: LiteratiDocument
+    @State private var document: ManuscriptDocument
     
-    init(document: LiteratiDocument) {
+    init(document: ManuscriptDocument) {
         self.document = document
         _viewModel = StateObject(wrappedValue: AppViewModel(document: document))
     }
@@ -15,20 +15,20 @@ struct ContentView: View {
         Group {
 #if os(iOS)
             IOSContentView(
-                literatiViewModel: viewModel.literatiViewModel,
+                manuscriptViewModel: viewModel.manuscriptViewModel,
                 detailSelection: $viewModel.detailSelection,
                 isAddBookSheetPresented: $viewModel.isAddBookSheetPresented
             )
 #else
             MacOSContentView(
-                literatiViewModel: viewModel.literatiViewModel,
+                manuscriptViewModel: viewModel.manuscriptViewModel,
                 detailSelection: $viewModel.detailSelection,
                 isAddBookSheetPresented: $viewModel.isAddBookSheetPresented
             )
 #endif
         }
 //        .sheet(isPresented: $viewModel.isAddBookSheetPresented) {
-//            NewProjectSheet(literatiViewModel: viewModel.literatiViewModel)
+//            NewProjectSheet(manuscriptViewModel: viewModel.manuscriptViewModel)
 //        }
         .sheet(isPresented: $viewModel.showOnboarding) {
             OnboardingView()
@@ -64,23 +64,22 @@ extension Color {
 }
 
 #if DEBUG
-extension LiteratiDocument {
-    // Convenience initializer for previews
-    convenience init(title: String, author: String) {
-        self.init()
-        self.title = title
-        self.author = author
+extension ManuscriptDocument {
+    // Factory method for previews (ManuscriptDocument is now a struct)
+    static func preview(title: String, author: String) -> ManuscriptDocument {
+        var doc = ManuscriptDocument()
+        doc.title = title
+        doc.author = author
+        return doc
     }
 }
 
 #Preview("With Document") {
-    let document = LiteratiDocument(title: "Preview Document", author: "Preview Author")
-    ContentView(document: document)
+    ContentView(document: ManuscriptDocument.preview(title: "Preview Document", author: "Preview Author"))
 }
 
 #Preview("Empty Document") {
-    let document = LiteratiDocument(title: "Empty Document", author: "Preview Author")
-    ContentView(document: document)
+    ContentView(document: ManuscriptDocument.preview(title: "Empty Document", author: "Preview Author"))
 }
 #endif
 

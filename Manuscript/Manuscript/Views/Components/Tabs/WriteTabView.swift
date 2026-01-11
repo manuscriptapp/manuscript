@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WriteTabView: View {
-    let document: LiteratiDocument.Document
+    let document: ManuscriptDocument.Document
     @Binding var editedContent: String
     @Binding var isGenerating: Bool
     @Binding var generationType: DocumentDetailViewModel.GenerationType
@@ -73,22 +73,21 @@ struct WriteTabView: View {
 }
 
 #if DEBUG
-struct WriteTabViewPreview: PreviewProvider {
-    static var previews: some View {
-        let document = LiteratiDocument()
-        document.title = "Sample Project"
-        document.author = "Sample Author"
-        let docItem = LiteratiDocument.Document(id: UUID(), title: "Sample Document", notes: "Sample notes", content: "Sample content")
-        
-        return WriteTabView(
-            document: docItem,
-            editedContent: .constant("Sample content"),
-            isGenerating: .constant(false),
-            generationType: .constant(.content),
-            showResult: .constant(false),
-            generatedText: .constant(""),
-            generationError: .constant(nil)
-        )
-    }
+#Preview {
+    let docItem = ManuscriptDocument.Document(
+        title: "Sample Document",
+        notes: "Sample notes",
+        content: "Sample content"
+    )
+
+    WriteTabView(
+        document: docItem,
+        editedContent: .constant("Sample content"),
+        isGenerating: .constant(false),
+        generationType: .constant(.content),
+        showResult: .constant(false),
+        generatedText: .constant(""),
+        generationError: .constant(nil)
+    )
 }
 #endif 

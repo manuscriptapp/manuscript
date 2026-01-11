@@ -1,23 +1,19 @@
 import SwiftUI
 
+// MARK: - Legacy view (deprecated)
+// This view is no longer used in the main app flow.
+// The app now uses ManuscriptProjectView with DocumentGroup.
+
 struct MacOSContentView: View {
-    @ObservedObject var literatiViewModel: LiteratiViewModel
+    @ObservedObject var manuscriptViewModel: ManuscriptViewModel
     @Binding var detailSelection: DetailSelection?
     @Binding var isAddBookSheetPresented: Bool
-    
+
     var body: some View {
-        NavigationSplitView {
-            VStack {
-                BookView(
-                    document: $literatiViewModel.document,
-                    literatiViewModel: literatiViewModel,
-                    detailSelection: $detailSelection
-                )
-                .frame(minWidth: 190)
-            }
-        } detail: {
-            DetailContentView(selection: detailSelection)
-        }
+        ContentUnavailableView(
+            "Legacy View",
+            systemImage: "exclamationmark.triangle",
+            description: Text("This view has been deprecated. Please use ManuscriptProjectView instead.")
+        )
     }
 }
-

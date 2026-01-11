@@ -2,18 +2,18 @@ import SwiftUI
 import SwiftData
 
 struct AddFolderSheet: View {
-    @ObservedObject var literatiViewModel: LiteratiViewModel
+    @ObservedObject var viewModel: DocumentViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
-    @State private var selectedFolder: LiteratiFolder
-    
-    init(document: LiteratiDocument, initialFolder: LiteratiFolder, literatiViewModel: LiteratiViewModel) {
-        self.literatiViewModel = literatiViewModel
-        self._selectedFolder = State(initialValue: initialFolder)
+    @State private var selectedFolder: ManuscriptFolder
+
+    init(viewModel: DocumentViewModel, initialFolder: ManuscriptFolder? = nil) {
+        self.viewModel = viewModel
+        self._selectedFolder = State(initialValue: initialFolder ?? viewModel.document.rootFolder)
     }
-    
+
     @ViewBuilder
-    func folderPickerContent(_ folder: LiteratiFolder, level: Int = 0) -> AnyView {
+    func folderPickerContent(_ folder: ManuscriptFolder, level: Int = 0) -> AnyView {
         AnyView(
             Group {
                 HStack {
@@ -38,7 +38,7 @@ struct AddFolderSheet: View {
                 
                 Section("Location") {
                     Picker("Parent Folder", selection: $selectedFolder) {
-                        folderPickerContent(literatiViewModel.document.rootFolder)
+                        folderPickerContent(viewModel.document.rootFolder)
                     }
                     .pickerStyle(.menu)
                 }
@@ -53,7 +53,7 @@ struct AddFolderSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        literatiViewModel.addFolder(to: selectedFolder, title: title)
+                        viewModel.addFolder(to: selectedFolder, title: title)
                         dismiss()
                     }
                     .disabled(title.isEmpty)

@@ -1,13 +1,13 @@
 import SwiftUI
 
-struct LiteratiCharacterDetailView: View {
+struct ManuscriptCharacterDetailView: View {
     @ObservedObject var documentManager: DocumentManager
-    let character: LiteratiCharacter
+    let character: ManuscriptCharacter
     @State private var editedName: String
     @State private var editedAge: Int?
-    @State private var editedGender: LiteratiCharacterGender
+    @State private var editedGender: ManuscriptCharacterGender
     
-    init(documentManager: DocumentManager, character: LiteratiCharacter) {
+    init(documentManager: DocumentManager, character: ManuscriptCharacter) {
         self.documentManager = documentManager
         self.character = character
         self._editedName = State(initialValue: character.name)
@@ -22,7 +22,7 @@ struct LiteratiCharacterDetailView: View {
                     .onChange(of: editedName) { updateCharacter() }
                 
                 Picker("Gender", selection: $editedGender) {
-                    ForEach(LiteratiCharacterGender.allCases, id: \.self) { gender in
+                    ForEach(ManuscriptCharacterGender.allCases, id: \.self) { gender in
                         Text(gender.rawValue).tag(gender)
                     }
                 }

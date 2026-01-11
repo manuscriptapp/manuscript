@@ -59,7 +59,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 }
 
 struct AddLocationSheet: View {
-    @ObservedObject var literatiViewModel: LiteratiViewModel
+    @ObservedObject var viewModel: DocumentViewModel
     @Environment(\.dismiss) private var dismiss
     @StateObject private var locationManager = LocationManager()
     @State private var name = ""
@@ -117,7 +117,7 @@ struct AddLocationSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        literatiViewModel.addLocation(name: name, latitude: coordinate.latitude, longitude: coordinate.longitude)
+                        viewModel.addLocation(name: name, latitude: coordinate.latitude, longitude: coordinate.longitude)
                         dismiss()
                     }
                     .disabled(name.isEmpty)
@@ -128,7 +128,7 @@ struct AddLocationSheet: View {
         .onAppear {
             locationManager.requestLocationPermission()
         }
-        .onChange(of: locationManager.location) { newLocation in
+        .onChange(of: locationManager.location) { _, newLocation in
             if let location = newLocation {
                 position = .region(MKCoordinateRegion(
                     center: location.coordinate,

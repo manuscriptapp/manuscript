@@ -13,15 +13,15 @@ final class AppViewModel: ObservableObject {
     @Published var isAddLocationSheetPresented = false
     @Published var showOnboarding = false
     
-    let literatiViewModel: LiteratiViewModel
+    let manuscriptViewModel: ManuscriptViewModel
     @AppStorage("hasSeenOnboarding") private var _hasSeenOnboarding = false
     
     var hasSeenOnboarding: Bool {
         _hasSeenOnboarding
     }
     
-    init(document: LiteratiDocument) {
-        self.literatiViewModel = LiteratiViewModel(document: document)
+    init(document: ManuscriptDocument) {
+        self.manuscriptViewModel = ManuscriptViewModel(document: document)
         
         // Set default detail selection if needed
         self.detailSelection = .projectInfo

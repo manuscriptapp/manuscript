@@ -2,21 +2,21 @@ import SwiftUI
 import SwiftData
 
 struct CharacterDetailView: View {
-    let character: LiteratiCharacter
-    @ObservedObject var documentManager: DocumentManager
+    let character: ManuscriptCharacter
+    @ObservedObject var viewModel: DocumentViewModel
     @State private var isEditing = false
     @State private var editedName: String
     @State private var editedAge: Int?
-    @State private var editedGender: LiteratiCharacterGender
-    
-    init(character: LiteratiCharacter, documentManager: DocumentManager) {
+    @State private var editedGender: ManuscriptCharacterGender
+
+    init(character: ManuscriptCharacter, viewModel: DocumentViewModel) {
         self.character = character
-        self.documentManager = documentManager
+        self.viewModel = viewModel
         _editedName = State(initialValue: character.name)
         _editedAge = State(initialValue: character.age)
         _editedGender = State(initialValue: character.gender)
     }
-    
+
     var body: some View {
         FormContainerView {
             VStack(alignment: .leading, spacing: 16) {
@@ -35,19 +35,19 @@ struct CharacterDetailView: View {
                             }
                         }
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Age:")
                             .font(.subheadline)
                         TextField("Age", value: $editedAge, format: .number)
                             .textFieldStyle(.roundedBorder)
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Gender:")
                             .font(.subheadline)
                         Picker("Gender", selection: $editedGender) {
-                            ForEach(LiteratiCharacterGender.allCases, id: \.self) { gender in
+                            ForEach(ManuscriptCharacterGender.allCases, id: \.self) { gender in
                                 Text(gender.rawValue).tag(gender)
                             }
                         }
@@ -56,9 +56,9 @@ struct CharacterDetailView: View {
                 } else {
                     Text("Character: \(character.name)")
                         .font(.title)
-                    
+
                     Divider()
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         if let age = character.age {
                             Text("Age: \(age)")
@@ -67,16 +67,16 @@ struct CharacterDetailView: View {
                         Text("Gender: \(character.gender.rawValue)")
                             .font(.body)
                     }
-                    
+
                     if !character.appearsInDocumentIds.isEmpty {
                         Divider()
-                        
+
                         Text("Appears in:")
                             .font(.headline)
                             .padding(.top, 8)
-                        
+
                         ForEach(character.appearsInDocumentIds, id: \.self) { docId in
-                            if let doc = documentManager.findDocument(withId: docId) {
+                            if let doc = viewModel.findDocument(withId: docId) {
                                 HStack {
                                     Image(systemName: doc.iconName)
                                         .foregroundStyle(Color(doc.colorName.lowercased()))
@@ -94,7 +94,7 @@ struct CharacterDetailView: View {
                 Text(character.name)
                     .font(.headline)
             }
-            
+
             ToolbarItem(placement: .primaryAction) {
                 Button(isEditing ? "Save" : "Edit") {
                     if isEditing {
@@ -103,7 +103,7 @@ struct CharacterDetailView: View {
                     isEditing.toggle()
                 }
             }
-            
+
             if isEditing {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -114,9 +114,9 @@ struct CharacterDetailView: View {
         }
         .navigationBarBackButtonHidden(isEditing)
     }
-    
+
     private func saveChanges() {
-        documentManager.updateCharacter(
+        viewModel.updateCharacter(
             character,
             name: editedName,
             age: editedAge,
@@ -124,7 +124,7 @@ struct CharacterDetailView: View {
         )
         isEditing = false
     }
-    
+
     private func cancelEditing() {
         editedName = character.name
         editedAge = character.age
@@ -135,14 +135,13 @@ struct CharacterDetailView: View {
 
 #if DEBUG
 #Preview {
-    let documentManager = DocumentManager(document: LiteratiDocument(title: "Test Document", author: "Test"))
-    let character = LiteratiCharacter(name: "Aria Windweaver", age: 18, gender: .female)
-    
+    let character = ManuscriptCharacter(name: "Aria Windweaver", age: 18, gender: .female)
+
     NavigationStack {
         CharacterDetailView(
             character: character,
-            documentManager: documentManager
+            viewModel: DocumentViewModel()
         )
     }
 }
-#endif 
+#endif

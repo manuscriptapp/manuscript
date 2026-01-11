@@ -6,10 +6,10 @@ enum DetailSelection: Hashable {
     case projectInfo
     case characters
     case locations
-    case folder(LiteratiFolder)
-    case document(LiteratiDocument.Document)
-    case character(LiteratiCharacter)
-    case location(LiteratiLocation)
+    case folder(ManuscriptFolder)
+    case document(ManuscriptDocument.Document)
+    case character(ManuscriptCharacter)
+    case location(ManuscriptLocation)
     
     // Custom Hashable implementation
     func hash(into hasher: inout Hasher) {

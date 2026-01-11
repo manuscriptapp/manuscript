@@ -4,8 +4,8 @@ import Combine
 
 @MainActor
 class DocumentDetailViewModel: ObservableObject {
-    let document: LiteratiDocument.Document
-    let literatiViewModel: LiteratiViewModel
+    let document: ManuscriptDocument.Document
+    let documentViewModel: DocumentViewModel
     @Published var editedTitle: String
     @Published var editedOutline: String
     @Published var editedNotes: String
@@ -20,7 +20,7 @@ class DocumentDetailViewModel: ObservableObject {
     @Published var generatedText: String = ""
     @Published var generationType: GenerationType = .outline
     @Published var isGenerateSheetPresented: Bool = false
-    
+
     // Selected text tracking
     @Published var selectedText: String = "" {
         didSet {
@@ -30,20 +30,20 @@ class DocumentDetailViewModel: ObservableObject {
         }
     }
     @Published var hasTextSelection: Bool = false
-    
+
     // Character and location selection
     @Published var selectedCharacters: [UUID] = []
     @Published var selectedLocations: [UUID] = []
-    
+
     enum GenerationType {
         case outline
         case content
         case notes
     }
-    
-    init(document: LiteratiDocument.Document, literatiViewModel: LiteratiViewModel) {
+
+    init(document: ManuscriptDocument.Document, documentViewModel: DocumentViewModel) {
         self.document = document
-        self.literatiViewModel = literatiViewModel
+        self.documentViewModel = documentViewModel
         self.editedTitle = document.title
         self.editedOutline = document.outline
         self.editedNotes = document.notes
@@ -51,25 +51,25 @@ class DocumentDetailViewModel: ObservableObject {
         self.selectedCharacters = document.characterIds
         self.selectedLocations = document.locationIds
     }
-    
-    var characters: [LiteratiCharacter] {
-        return literatiViewModel.document.characters.filter { selectedCharacters.contains($0.id) }
+
+    var characters: [ManuscriptCharacter] {
+        return documentViewModel.document.characters.filter { selectedCharacters.contains($0.id) }
     }
-    
-    var locations: [LiteratiLocation] {
-        return literatiViewModel.document.locations.filter { selectedLocations.contains($0.id) }
+
+    var locations: [ManuscriptLocation] {
+        return documentViewModel.document.locations.filter { selectedLocations.contains($0.id) }
     }
-    
-    var availableCharacters: [LiteratiCharacter] {
-        return literatiViewModel.document.characters
+
+    var availableCharacters: [ManuscriptCharacter] {
+        return documentViewModel.document.characters
     }
-    
-    var availableLocations: [LiteratiLocation] {
-        return literatiViewModel.document.locations
+
+    var availableLocations: [ManuscriptLocation] {
+        return documentViewModel.document.locations
     }
-    
+
     func saveChanges() {
-        literatiViewModel.updateDocument(
+        documentViewModel.updateDocument(
             document,
             title: editedTitle,
             outline: editedOutline,
@@ -79,8 +79,8 @@ class DocumentDetailViewModel: ObservableObject {
             locationIds: selectedLocations
         )
     }
-    
-    func toggleCharacter(_ character: LiteratiCharacter) {
+
+    func toggleCharacter(_ character: ManuscriptCharacter) {
         if selectedCharacters.contains(character.id) {
             selectedCharacters.removeAll { $0 == character.id }
         } else {
@@ -88,8 +88,8 @@ class DocumentDetailViewModel: ObservableObject {
         }
         saveChanges()
     }
-    
-    func toggleLocation(_ location: LiteratiLocation) {
+
+    func toggleLocation(_ location: ManuscriptLocation) {
         if selectedLocations.contains(location.id) {
             selectedLocations.removeAll { $0 == location.id }
         } else {
@@ -97,26 +97,26 @@ class DocumentDetailViewModel: ObservableObject {
         }
         saveChanges()
     }
-    
+
     // MARK: - Text Generation
-    
+
     func generateText(type: GenerationType, prompt: String) async -> String {
         isGenerating = true
         generationType = type
-        
+
         do {
             // Call your AI service here
             // For now, we'll just simulate a delay
             try await Task.sleep(nanoseconds: 2_000_000_000)
-            
+
             // Simulate generated text
             let result = "This is simulated generated text based on your prompt: \(prompt)"
-            
+
             await MainActor.run {
                 generatedText = result
                 isGenerating = false
             }
-            
+
             return result
         } catch {
             await MainActor.run {
@@ -126,7 +126,7 @@ class DocumentDetailViewModel: ObservableObject {
             return ""
         }
     }
-    
+
     func applyGeneratedText(_ text: String) {
         switch generationType {
         case .content:
@@ -148,7 +148,7 @@ class DocumentDetailViewModel: ObservableObject {
         case .notes:
             editedNotes += "\n\n" + text
         }
-        
+
         saveChanges()
         generatedText = ""
     }
@@ -159,4 +159,4 @@ enum GenerationStyle {
     case casual
     case fastPaced
     case detailed
-} 
+}

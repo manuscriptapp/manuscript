@@ -9,7 +9,7 @@ import AppKit
 #endif
 
 struct ExportView: View {
-    let document: LiteratiDocument
+    let document: ManuscriptDocument
     @State private var isExporting = false
     @State private var exportError: Error?
     @State private var showShareSheet = false
@@ -155,7 +155,7 @@ struct ExportView: View {
         #endif
     }
     
-    private func addFolderContentToPDF(folder: LiteratiFolder, pdfDocument: PDFDocument, startingPage: inout Int) async throws {
+    private func addFolderContentToPDF(folder: ManuscriptFolder, pdfDocument: PDFDocument, startingPage: inout Int) async throws {
         // Add documents in this folder
         for document in folder.documents.sorted(by: { $0.order < $1.order }) {
             if let page = createContentPage(for: document) {
@@ -170,7 +170,7 @@ struct ExportView: View {
         }
     }
     
-    private func createContentPage(for document: LiteratiDocument.Document) -> PDFPage? {
+    private func createContentPage(for document: ManuscriptDocument.Document) -> PDFPage? {
         #if os(iOS)
         let format = UIGraphicsPDFRendererFormat()
         let pageRect = CGRect(x: 0, y: 0, width: 612, height: 792) // US Letter size
@@ -276,9 +276,11 @@ struct ExportButton: View {
 
 #if DEBUG
 #Preview {
-    let document = LiteratiDocument()
-    document.title = "Sample Project"
-    document.author = "Sample Author"
-    return ExportView(document: document)
+    ExportView(document: {
+        var doc = ManuscriptDocument()
+        doc.title = "Sample Project"
+        doc.author = "Sample Author"
+        return doc
+    }())
 }
 #endif 

@@ -2,21 +2,21 @@ import SwiftUI
 import SwiftData
 
 struct AddDocumentSheet: View {
-    @ObservedObject var literatiViewModel: LiteratiViewModel
+    @ObservedObject var viewModel: DocumentViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var outline = ""
     @State private var notes = ""
     @State private var content = ""
-    @State private var selectedFolder: LiteratiFolder
-    
-    init(document: LiteratiDocument, initialFolder: LiteratiFolder, literatiViewModel: LiteratiViewModel) {
-        self.literatiViewModel = literatiViewModel
-        self._selectedFolder = State(initialValue: initialFolder)
+    @State private var selectedFolder: ManuscriptFolder
+
+    init(viewModel: DocumentViewModel, initialFolder: ManuscriptFolder? = nil) {
+        self.viewModel = viewModel
+        self._selectedFolder = State(initialValue: initialFolder ?? viewModel.document.rootFolder)
     }
-    
+
     @ViewBuilder
-    func folderPickerContent(_ folder: LiteratiFolder, level: Int = 0) -> AnyView {
+    func folderPickerContent(_ folder: ManuscriptFolder, level: Int = 0) -> AnyView {
         AnyView(
             Group {
                 HStack {
@@ -41,7 +41,7 @@ struct AddDocumentSheet: View {
                 
                 Section("Location") {
                     Picker("Folder", selection: $selectedFolder) {
-                        folderPickerContent(literatiViewModel.document.rootFolder)
+                        folderPickerContent(viewModel.document.rootFolder)
                     }
                     .pickerStyle(.menu)
                 }
@@ -71,7 +71,7 @@ struct AddDocumentSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        literatiViewModel.addDocument(
+                        viewModel.addDocument(
                             to: selectedFolder,
                             title: title,
                             outline: outline,

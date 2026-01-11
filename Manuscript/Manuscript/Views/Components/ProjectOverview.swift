@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ProjectOverview: View {
-    @ObservedObject var documentManager: DocumentManager
+    @ObservedObject var viewModel: DocumentViewModel
     
     var body: some View {
         VStack {
@@ -10,7 +10,7 @@ struct ProjectOverview: View {
                 .foregroundColor(.secondary)
                 .padding()
             
-            Text(documentManager.document.title.isEmpty ? "Untitled Project" : documentManager.document.title)
+            Text(viewModel.document.title.isEmpty ? "Untitled Project" : viewModel.document.title)
                 .font(.title)
             
             Text("Select an item from the sidebar to begin editing")
@@ -22,21 +22,21 @@ struct ProjectOverview: View {
                 HStack {
                     Text("Documents:")
                     Spacer()
-                    Text("\(documentManager.document.rootFolder.totalDocumentCount)")
+                    Text("\(viewModel.document.rootFolder.totalDocumentCount)")
                         .foregroundColor(.secondary)
                 }
                 
                 HStack {
                     Text("Characters:")
                     Spacer()
-                    Text("\(documentManager.document.characters.count)")
+                    Text("\(viewModel.document.characters.count)")
                         .foregroundColor(.secondary)
                 }
                 
                 HStack {
                     Text("Locations:")
                     Spacer()
-                    Text("\(documentManager.document.locations.count)")
+                    Text("\(viewModel.document.locations.count)")
                         .foregroundColor(.secondary)
                 }
             }

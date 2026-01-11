@@ -30,7 +30,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		E629AD902F13CBC700C8831E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		E629AD902F13CBC700C8831E /* Exceptions for "manuscript" folder in "manuscript" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -43,7 +43,7 @@
 		E629AD552F13CBC700C8831E /* manuscript */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				E629AD902F13CBC700C8831E /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+				E629AD902F13CBC700C8831E /* Exceptions for "manuscript" folder in "manuscript" target */,
 			);
 			path = manuscript;
 			sourceTree = "<group>";

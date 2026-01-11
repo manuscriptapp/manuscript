@@ -362,14 +362,13 @@ struct SelectionObserver: NSViewRepresentable {
 #endif
 
 #if DEBUG
-struct WriteTabPreview: PreviewProvider {
-    static var previews: some View {
-        let document = LiteratiDocument()
-        document.title = "Sample Project"
-        document.author = "Sample Author"
-        let docItem = LiteratiDocument.Document(id: UUID(), title: "Sample Document", notes: "Sample notes", content: "Sample content")
-        
-        return WriteTab(viewModel: DocumentDetailViewModel(document: docItem, literatiViewModel: LiteratiViewModel(document: document)))
-    }
+#Preview {
+    let docItem = ManuscriptDocument.Document(
+        title: "Sample Document",
+        notes: "Sample notes",
+        content: "Sample content"
+    )
+    let viewModel = DocumentViewModel()
+    return WriteTab(viewModel: DocumentDetailViewModel(document: docItem, documentViewModel: viewModel))
 }
 #endif 

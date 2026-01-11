@@ -1,8 +1,7 @@
 import SwiftUI
 
 struct ProjectSidebar: View {
-    @ObservedObject var documentManager: DocumentManager
-    @ObservedObject var literatiViewModel: LiteratiViewModel
+    @ObservedObject var viewModel: DocumentViewModel
     @Binding var detailSelection: DetailSelection?
     @Binding var isAddDocumentSheetPresented: Bool
     @Binding var isAddFolderSheetPresented: Bool
@@ -18,7 +17,7 @@ struct ProjectSidebar: View {
         // Create the content as a separate variable
         let listContent = Group {
             #if os(iOS)
-            Text(documentManager.document.title)
+            Text(viewModel.document.title)
                 .font(.title)
                 .bold()
                 .listRowSeparator(.hidden)
@@ -29,11 +28,11 @@ struct ProjectSidebar: View {
             // Folder structure
             Section("Content") {
                 FolderItemView(
-                    folder: documentManager.document.rootFolder,
-                    literatiViewModel: literatiViewModel,
+                    folder: viewModel.document.rootFolder,
+                    viewModel: viewModel,
                     detailSelection: typedSelection
                 )
-                .id(documentManager.document.rootFolder.totalDocumentCount)
+                .id(viewModel.document.rootFolder.totalDocumentCount)
             }
             
             // Basic project info
@@ -44,7 +43,7 @@ struct ProjectSidebar: View {
                 
                 // Characters in a disclosure group
                 DisclosureGroup(isExpanded: $isCharactersExpanded) {
-                    ForEach(documentManager.document.characters) { character in
+                    ForEach(viewModel.document.characters) { character in
                         NavigationLink(value: DetailSelection.character(character)) {
                             Label(character.name, systemImage: "person")
                         }
@@ -62,12 +61,12 @@ struct ProjectSidebar: View {
                     .padding(.top, 4)
                 } label: {
                     Label("Characters", systemImage: "person.2")
-                        .badge(documentManager.document.characters.count)
+                        .badge(viewModel.document.characters.count)
                 }
                 
                 // Locations in a disclosure group
                 DisclosureGroup(isExpanded: $isLocationsExpanded) {
-                    ForEach(documentManager.document.locations) { location in
+                    ForEach(viewModel.document.locations) { location in
                         NavigationLink(value: DetailSelection.location(location)) {
                             Label(location.name, systemImage: "mappin")
                         }
@@ -85,7 +84,7 @@ struct ProjectSidebar: View {
                     .padding(.top, 4)
                 } label: {
                     Label("Locations", systemImage: "mappin.and.ellipse")
-                        .badge(documentManager.document.locations.count)
+                        .badge(viewModel.document.locations.count)
                 }
             }
             
@@ -97,7 +96,7 @@ struct ProjectSidebar: View {
         }
         .listStyle(.sidebar)
         #if os(macOS)
-        .navigationTitle(documentManager.document.title.isEmpty ? "Untitled" : documentManager.document.title)
+        .navigationTitle(viewModel.document.title.isEmpty ? "Untitled" : viewModel.document.title)
         #endif
         .toolbar {
             #if os(macOS)
@@ -150,11 +149,11 @@ struct ProjectSidebar: View {
             }
             #endif
         }
-        .alert(literatiViewModel.renameAlertTitle, isPresented: $literatiViewModel.isRenameAlertPresented) {
-            TextField("Name", text: $literatiViewModel.newItemName)
+        .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
+            TextField("Name", text: $viewModel.newItemName)
             Button("Cancel", role: .cancel) { }
             Button("Rename") {
-                literatiViewModel.performRename()
+                viewModel.performRename()
             }
         } message: {
             Text("Enter new name")

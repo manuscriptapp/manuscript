@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct LocationsView: View {
-    @ObservedObject var documentManager: DocumentManager
+    @ObservedObject var viewModel: DocumentViewModel
     
     var body: some View {
         List {
-            ForEach(documentManager.document.locations) { location in
+            ForEach(viewModel.document.locations) { location in
                 NavigationLink(value: DetailSelection.location(location)) {
                     VStack(alignment: .leading) {
                         Text(location.name)
@@ -18,13 +18,13 @@ struct LocationsView: View {
                 }
                 .contextMenu {
                     Button {
-                        documentManager.showRenameAlert(for: location)
+                        viewModel.showRenameAlert(for: location)
                     } label: {
                         Label("Rename", systemImage: "pencil")
                     }
                     
                     Button(role: .destructive) {
-                        documentManager.deleteLocation(location)
+                        viewModel.deleteLocation(location)
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
@@ -35,7 +35,7 @@ struct LocationsView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    documentManager.addLocation(name: "New Location", latitude: 0, longitude: 0)
+                    viewModel.addLocation(name: "New Location", latitude: 0, longitude: 0)
                 } label: {
                     Label("Add Location", systemImage: "plus")
                 }

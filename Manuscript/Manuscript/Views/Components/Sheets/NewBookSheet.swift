@@ -3,7 +3,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 struct NewBookSheet: View {
-    @ObservedObject var literatiViewModel: LiteratiViewModel
+    @ObservedObject var manuscriptViewModel: ManuscriptViewModel
     let preSelectedTemplate: BookTemplate?
     @Environment(\.dismiss) private var dismiss
     @AppStorage("defaultAuthorName") private var defaultAuthorName = ""
@@ -14,12 +14,12 @@ struct NewBookSheet: View {
     @State private var selectedTemplate: BookTemplate?
     @State private var showingTemplateInfo = false
     @State private var showingSavePanel = false
-    @State private var document: LiteratiDocument?
+    @State private var document: ManuscriptDocument?
     
-    var onComplete: (LiteratiDocument) -> Void
+    var onComplete: (ManuscriptDocument) -> Void
     
-    init(literatiViewModel: LiteratiViewModel, preSelectedTemplate: BookTemplate? = nil, onComplete: @escaping (LiteratiDocument) -> Void = { _ in }) {
-        self.literatiViewModel = literatiViewModel
+    init(manuscriptViewModel: ManuscriptViewModel, preSelectedTemplate: BookTemplate? = nil, onComplete: @escaping (ManuscriptDocument) -> Void = { _ in }) {
+        self.manuscriptViewModel = manuscriptViewModel
         self.preSelectedTemplate = preSelectedTemplate
         self.onComplete = onComplete
         _selectedTemplate = State(initialValue: preSelectedTemplate)
@@ -75,7 +75,7 @@ struct NewBookSheet: View {
             #if os(macOS)
             .fileExporter(
                 isPresented: $showingSavePanel,
-                document: document != nil ? LiteratiDocumentWrapper(document: document!) : nil,
+                document: document != nil ? ManuscriptDocumentWrapper(document: document!) : nil,
                 contentType: UTType(filenameExtension: "literati") ?? .data,
                 defaultFilename: title.isEmpty ? "Untitled" : title
             ) { result in
@@ -200,43 +200,43 @@ struct NewBookSheet: View {
     // MARK: - Actions
     
     private func prepareDocument() {
-        // Create a new document
-        let newDocument = LiteratiDocument()
-        
+        // Create a new document (using var since ManuscriptDocument is now a struct)
+        var newDocument = ManuscriptDocument()
+
         // Update the document properties
         newDocument.title = title
         newDocument.author = author
         newDocument.metaDescription = metaInfo
-        
+
         // Apply template if selected
         if let template = selectedTemplate {
-            applyTemplate(template, to: newDocument)
+            applyTemplate(template, to: &newDocument)
         }
-        
+
         // Save default author name
         if !author.isEmpty {
             UserDefaults.standard.set(author, forKey: "defaultAuthorName")
         }
-        
+
         // Store the document for saving
         self.document = newDocument
     }
-    
-    private func applyTemplate(_ template: BookTemplate, to document: LiteratiDocument) {
+
+    private func applyTemplate(_ template: BookTemplate, to document: inout ManuscriptDocument) {
         // Apply the template structure to the root folder
         for subfolder in template.structure.subfolders {
-            createFolderFromTemplate(subfolder, in: document.rootFolder, document: document)
+            createFolderFromTemplate(subfolder, in: &document.rootFolder)
         }
     }
-    
-    private func createFolderFromTemplate(_ folderTemplate: FolderTemplate, in parentFolder: LiteratiFolder, document: LiteratiDocument) {
+
+    private func createFolderFromTemplate(_ folderTemplate: FolderTemplate, in parentFolder: inout ManuscriptFolder) {
         // Create a new folder
-        var newFolder = LiteratiFolder(title: folderTemplate.title)
-        var documents: [LiteratiDocument.Document] = []
-        
+        var newFolder = ManuscriptFolder(title: folderTemplate.title)
+        var documents: [ManuscriptDocument.Document] = []
+
         // Add documents to the folder
         for docTemplate in folderTemplate.documents {
-            let doc = LiteratiDocument.Document(
+            let doc = ManuscriptDocument.Document(
                 title: docTemplate.title,
                 outline: docTemplate.outline,
                 notes: docTemplate.notes,
@@ -245,40 +245,29 @@ struct NewBookSheet: View {
             )
             documents.append(doc)
         }
-        
+
         // Set the documents
         newFolder.documents = documents
-        
+
         // Create subfolders
-        var subfolders: [LiteratiFolder] = []
-        
+        var subfolders: [ManuscriptFolder] = []
+
         // Add subfolders recursively
         for subfolder in folderTemplate.subfolders {
-            var childFolder = LiteratiFolder(title: subfolder.title)
+            var childFolder = ManuscriptFolder(title: subfolder.title)
             populateFolder(&childFolder, from: subfolder)
             subfolders.append(childFolder)
         }
-        
+
         // Set the subfolders
         newFolder.subfolders = subfolders
-        
+
         // Add the new folder to the parent
-        var updatedParentFolder = parentFolder
-        updatedParentFolder.subfolders.append(newFolder)
-        
-        // Update the parent folder in the document structure
-        if updatedParentFolder.id == document.rootFolder.id {
-            document.rootFolder = updatedParentFolder
-        } else {
-            // Use direct document manipulation
-            var rootFolder = document.rootFolder
-            updateFolder(in: &rootFolder, with: updatedParentFolder)
-            document.rootFolder = rootFolder
-        }
+        parentFolder.subfolders.append(newFolder)
     }
     
     // Helper method to update a folder in the document structure
-    private func updateFolder(in parentFolder: inout LiteratiFolder, with updatedFolder: LiteratiFolder) {
+    private func updateFolder(in parentFolder: inout ManuscriptFolder, with updatedFolder: ManuscriptFolder) {
         for i in 0..<parentFolder.subfolders.count {
             if parentFolder.subfolders[i].id == updatedFolder.id {
                 parentFolder.subfolders[i] = updatedFolder
@@ -292,11 +281,11 @@ struct NewBookSheet: View {
         }
     }
     
-    private func populateFolder(_ folder: inout LiteratiFolder, from template: FolderTemplate) {
+    private func populateFolder(_ folder: inout ManuscriptFolder, from template: FolderTemplate) {
         // Add documents
-        var documents: [LiteratiDocument.Document] = []
+        var documents: [ManuscriptDocument.Document] = []
         for docTemplate in template.documents {
-            let document = LiteratiDocument.Document(
+            let document = ManuscriptDocument.Document(
                 title: docTemplate.title,
                 outline: docTemplate.outline,
                 notes: docTemplate.notes,
@@ -308,9 +297,9 @@ struct NewBookSheet: View {
         folder.documents = documents
         
         // Add subfolders recursively
-        var subfolders: [LiteratiFolder] = []
+        var subfolders: [ManuscriptFolder] = []
         for subfolder in template.subfolders {
-            var childFolder = LiteratiFolder(title: subfolder.title)
+            var childFolder = ManuscriptFolder(title: subfolder.title)
             populateFolder(&childFolder, from: subfolder)
             subfolders.append(childFolder)
         }
@@ -320,18 +309,18 @@ struct NewBookSheet: View {
 
 // Document wrapper for file exporter
 #if os(macOS)
-struct LiteratiDocumentWrapper: FileDocument {
-    var document: LiteratiDocument
+struct ManuscriptDocumentWrapper: FileDocument {
+    var document: ManuscriptDocument
     
     static var readableContentTypes: [UTType] { [UTType(filenameExtension: "literati") ?? .data] }
     
-    init(document: LiteratiDocument) {
+    init(document: ManuscriptDocument) {
         self.document = document
     }
     
     init(configuration: ReadConfiguration) throws {
         // This initializer is required but won't be used in this context
-        document = LiteratiDocument()
+        document = ManuscriptDocument()
     }
     
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
@@ -343,5 +332,5 @@ struct LiteratiDocumentWrapper: FileDocument {
 
 // MARK: - Preview
 #Preview {
-    NewBookSheet(literatiViewModel: LiteratiViewModel(document: LiteratiDocument()))
+    NewBookSheet(manuscriptViewModel: ManuscriptViewModel(document: ManuscriptDocument()))
 }

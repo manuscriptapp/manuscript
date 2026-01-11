@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ProjectInfoView: View {
-    @ObservedObject var documentManager: DocumentManager
+    @ObservedObject var viewModel: DocumentViewModel
     @State private var editedTitle: String = ""
     @State private var editedAuthor: String = ""
     @State private var editedDescription: String = ""
@@ -94,14 +94,14 @@ struct ProjectInfoView: View {
             Form {
                 Section("Project Information") {
                     TextField("Title", text: $editedTitle)
-                        .onChange(of: editedTitle) { documentManager.document.title = $1 }
+                        .onChange(of: editedTitle) { viewModel.document.title = $1 }
                     
                     TextField("Author", text: $editedAuthor)
-                        .onChange(of: editedAuthor) { documentManager.document.author = $1 }
+                        .onChange(of: editedAuthor) { viewModel.document.author = $1 }
                     
                     TextField("Description", text: $editedDescription, axis: .vertical)
                         .lineLimit(5...10)
-                        .onChange(of: editedDescription) { documentManager.document.metaDescription = $1 }
+                        .onChange(of: editedDescription) { viewModel.document.metaDescription = $1 }
                 }
             }
         }
@@ -297,7 +297,7 @@ struct ProjectInfoView: View {
                 Section("Synopsis") {
                     TextEditor(text: $editedSynopsis)
                         .frame(minHeight: 300)
-                        .onChange(of: editedSynopsis) { documentManager.document.synopsis = $1 }
+                        .onChange(of: editedSynopsis) { viewModel.document.synopsis = $1 }
                 }
                 
                 Section("Writing tips") {
@@ -345,27 +345,27 @@ struct ProjectInfoView: View {
     }
     
     private func loadData() {
-        editedTitle = documentManager.document.title
-        editedAuthor = documentManager.document.author
-        editedDescription = documentManager.document.metaDescription
-        editedSynopsis = documentManager.document.synopsis
+        editedTitle = viewModel.document.title
+        editedAuthor = viewModel.document.author
+        editedDescription = viewModel.document.metaDescription
+        editedSynopsis = viewModel.document.synopsis
         
         // Load genres
-        selectedGenres = Set(documentManager.document.genre.split(separator: ", ").map(String.init))
+        selectedGenres = Set(viewModel.document.genre.split(separator: ", ").map(String.init))
         
         // Load styles
-        let styles = documentManager.document.style.split(separator: ", ").map(String.init)
+        let styles = viewModel.document.style.split(separator: ", ").map(String.init)
         selectedNarrativeStyle = styles.first { narrativeStyles.contains($0) } ?? ""
         selectedLiteraryStyle = styles.first { literaryStyles.contains($0) } ?? ""
         selectedStorytellingStyle = styles.first { storytellingStyles.contains($0) } ?? ""
     }
     
     private func updateGenre() {
-        documentManager.document.genre = Array(selectedGenres).sorted().joined(separator: ", ")
+        viewModel.document.genre = Array(selectedGenres).sorted().joined(separator: ", ")
     }
     
     private func updateStyle() {
-        documentManager.document.style = combinedStyle
+        viewModel.document.style = combinedStyle
     }
 }
 
@@ -420,7 +420,7 @@ struct GenreFlowLayout: Layout {
 struct ProjectInfoView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            ProjectInfoView(documentManager: DocumentManager(document: LiteratiDocument()))
+            ProjectInfoView(viewModel: DocumentViewModel())
         }
     }
 }

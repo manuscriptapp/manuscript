@@ -2,12 +2,12 @@ import SwiftUI
 import SwiftData
 
 struct FolderContentBuilder {
-    let document: LiteratiDocument
-    let literatiViewModel: LiteratiViewModel
+    let document: ManuscriptDocument
+    let manuscriptViewModel: ManuscriptViewModel
     
     enum TreeItem: Identifiable, Hashable {
-        case folder(LiteratiFolder, children: [TreeItem])
-        case document(LiteratiDocument.Document)
+        case folder(ManuscriptFolder, children: [TreeItem])
+        case document(ManuscriptDocument.Document)
         
         var id: UUID {
             switch self {
@@ -67,14 +67,14 @@ struct FolderContentBuilder {
             return false
         }
         
-        var asFolder: (LiteratiFolder, [TreeItem])? {
+        var asFolder: (ManuscriptFolder, [TreeItem])? {
             if case .folder(let folder, let children) = self {
                 return (folder, children)
             }
             return nil
         }
         
-        var asDocument: LiteratiDocument.Document? {
+        var asDocument: ManuscriptDocument.Document? {
             if case .document(let document) = self {
                 return document
             }
@@ -82,13 +82,13 @@ struct FolderContentBuilder {
         }
     }
     
-    func buildTree(from folder: LiteratiFolder) -> TreeItem {
+    func buildTree(from folder: ManuscriptFolder) -> TreeItem {
         // Create a dictionary to track visited folders to prevent cycles
         var visitedFolders: Set<UUID> = []
         return buildTreeSafely(from: folder, visited: &visitedFolders)
     }
     
-    private func buildTreeSafely(from folder: LiteratiFolder, visited: inout Set<UUID>) -> TreeItem {
+    private func buildTreeSafely(from folder: ManuscriptFolder, visited: inout Set<UUID>) -> TreeItem {
         // Add current folder to visited set
         visited.insert(folder.id)
         

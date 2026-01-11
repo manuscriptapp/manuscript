@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct LocationSelectionView: View {
-    let locations: [LiteratiLocation]?
+    let locations: [ManuscriptLocation]?
     @Binding var selectedLocations: Set<UUID>
     @Binding var isExpanded: Bool
     
@@ -65,8 +65,8 @@ struct LocationSelectionView: View {
 #Preview {
     LocationSelectionView(
         locations: [
-            LiteratiLocation(name: "Mountain Temple", latitude: 35.6762, longitude: 139.6503),
-            LiteratiLocation(name: "Coastal Village", latitude: 34.7466, longitude: 138.4567)
+            ManuscriptLocation(name: "Mountain Temple", latitude: 35.6762, longitude: 139.6503),
+            ManuscriptLocation(name: "Coastal Village", latitude: 34.7466, longitude: 138.4567)
         ],
         selectedLocations: .constant(Set<UUID>()),
         isExpanded: .constant(true)

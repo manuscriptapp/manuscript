@@ -24,7 +24,10 @@
       "mcp__XcodeBuildMCP__build_run_sim",
       "Bash(xcodebuild:*)",
       "mcp__XcodeBuildMCP__screenshot",
-      "mcp__XcodeBuildMCP__build_sim"
+      "mcp__XcodeBuildMCP__build_sim",
+      "mcp__XcodeBuildMCP__session-clear-defaults",
+      "mcp__XcodeBuildMCP__build_run_macos",
+      "Bash(git pull:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"

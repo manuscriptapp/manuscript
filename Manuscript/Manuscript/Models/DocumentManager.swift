@@ -3,9 +3,9 @@ import Combine
 
 @MainActor
 class DocumentManager: ObservableObject {
-    @Published var document: LiteratiDocument
-    @Published var currentFolder: LiteratiFolder
-    @Published var selectedDocument: LiteratiDocument.Document?
+    @Published var document: ManuscriptDocument
+    @Published var currentFolder: ManuscriptFolder
+    @Published var selectedDocument: ManuscriptDocument.Document?
     @Published var isRenameAlertPresented = false
     @Published var renameAlertTitle = ""
     @Published var newItemName = ""
@@ -13,7 +13,7 @@ class DocumentManager: ObservableObject {
     private var itemToRename: Any?
     private var cancellables = Set<AnyCancellable>()
     
-    init(document: LiteratiDocument) {
+    init(document: ManuscriptDocument) {
         self.document = document
         self.currentFolder = document.rootFolder
         
@@ -33,7 +33,7 @@ class DocumentManager: ObservableObject {
     
     // MARK: - Document Navigation and Selection
     
-    func navigateToFolder(_ folder: LiteratiFolder) {
+    func navigateToFolder(_ folder: ManuscriptFolder) {
         currentFolder = folder
     }
     
@@ -41,16 +41,16 @@ class DocumentManager: ObservableObject {
         currentFolder = document.rootFolder
     }
     
-    func selectDocument(_ doc: LiteratiDocument.Document?) {
+    func selectDocument(_ doc: ManuscriptDocument.Document?) {
         selectedDocument = doc
     }
     
     // Helper method to find a document by ID
-    func findDocument(withId id: UUID) -> LiteratiDocument.Document? {
+    func findDocument(withId id: UUID) -> ManuscriptDocument.Document? {
         return findDocumentRecursively(withId: id, in: document.rootFolder)
     }
     
-    private func findDocumentRecursively(withId id: UUID, in folder: LiteratiFolder) -> LiteratiDocument.Document? {
+    private func findDocumentRecursively(withId id: UUID, in folder: ManuscriptFolder) -> ManuscriptDocument.Document? {
         // Check documents in this folder
         if let document = folder.documents.first(where: { $0.id == id }) {
             return document
@@ -68,8 +68,8 @@ class DocumentManager: ObservableObject {
     
     // MARK: - Folder Management
     
-    func addFolder(to parentFolder: LiteratiFolder, title: String) {
-        let newFolder = LiteratiFolder(title: title)
+    func addFolder(to parentFolder: ManuscriptFolder, title: String) {
+        let newFolder = ManuscriptFolder(title: title)
         
         // Add to parent folder
         var updatedSubfolders = parentFolder.subfolders
@@ -101,11 +101,11 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    private func updateFolderInDocument(_ folderId: UUID, with updatedFolder: LiteratiFolder) {
+    private func updateFolderInDocument(_ folderId: UUID, with updatedFolder: ManuscriptFolder) {
         document.rootFolder = updateFolderRecursively(document.rootFolder, folderId: folderId, updatedFolder: updatedFolder)
     }
     
-    private func updateFolderRecursively(_ folder: LiteratiFolder, folderId: UUID, updatedFolder: LiteratiFolder) -> LiteratiFolder {
+    private func updateFolderRecursively(_ folder: ManuscriptFolder, folderId: UUID, updatedFolder: ManuscriptFolder) -> ManuscriptFolder {
         if folder.id == folderId {
             return updatedFolder
         }
@@ -118,7 +118,7 @@ class DocumentManager: ObservableObject {
         return updatedCurrentFolder
     }
     
-    func renameFolder(_ folder: LiteratiFolder, newTitle: String) {
+    func renameFolder(_ folder: ManuscriptFolder, newTitle: String) {
         var updatedFolder = folder
         updatedFolder.title = newTitle
         
@@ -133,7 +133,7 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    func deleteFolder(_ folder: LiteratiFolder) {
+    func deleteFolder(_ folder: ManuscriptFolder) {
         // Can't delete root folder
         guard folder.id != document.rootFolder.id else { return }
         
@@ -146,7 +146,7 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    private func removeFolderRecursively(_ folder: LiteratiFolder, folderIdToRemove: UUID) -> LiteratiFolder {
+    private func removeFolderRecursively(_ folder: ManuscriptFolder, folderIdToRemove: UUID) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Check if this folder contains the folder to remove
@@ -164,10 +164,10 @@ class DocumentManager: ObservableObject {
     
     // MARK: - Document Management
     
-    func addDocument(to folder: LiteratiFolder, title: String, outline: String = "", notes: String = "", content: String = "") {
+    func addDocument(to folder: ManuscriptFolder, title: String, outline: String = "", notes: String = "", content: String = "") {
         let nextOrder = folder.documents.count
         
-        let document = LiteratiDocument.Document(
+        let document = ManuscriptDocument.Document(
             title: title,
             outline: outline,
             notes: notes,
@@ -192,7 +192,7 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    func updateDocument(_ doc: LiteratiDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil) {
+    func updateDocument(_ doc: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil) {
         // Find the document in the folder structure
         let updatedDoc = updateDocumentProperties(doc, title: title, outline: outline, notes: notes, content: content, characterIds: characterIds, locationIds: locationIds)
         
@@ -205,7 +205,7 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    private func updateDocumentProperties(_ doc: LiteratiDocument.Document, title: String?, outline: String?, notes: String?, content: String?, characterIds: [UUID]?, locationIds: [UUID]?) -> LiteratiDocument.Document {
+    private func updateDocumentProperties(_ doc: ManuscriptDocument.Document, title: String?, outline: String?, notes: String?, content: String?, characterIds: [UUID]?, locationIds: [UUID]?) -> ManuscriptDocument.Document {
         var updatedDoc = doc
         
         if let title = title {
@@ -235,7 +235,7 @@ class DocumentManager: ObservableObject {
         return updatedDoc
     }
     
-    private func updateDocumentInFolders(docId: UUID, updatedDoc: LiteratiDocument.Document) {
+    private func updateDocumentInFolders(docId: UUID, updatedDoc: ManuscriptDocument.Document) {
         // Start the search at the root folder
         document.rootFolder = updateDocumentInFolder(document.rootFolder, docId: docId, updatedDoc: updatedDoc)
         
@@ -247,7 +247,7 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    private func updateDocumentInFolder(_ folder: LiteratiFolder, docId: UUID, updatedDoc: LiteratiDocument.Document) -> LiteratiFolder {
+    private func updateDocumentInFolder(_ folder: ManuscriptFolder, docId: UUID, updatedDoc: ManuscriptDocument.Document) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Check if document is in this folder
@@ -266,7 +266,7 @@ class DocumentManager: ObservableObject {
         return updatedFolder
     }
     
-    func deleteDocument(_ doc: LiteratiDocument.Document) {
+    func deleteDocument(_ doc: ManuscriptDocument.Document) {
         // Update all folders to remove this document
         document.rootFolder = removeDocumentFromFolder(document.rootFolder, docId: doc.id)
         
@@ -293,7 +293,7 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    private func removeDocumentFromFolder(_ folder: LiteratiFolder, docId: UUID) -> LiteratiFolder {
+    private func removeDocumentFromFolder(_ folder: ManuscriptFolder, docId: UUID) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Remove document if it's in this folder
@@ -309,8 +309,8 @@ class DocumentManager: ObservableObject {
     
     // MARK: - Character Management
     
-    func addCharacter(name: String, age: Int? = nil, gender: LiteratiCharacterGender = .notSpecified) {
-        let character = LiteratiCharacter(
+    func addCharacter(name: String, age: Int? = nil, gender: ManuscriptCharacterGender = .notSpecified) {
+        let character = ManuscriptCharacter(
             name: name,
             age: age,
             gender: gender
@@ -319,7 +319,7 @@ class DocumentManager: ObservableObject {
         document.characters.append(character)
     }
     
-    func updateCharacter(_ character: LiteratiCharacter, name: String? = nil, age: Int? = nil, gender: LiteratiCharacterGender? = nil) {
+    func updateCharacter(_ character: ManuscriptCharacter, name: String? = nil, age: Int? = nil, gender: ManuscriptCharacterGender? = nil) {
         guard let index = document.characters.firstIndex(where: { $0.id == character.id }) else { return }
         
         var updatedCharacter = character
@@ -339,7 +339,7 @@ class DocumentManager: ObservableObject {
         document.characters[index] = updatedCharacter
     }
     
-    func deleteCharacter(_ character: LiteratiCharacter) {
+    func deleteCharacter(_ character: ManuscriptCharacter) {
         document.characters.removeAll { $0.id == character.id }
         
         // Remove character from all documents
@@ -351,7 +351,7 @@ class DocumentManager: ObservableObject {
         document.rootFolder = removeCharacterFromFolderDocuments(document.rootFolder, characterId: characterId)
     }
     
-    private func removeCharacterFromFolderDocuments(_ folder: LiteratiFolder, characterId: UUID) -> LiteratiFolder {
+    private func removeCharacterFromFolderDocuments(_ folder: ManuscriptFolder, characterId: UUID) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Update documents in this folder
@@ -370,7 +370,7 @@ class DocumentManager: ObservableObject {
     // MARK: - Location Management
     
     func addLocation(name: String, latitude: Double, longitude: Double) {
-        let location = LiteratiLocation(
+        let location = ManuscriptLocation(
             name: name,
             latitude: latitude,
             longitude: longitude
@@ -379,7 +379,7 @@ class DocumentManager: ObservableObject {
         document.locations.append(location)
     }
     
-    func updateLocation(_ location: LiteratiLocation, name: String? = nil, latitude: Double? = nil, longitude: Double? = nil) {
+    func updateLocation(_ location: ManuscriptLocation, name: String? = nil, latitude: Double? = nil, longitude: Double? = nil) {
         guard let index = document.locations.firstIndex(where: { $0.id == location.id }) else { return }
         
         var updatedLocation = location
@@ -399,7 +399,7 @@ class DocumentManager: ObservableObject {
         document.locations[index] = updatedLocation
     }
     
-    func deleteLocation(_ location: LiteratiLocation) {
+    func deleteLocation(_ location: ManuscriptLocation) {
         document.locations.removeAll { $0.id == location.id }
         
         // Remove location from all documents
@@ -411,7 +411,7 @@ class DocumentManager: ObservableObject {
         document.rootFolder = removeLocationFromFolderDocuments(document.rootFolder, locationId: locationId)
     }
     
-    private func removeLocationFromFolderDocuments(_ folder: LiteratiFolder, locationId: UUID) -> LiteratiFolder {
+    private func removeLocationFromFolderDocuments(_ folder: ManuscriptFolder, locationId: UUID) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Update documents in this folder
@@ -432,19 +432,19 @@ class DocumentManager: ObservableObject {
     func showRenameAlert(for item: Any) {
         itemToRename = item
         
-        if let folder = item as? LiteratiFolder {
+        if let folder = item as? ManuscriptFolder {
             renameAlertTitle = "Rename Folder"
             newItemName = folder.title
             isRenameAlertPresented = true
-        } else if let document = item as? LiteratiDocument.Document {
+        } else if let document = item as? ManuscriptDocument.Document {
             renameAlertTitle = "Rename Document"
             newItemName = document.title
             isRenameAlertPresented = true
-        } else if let character = item as? LiteratiCharacter {
+        } else if let character = item as? ManuscriptCharacter {
             renameAlertTitle = "Rename Character"
             newItemName = character.name
             isRenameAlertPresented = true
-        } else if let location = item as? LiteratiLocation {
+        } else if let location = item as? ManuscriptLocation {
             renameAlertTitle = "Rename Location"
             newItemName = location.name
             isRenameAlertPresented = true
@@ -453,13 +453,13 @@ class DocumentManager: ObservableObject {
     
     func performRename() {
         switch itemToRename {
-        case let folder as LiteratiFolder:
+        case let folder as ManuscriptFolder:
             renameFolder(folder, newTitle: newItemName)
-        case let doc as LiteratiDocument.Document:
+        case let doc as ManuscriptDocument.Document:
             updateDocument(doc, title: newItemName)
-        case let character as LiteratiCharacter:
+        case let character as ManuscriptCharacter:
             updateCharacter(character, name: newItemName)
-        case let location as LiteratiLocation:
+        case let location as ManuscriptLocation:
             updateLocation(location, name: newItemName)
         default:
             break

@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct AddCharacterSheet: View {
-    @ObservedObject var literatiViewModel: LiteratiViewModel
+    @ObservedObject var viewModel: DocumentViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var age = ""
-    @State private var gender: LiteratiCharacterGender = .notSpecified
+    @State private var gender: ManuscriptCharacterGender = .notSpecified
     
     var body: some View {
         NavigationStack {
@@ -18,7 +18,7 @@ struct AddCharacterSheet: View {
                     #endif
                     
                     Picker("Gender", selection: $gender) {
-                        ForEach(LiteratiCharacterGender.allCases, id: \.self) { gender in
+                        ForEach(ManuscriptCharacterGender.allCases, id: \.self) { gender in
                             Text(gender.rawValue).tag(gender)
                         }
                     }
@@ -34,7 +34,7 @@ struct AddCharacterSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
                         let ageInt = Int(age)
-                        literatiViewModel.addCharacter(name: name, age: ageInt, gender: gender)
+                        viewModel.addCharacter(name: name, age: ageInt, gender: gender)
                         dismiss()
                     }
                     .disabled(name.isEmpty)

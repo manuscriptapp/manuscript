@@ -3,10 +3,10 @@ import SwiftUI
 import Combine
 
 @MainActor
-class LiteratiViewModel: ObservableObject {
-    @Published var document: LiteratiDocument
-    @Published var currentFolder: LiteratiFolder
-    @Published var selectedDocument: LiteratiDocument.Document?
+class ManuscriptViewModel: ObservableObject {
+    @Published var document: ManuscriptDocument
+    @Published var currentFolder: ManuscriptFolder
+    @Published var selectedDocument: ManuscriptDocument.Document?
     
     // Rename state
     @Published var isRenameAlertPresented = false
@@ -15,7 +15,7 @@ class LiteratiViewModel: ObservableObject {
     private var itemToRename: Any?
     private var cancellables = Set<AnyCancellable>()
     
-    init(document: LiteratiDocument) {
+    init(document: ManuscriptDocument) {
         self.document = document
         self.currentFolder = document.rootFolder
         
@@ -35,7 +35,7 @@ class LiteratiViewModel: ObservableObject {
     
     // MARK: - Document Navigation and Selection
     
-    func navigateToFolder(_ folder: LiteratiFolder) {
+    func navigateToFolder(_ folder: ManuscriptFolder) {
         currentFolder = folder
     }
     
@@ -43,16 +43,16 @@ class LiteratiViewModel: ObservableObject {
         currentFolder = document.rootFolder
     }
     
-    func selectDocument(_ doc: LiteratiDocument.Document?) {
+    func selectDocument(_ doc: ManuscriptDocument.Document?) {
         selectedDocument = doc
     }
     
     // Helper method to find a document by ID
-    func findDocument(withId id: UUID) -> LiteratiDocument.Document? {
+    func findDocument(withId id: UUID) -> ManuscriptDocument.Document? {
         return findDocumentRecursively(withId: id, in: document.rootFolder)
     }
     
-    private func findDocumentRecursively(withId id: UUID, in folder: LiteratiFolder) -> LiteratiDocument.Document? {
+    private func findDocumentRecursively(withId id: UUID, in folder: ManuscriptFolder) -> ManuscriptDocument.Document? {
         // Check documents in this folder
         if let document = folder.documents.first(where: { $0.id == id }) {
             return document
@@ -78,8 +78,8 @@ class LiteratiViewModel: ObservableObject {
     
     // MARK: - Folder Management
     
-    func addFolder(to parentFolder: LiteratiFolder, title: String) {
-        let newFolder = LiteratiFolder(title: title)
+    func addFolder(to parentFolder: ManuscriptFolder, title: String) {
+        let newFolder = ManuscriptFolder(title: title)
         
         // Add to parent folder
         var updatedSubfolders = parentFolder.subfolders
@@ -111,11 +111,11 @@ class LiteratiViewModel: ObservableObject {
         }
     }
     
-    private func updateFolderInDocument(_ folderId: UUID, with updatedFolder: LiteratiFolder) {
+    private func updateFolderInDocument(_ folderId: UUID, with updatedFolder: ManuscriptFolder) {
         document.rootFolder = updateFolderRecursively(document.rootFolder, folderId: folderId, updatedFolder: updatedFolder)
     }
     
-    private func updateFolderRecursively(_ folder: LiteratiFolder, folderId: UUID, updatedFolder: LiteratiFolder) -> LiteratiFolder {
+    private func updateFolderRecursively(_ folder: ManuscriptFolder, folderId: UUID, updatedFolder: ManuscriptFolder) -> ManuscriptFolder {
         if folder.id == folderId {
             return updatedFolder
         }
@@ -128,7 +128,7 @@ class LiteratiViewModel: ObservableObject {
         return updatedCurrentFolder
     }
     
-    func renameFolder(_ folder: LiteratiFolder, newTitle: String) {
+    func renameFolder(_ folder: ManuscriptFolder, newTitle: String) {
         var updatedFolder = folder
         updatedFolder.title = newTitle
         
@@ -143,7 +143,7 @@ class LiteratiViewModel: ObservableObject {
         }
     }
     
-    func deleteFolder(_ folder: LiteratiFolder) {
+    func deleteFolder(_ folder: ManuscriptFolder) {
         // Can't delete root folder
         guard folder.id != document.rootFolder.id else { return }
         
@@ -156,7 +156,7 @@ class LiteratiViewModel: ObservableObject {
         }
     }
     
-    private func removeFolderRecursively(_ folder: LiteratiFolder, folderIdToRemove: UUID) -> LiteratiFolder {
+    private func removeFolderRecursively(_ folder: ManuscriptFolder, folderIdToRemove: UUID) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Check if this folder contains the folder to remove
@@ -174,10 +174,10 @@ class LiteratiViewModel: ObservableObject {
     
     // MARK: - Document Management
     
-    func addDocument(to folder: LiteratiFolder, title: String, outline: String = "", notes: String = "", content: String = "") {
+    func addDocument(to folder: ManuscriptFolder, title: String, outline: String = "", notes: String = "", content: String = "") {
         let nextOrder = folder.documents.count
         
-        let document = LiteratiDocument.Document(
+        let document = ManuscriptDocument.Document(
             title: title,
             outline: outline,
             notes: notes,
@@ -201,11 +201,11 @@ class LiteratiViewModel: ObservableObject {
             updateFolderInDocument(folder.id, with: updatedFolder)
         }
 
-        // Notify observers that the document changed (required since LiteratiDocument is a class)
+        // Notify observers that the document changed (required since ManuscriptDocument is a class)
         objectWillChange.send()
     }
     
-    func updateDocument(_ doc: LiteratiDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil) {
+    func updateDocument(_ doc: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil) {
         // Find the document in the folder structure
         let updatedDoc = updateDocumentProperties(doc, title: title, outline: outline, notes: notes, content: content, characterIds: characterIds, locationIds: locationIds)
         
@@ -218,7 +218,7 @@ class LiteratiViewModel: ObservableObject {
         }
     }
     
-    private func updateDocumentProperties(_ doc: LiteratiDocument.Document, title: String?, outline: String?, notes: String?, content: String?, characterIds: [UUID]?, locationIds: [UUID]?, iconName: String? = nil, colorName: String? = nil) -> LiteratiDocument.Document {
+    private func updateDocumentProperties(_ doc: ManuscriptDocument.Document, title: String?, outline: String?, notes: String?, content: String?, characterIds: [UUID]?, locationIds: [UUID]?, iconName: String? = nil, colorName: String? = nil) -> ManuscriptDocument.Document {
         var updatedDoc = doc
         
         if let title = title {
@@ -256,7 +256,7 @@ class LiteratiViewModel: ObservableObject {
         return updatedDoc
     }
     
-    private func updateDocumentInFolders(docId: UUID, updatedDoc: LiteratiDocument.Document) {
+    private func updateDocumentInFolders(docId: UUID, updatedDoc: ManuscriptDocument.Document) {
         // Start the search at the root folder
         document.rootFolder = updateDocumentInFolder(document.rootFolder, docId: docId, updatedDoc: updatedDoc)
         
@@ -268,7 +268,7 @@ class LiteratiViewModel: ObservableObject {
         }
     }
     
-    private func updateDocumentInFolder(_ folder: LiteratiFolder, docId: UUID, updatedDoc: LiteratiDocument.Document) -> LiteratiFolder {
+    private func updateDocumentInFolder(_ folder: ManuscriptFolder, docId: UUID, updatedDoc: ManuscriptDocument.Document) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Check if document is in this folder
@@ -287,7 +287,7 @@ class LiteratiViewModel: ObservableObject {
         return updatedFolder
     }
     
-    func deleteDocument(_ doc: LiteratiDocument.Document) {
+    func deleteDocument(_ doc: ManuscriptDocument.Document) {
         // Update all folders to remove this document
         document.rootFolder = removeDocumentFromFolder(document.rootFolder, docId: doc.id)
         
@@ -314,7 +314,7 @@ class LiteratiViewModel: ObservableObject {
         }
     }
     
-    private func removeDocumentFromFolder(_ folder: LiteratiFolder, docId: UUID) -> LiteratiFolder {
+    private func removeDocumentFromFolder(_ folder: ManuscriptFolder, docId: UUID) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Remove document if it's in this folder
@@ -330,8 +330,8 @@ class LiteratiViewModel: ObservableObject {
     
     // MARK: - Character Management
     
-    func addCharacter(name: String, age: Int? = nil, gender: LiteratiCharacterGender = .notSpecified) {
-        let character = LiteratiCharacter(
+    func addCharacter(name: String, age: Int? = nil, gender: ManuscriptCharacterGender = .notSpecified) {
+        let character = ManuscriptCharacter(
             name: name,
             age: age,
             gender: gender
@@ -340,7 +340,7 @@ class LiteratiViewModel: ObservableObject {
         document.characters.append(character)
     }
     
-    func updateCharacter(_ character: LiteratiCharacter, name: String? = nil, age: Int? = nil, gender: LiteratiCharacterGender? = nil) {
+    func updateCharacter(_ character: ManuscriptCharacter, name: String? = nil, age: Int? = nil, gender: ManuscriptCharacterGender? = nil) {
         guard let index = document.characters.firstIndex(where: { $0.id == character.id }) else { return }
         
         var updatedCharacter = character
@@ -360,7 +360,7 @@ class LiteratiViewModel: ObservableObject {
         document.characters[index] = updatedCharacter
     }
     
-    func deleteCharacter(_ character: LiteratiCharacter) {
+    func deleteCharacter(_ character: ManuscriptCharacter) {
         document.characters.removeAll { $0.id == character.id }
         
         // Remove character from all documents
@@ -372,7 +372,7 @@ class LiteratiViewModel: ObservableObject {
         document.rootFolder = removeCharacterFromFolderDocuments(document.rootFolder, characterId: characterId)
     }
     
-    private func removeCharacterFromFolderDocuments(_ folder: LiteratiFolder, characterId: UUID) -> LiteratiFolder {
+    private func removeCharacterFromFolderDocuments(_ folder: ManuscriptFolder, characterId: UUID) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Update documents in this folder
@@ -391,7 +391,7 @@ class LiteratiViewModel: ObservableObject {
     // MARK: - Location Management
     
     func addLocation(name: String, latitude: Double, longitude: Double) {
-        let location = LiteratiLocation(
+        let location = ManuscriptLocation(
             name: name,
             latitude: latitude,
             longitude: longitude
@@ -400,7 +400,7 @@ class LiteratiViewModel: ObservableObject {
         document.locations.append(location)
     }
     
-    func updateLocation(_ location: LiteratiLocation, name: String? = nil, latitude: Double? = nil, longitude: Double? = nil) {
+    func updateLocation(_ location: ManuscriptLocation, name: String? = nil, latitude: Double? = nil, longitude: Double? = nil) {
         guard let index = document.locations.firstIndex(where: { $0.id == location.id }) else { return }
         
         var updatedLocation = location
@@ -420,7 +420,7 @@ class LiteratiViewModel: ObservableObject {
         document.locations[index] = updatedLocation
     }
     
-    func deleteLocation(_ location: LiteratiLocation) {
+    func deleteLocation(_ location: ManuscriptLocation) {
         document.locations.removeAll { $0.id == location.id }
         
         // Remove location from all documents
@@ -432,7 +432,7 @@ class LiteratiViewModel: ObservableObject {
         document.rootFolder = removeLocationFromFolderDocuments(document.rootFolder, locationId: locationId)
     }
     
-    private func removeLocationFromFolderDocuments(_ folder: LiteratiFolder, locationId: UUID) -> LiteratiFolder {
+    private func removeLocationFromFolderDocuments(_ folder: ManuscriptFolder, locationId: UUID) -> ManuscriptFolder {
         var updatedFolder = folder
         
         // Update documents in this folder
@@ -453,19 +453,19 @@ class LiteratiViewModel: ObservableObject {
     func showRenameAlert(for item: Any) {
         itemToRename = item
         
-        if let folder = item as? LiteratiFolder {
+        if let folder = item as? ManuscriptFolder {
             renameAlertTitle = "Rename Folder"
             newItemName = folder.title
             isRenameAlertPresented = true
-        } else if let document = item as? LiteratiDocument.Document {
+        } else if let document = item as? ManuscriptDocument.Document {
             renameAlertTitle = "Rename Document"
             newItemName = document.title
             isRenameAlertPresented = true
-        } else if let character = item as? LiteratiCharacter {
+        } else if let character = item as? ManuscriptCharacter {
             renameAlertTitle = "Rename Character"
             newItemName = character.name
             isRenameAlertPresented = true
-        } else if let location = item as? LiteratiLocation {
+        } else if let location = item as? ManuscriptLocation {
             renameAlertTitle = "Rename Location"
             newItemName = location.name
             isRenameAlertPresented = true
@@ -474,13 +474,13 @@ class LiteratiViewModel: ObservableObject {
     
     func performRename() {
         switch itemToRename {
-        case let folder as LiteratiFolder:
+        case let folder as ManuscriptFolder:
             renameFolder(folder, newTitle: newItemName)
-        case let doc as LiteratiDocument.Document:
+        case let doc as ManuscriptDocument.Document:
             updateDocument(doc, title: newItemName)
-        case let character as LiteratiCharacter:
+        case let character as ManuscriptCharacter:
             updateCharacter(character, name: newItemName)
-        case let location as LiteratiLocation:
+        case let location as ManuscriptLocation:
             updateLocation(location, name: newItemName)
         default:
             break
@@ -489,19 +489,19 @@ class LiteratiViewModel: ObservableObject {
     
     // MARK: - Document Appearance
     
-    func updateDocumentIcon(_ doc: LiteratiDocument.Document, iconName: String) {
+    func updateDocumentIcon(_ doc: ManuscriptDocument.Document, iconName: String) {
         updateDocument(doc, title: nil, outline: nil, notes: nil, content: nil, iconName: iconName)
         // Force an update notification
         objectWillChange.send()
     }
     
-    func updateDocumentColor(_ doc: LiteratiDocument.Document, colorName: String) {
+    func updateDocumentColor(_ doc: ManuscriptDocument.Document, colorName: String) {
         updateDocument(doc, title: nil, outline: nil, notes: nil, content: nil, colorName: colorName)
         // Force an update notification
         objectWillChange.send()
     }
     
-    func updateDocument(_ doc: LiteratiDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil) {
+    func updateDocument(_ doc: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil) {
         // Find the document in the folder structure
         let updatedDoc = updateDocumentProperties(doc, title: title, outline: outline, notes: notes, content: content, characterIds: characterIds, locationIds: locationIds, iconName: iconName, colorName: colorName)
         
@@ -518,5 +518,4 @@ class LiteratiViewModel: ObservableObject {
     }
 }
 
-// Type alias for backward compatibility and new naming
-typealias ManuscriptViewModel = LiteratiViewModel
+// Note: This class was formerly named LiteratiViewModel

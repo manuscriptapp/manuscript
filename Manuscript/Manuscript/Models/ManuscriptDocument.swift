@@ -1,6 +1,5 @@
 import SwiftUI
 import UniformTypeIdentifiers
-import Combine
 
 // Define our custom document type
 extension UTType {
@@ -18,7 +17,7 @@ enum ManuscriptCharacterGender: String, Codable, CaseIterable {
 }
 
 // Core document structure that represents a Manuscript project
-class ManuscriptDocument: FileDocument, Equatable, Codable {
+struct ManuscriptDocument: FileDocument, Equatable {
     // Document properties
     var title: String
     var author: String
@@ -38,14 +37,6 @@ class ManuscriptDocument: FileDocument, Equatable, Codable {
     // Required for FileDocument
     static var readableContentTypes: [UTType] { [.manuscriptDocument] }
 
-    // Equatable implementation
-    static func == (lhs: ManuscriptDocument, rhs: ManuscriptDocument) -> Bool {
-        return lhs.title == rhs.title &&
-               lhs.author == rhs.author &&
-               lhs.creationDate == rhs.creationDate &&
-               lhs.rootFolder.id == rhs.rootFolder.id
-    }
-
     // Initialize with default empty state
     init() {
         self.title = ""
@@ -55,51 +46,38 @@ class ManuscriptDocument: FileDocument, Equatable, Codable {
         self.genre = ""
         self.synopsis = ""
         self.creationDate = Date()
-
-        // Create an initial draft folder
         self.rootFolder = ManuscriptFolder(title: "Draft")
         self.characters = []
         self.locations = []
     }
 
-    // Initialize from external file
-    required init(configuration: ReadConfiguration) throws {
+    // Initialize from external file - throws on decode failure
+    init(configuration: ReadConfiguration) throws {
         guard let data = configuration.file.regularFileContents else {
             throw CocoaError(.fileReadCorruptFile)
         }
 
         let decoder = JSONDecoder()
 
-        // Decode the document data
-        if let documentData = try? decoder.decode(ManuscriptDocumentData.self, from: data) {
-            title = documentData.title
-            author = documentData.author
-            metaDescription = documentData.metaDescription
-            style = documentData.style
-            genre = documentData.genre
-            synopsis = documentData.synopsis
-            creationDate = documentData.creationDate
-            rootFolder = documentData.rootFolder
-            characters = documentData.characters
-            locations = documentData.locations
-        } else {
-            // If we can't decode, start with an empty document
-            title = ""
-            author = ""
-            metaDescription = ""
-            style = ""
-            genre = ""
-            synopsis = ""
-            creationDate = Date()
-            rootFolder = ManuscriptFolder(title: "Draft")
-            characters = []
-            locations = []
+        do {
+            let documentData = try decoder.decode(ManuscriptDocumentData.self, from: data)
+            self.title = documentData.title
+            self.author = documentData.author
+            self.metaDescription = documentData.metaDescription
+            self.style = documentData.style
+            self.genre = documentData.genre
+            self.synopsis = documentData.synopsis
+            self.creationDate = documentData.creationDate
+            self.rootFolder = documentData.rootFolder
+            self.characters = documentData.characters
+            self.locations = documentData.locations
+        } catch {
+            throw CocoaError(.fileReadCorruptFile)
         }
     }
 
     // Write to file
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        // Create the data to save
         let documentData = ManuscriptDocumentData(
             title: title,
             author: author,
@@ -117,8 +95,6 @@ class ManuscriptDocument: FileDocument, Equatable, Codable {
         encoder.outputFormatting = .prettyPrinted
 
         let data = try encoder.encode(documentData)
-
-        // Return a file wrapper
         return FileWrapper(regularFileWithContents: data)
     }
 
@@ -185,7 +161,7 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
 }
 
 // Character
-struct ManuscriptCharacter: Identifiable, Codable {
+struct ManuscriptCharacter: Identifiable, Codable, Equatable {
     var id: UUID
     var name: String
     var age: Int?
@@ -210,7 +186,7 @@ struct ManuscriptCharacter: Identifiable, Codable {
 }
 
 // Location
-struct ManuscriptLocation: Identifiable, Codable {
+struct ManuscriptLocation: Identifiable, Codable, Equatable {
     var id: UUID
     var name: String
     var latitude: Double
@@ -236,7 +212,7 @@ struct ManuscriptLocation: Identifiable, Codable {
 
 // Document within a folder
 extension ManuscriptDocument {
-    struct Document: Identifiable, Codable {
+    struct Document: Identifiable, Codable, Equatable {
         var id: UUID
         var title: String
         var outlinePrompt: String  // Template's outline guidance/questions
@@ -282,10 +258,4 @@ extension ManuscriptDocument {
     }
 }
 
-// MARK: - Type Aliases for backward compatibility during migration
-// These can be removed once all references are updated
-typealias LiteratiDocument = ManuscriptDocument
-typealias LiteratiFolder = ManuscriptFolder
-typealias LiteratiCharacter = ManuscriptCharacter
-typealias LiteratiLocation = ManuscriptLocation
-typealias LiteratiCharacterGender = ManuscriptCharacterGender
+// Note: Literati type aliases have been removed. Use Manuscript types directly.

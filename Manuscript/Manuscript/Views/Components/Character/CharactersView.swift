@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct CharactersView: View {
-    @ObservedObject var documentManager: DocumentManager
+    @ObservedObject var viewModel: DocumentViewModel
     
     var body: some View {
         List {
-            ForEach(documentManager.document.characters) { character in
+            ForEach(viewModel.document.characters) { character in
                 NavigationLink(value: DetailSelection.character(character)) {
                     VStack(alignment: .leading) {
                         Text(character.name)
@@ -24,13 +24,13 @@ struct CharactersView: View {
                 }
                 .contextMenu {
                     Button {
-                        documentManager.showRenameAlert(for: character)
+                        viewModel.showRenameAlert(for: character)
                     } label: {
                         Label("Rename", systemImage: "pencil")
                     }
                     
                     Button(role: .destructive) {
-                        documentManager.deleteCharacter(character)
+                        viewModel.deleteCharacter(character)
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
@@ -41,7 +41,7 @@ struct CharactersView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    documentManager.addCharacter(name: "New Character")
+                    viewModel.addCharacter(name: "New Character")
                 } label: {
                     Label("Add Character", systemImage: "plus")
                 }
