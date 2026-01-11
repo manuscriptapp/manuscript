@@ -34,6 +34,11 @@ struct ManuscriptApp: App {
                     } catch {
                         print("Error creating new document: \(error.localizedDescription)")
                     }
+                },
+                onImportDocument: { importedDocument in
+                    // Save the imported document and open it
+                    saveAndOpenImportedDocument(importedDocument)
+                    isShowingWelcomeScreen = false
                 }
             )
             .environmentObject(recentDocumentsManager)
@@ -80,4 +85,37 @@ struct ManuscriptApp: App {
         }
         #endif
     }
+
+    #if os(macOS)
+    /// Save an imported document to a temporary file and open it
+    private func saveAndOpenImportedDocument(_ document: ManuscriptDocument) {
+        // Create a temporary file for the imported document
+        let tempDir = FileManager.default.temporaryDirectory
+        let fileName = document.title.isEmpty ? "Imported Project" : document.title
+        let sanitizedFileName = fileName.replacingOccurrences(of: "/", with: "-")
+        let tempURL = tempDir.appendingPathComponent("\(sanitizedFileName).manuscript")
+
+        do {
+            // Encode the document
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            let data = try encoder.encode(document)
+
+            // Write to temp file
+            try data.write(to: tempURL)
+
+            // Open the document
+            NSDocumentController.shared.openDocument(withContentsOf: tempURL, display: true) { nsDocument, _, error in
+                if let error = error {
+                    print("Error opening imported document: \(error.localizedDescription)")
+                } else if let nsDocument = nsDocument {
+                    // Mark as unsaved so user is prompted to save to a permanent location
+                    nsDocument.updateChangeCount(.changeDone)
+                }
+            }
+        } catch {
+            print("Error saving imported document: \(error.localizedDescription)")
+        }
+    }
+    #endif
 }
