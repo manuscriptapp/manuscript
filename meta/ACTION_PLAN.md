@@ -2,300 +2,297 @@
 
 *Last updated: January 2026*
 
-This document outlines the prioritized next steps for Manuscript development, based on a comprehensive review of the codebase, existing planning documents, and competitive analysis.
+This document outlines the prioritized next steps for Manuscript development. **Aggressive timeline targeting feature parity by June 2026.**
 
 ---
 
 ## Executive Summary
 
-Manuscript has a solid SwiftUI foundation and thorough planning documentation. The immediate priority is **fixing architectural issues** before adding new features, followed by **rich text formatting** and **Scrivener import** to reach feature parity with competitors.
+Manuscript has a solid SwiftUI foundation. We're compressing the roadmap to reach **feature parity with Scrivener by June 2026** - 6 months instead of 12.
 
-**Timeline Overview:**
-- **Now → Q1 2026**: Foundation fixes + basic rich text
-- **Q2 2026**: Scrivener import + core UI features
-- **Q3 2026**: Organization features + sync
-- **Q4 2026+**: Advanced features + polish
+**Aggressive Timeline:**
+- **Week 1-2 (Jan 13-26)**: Foundation fixes + start rich text
+- **Week 3-6 (Jan 27 - Feb 23)**: Rich text complete + Scrivener import
+- **Week 7-10 (Feb 24 - Mar 23)**: Core UI features (parallel tracks)
+- **Week 11-14 (Mar 24 - Apr 20)**: Organization + CloudKit sync
+- **Week 15-18 (Apr 21 - May 18)**: Export formats + polish
+- **Week 19-22 (May 19 - Jun 15)**: Advanced features + beta release
+
+**Key Strategy**: Run multiple tracks in parallel. Ship incrementally.
 
 ---
 
-## Phase 0: Critical Foundation Fixes (Immediate Priority)
+## Sprint 1: Foundation Blitz (Week 1 - Jan 13-19)
 
-These issues should be addressed **before** any new feature work to prevent compounding technical debt.
+**Goal**: Fix all architectural debt in ONE week.
 
-### 0.1 Fix DocumentGroup Architecture
-**Priority: 🔴 Critical** | **Effort: 2-3 days** | **Reference: `DOCUMENTGROUP_AUDIT.md`**
-
+### Day 1-2: DocumentGroup Architecture
 - [ ] Convert `ManuscriptDocument` from class to struct
-- [ ] Implement proper `FileDocument` semantics with value-type mutations
-- [ ] Fix `@Binding` usage to work correctly with SwiftUI change detection
-- [ ] Add unit tests for document save/load cycle
+- [ ] Fix `@Binding` with proper value-type semantics
+- [ ] Update `FileDocument` implementation
 
-### 0.2 Consolidate Document Managers
-**Priority: 🔴 Critical** | **Effort: 1-2 days**
+### Day 3: Manager Consolidation
+- [ ] Merge `DocumentManager` + `ManuscriptViewModel` into single manager
+- [ ] Remove all duplicate state
 
-- [ ] Merge `DocumentManager` and `ManuscriptViewModel` into single source of truth
-- [ ] Remove duplicate state management
-- [ ] Simplify document state synchronization
+### Day 4: API Updates
+- [ ] Fix all deprecated `onChange` calls
+- [ ] Update iCloud container ID to "manuscript"
+- [ ] Remove all compiler warnings
 
-### 0.3 Update Deprecated APIs
-**Priority: 🟡 Moderate** | **Effort: 1 day**
-
-- [ ] Update `onChange(of:perform:)` to new iOS 17+ API signature
-- [ ] Update iCloud container ID from "literati-ai" to "manuscript"
-- [ ] Audit for other deprecated API usage
-
-### 0.4 Add Basic Test Coverage
-**Priority: 🟡 Moderate** | **Effort: 2-3 days**
-
-- [ ] Add unit tests for `ManuscriptDocument` save/load
-- [ ] Add unit tests for `DocumentManager` operations
-- [ ] Add UI tests for basic editor workflow
-- [ ] Set up CI to run tests on PR
+### Day 5: Tests + Validation
+- [ ] Unit tests for document save/load
+- [ ] Test on iOS Simulator + macOS
+- [ ] Set up CI pipeline
 
 ---
 
-## Phase 1: Rich Text Formatting (Q1 2026)
+## Sprint 2: Rich Text MVP (Week 2 - Jan 20-26)
 
-**Reference: `PLAN_TEXT_FORMATTING.md`**
+**Goal**: Basic formatting working. Ship it.
 
-This is the most requested feature gap vs competitors. The plan uses native iOS 26/macOS 26 `AttributedString` + `TextEditor` APIs.
+### Day 1-3: Core Implementation
+- [ ] `AttributedString` + `TextEditor` integration
+- [ ] Bold (⌘B), Italic (⌘I), Underline (⌘U)
+- [ ] Keyboard shortcuts on both platforms
 
-### 1.1 Basic Formatting
-**Target: February 2026** | **Effort: 2 weeks**
-
-- [ ] Implement bold (⌘B), italic (⌘I), underline (⌘U) support
-- [ ] Add formatting toolbar component
-- [ ] Integrate with existing `MarkdownEditor` view
-- [ ] Ensure keyboard shortcuts work on both iOS and macOS
-
-### 1.2 Extended Formatting
-**Target: March 2026** | **Effort: 2 weeks**
-
-- [ ] Add font family selection
-- [ ] Add font size controls
-- [ ] Add text color picker
-- [ ] Add highlight/background color
-
-### 1.3 Markdown Interoperability
-**Target: April 2026** | **Effort: 3 weeks**
-
-- [ ] Implement Markdown → AttributedString parsing
-- [ ] Implement AttributedString → Markdown serialization
-- [ ] Ensure round-trip fidelity (no data loss)
-- [ ] Add preview mode toggle
-
-### 1.4 Persistence
-**Target: April 2026** | **Effort: 1 week**
-
-- [ ] Update `ManuscriptDocument` to handle attributed content
-- [ ] Ensure backwards compatibility with plain Markdown files
-- [ ] Add file format version handling
+### Day 4-5: Toolbar + Polish
+- [ ] Formatting toolbar component
+- [ ] Integration with existing editor
+- [ ] Basic Markdown ↔ AttributedString conversion
 
 ---
 
-## Phase 2: Scrivener Import (Q2 2026)
+## Sprint 3: Rich Text Complete + Scrivener Import Start (Week 3-4 - Jan 27 - Feb 9)
 
-**Reference: `SCRIVENER_IMPORT_PLAN.md`**
+**Run in parallel**: Two developers or alternating focus.
 
-Critical for user acquisition - allows writers to migrate existing projects.
+### Track A: Extended Formatting (Week 3)
+- [ ] Font family selection
+- [ ] Font size controls
+- [ ] Text/highlight color pickers
+- [ ] Full Markdown round-trip fidelity
 
-### 2.1 Core Parser
-**Target: May 2026 Week 1-2** | **Effort: 2 weeks**
-
-- [ ] Implement `.scriv` bundle structure parser
-- [ ] Parse `project.scrivx` XML file
-- [ ] Extract binder hierarchy (folders, documents)
-- [ ] Map Scrivener UUIDs to Manuscript documents
-
-### 2.2 Content Conversion
-**Target: May 2026 Week 3** | **Effort: 1 week**
-
-- [ ] Implement RTF → Markdown converter
-- [ ] Handle common RTF formatting (bold, italic, lists)
-- [ ] Preserve document metadata (synopsis, notes)
-- [ ] Convert Scrivener labels/statuses
-
-### 2.3 Integration & UI
-**Target: May 2026 Week 4** | **Effort: 1 week**
-
-- [ ] Add import UI (file picker, progress, preview)
-- [ ] Handle import errors gracefully
-- [ ] Add import report (what was converted, what was skipped)
-- [ ] Write comprehensive import tests
+### Track B: Scrivener Parser (Week 3-4)
+- [ ] `.scriv` bundle parser
+- [ ] `project.scrivx` XML parsing
+- [ ] Binder hierarchy extraction
+- [ ] RTF → Markdown converter (core formatting)
 
 ---
 
-## Phase 3: Core UI Features (Q2-Q3 2026)
+## Sprint 4: Scrivener Import Complete (Week 5-6 - Feb 10-23)
 
-These features are table-stakes for a serious writing app.
+### Week 5: Content Conversion
+- [ ] Complete RTF conversion (lists, headers, etc.)
+- [ ] Metadata preservation (synopsis, notes, labels)
+- [ ] Handle edge cases and malformed files
 
-### 3.1 Split Editor
-**Priority: High** | **Effort: 2 weeks**
-
-- [ ] Implement horizontal split view
-- [ ] Implement vertical split view
-- [ ] Add drag-to-resize divider
-- [ ] Support independent scrolling
-- [ ] Platform-specific implementations (NSSplitView vs custom)
-
-### 3.2 Composition Mode (Distraction-Free)
-**Priority: High** | **Effort: 1 week**
-
-- [ ] Implement fullscreen editor mode
-- [ ] Hide all UI except text
-- [ ] Add customizable background (color, texture)
-- [ ] Add fade-in UI on mouse movement
-- [ ] Keyboard shortcut to toggle (⌘⇧F or similar)
-
-### 3.3 Snapshots (Version History)
-**Priority: Medium** | **Effort: 2 weeks**
-
-- [ ] Design snapshot storage format
-- [ ] Implement auto-snapshot on significant changes
-- [ ] Add manual "Take Snapshot" command
-- [ ] Build snapshot browser UI
-- [ ] Add diff view between snapshots
-- [ ] Implement restore from snapshot
-
-### 3.4 Search
-**Priority: High** | **Effort: 2 weeks**
-
-- [ ] Implement full-text search across project
-- [ ] Add find-in-document (⌘F)
-- [ ] Add find-and-replace
-- [ ] Add search filters (by folder, by date, by status)
-- [ ] Highlight matches in results
+### Week 6: Integration + Ship
+- [ ] Import UI (file picker, progress indicator)
+- [ ] Import report showing conversion results
+- [ ] Comprehensive test suite with real .scriv files
+- [ ] **Ship v0.2 with rich text + Scrivener import**
 
 ---
 
-## Phase 4: Organization Features (Q3 2026)
+## Sprint 5-6: Core UI Features (Week 7-10 - Feb 24 - Mar 23)
 
-### 4.1 Labels & Status
-**Priority: Medium** | **Effort: 1 week**
+**Run ALL tracks in parallel.**
 
-- [ ] Add label model (name, color)
-- [ ] Add status model (To Do, First Draft, Revised, Final, Done)
-- [ ] Update document model to include label/status
-- [ ] Add UI for setting label/status
-- [ ] Add color indicators in binder
+### Track A: Split Editor (Week 7-8)
+- [ ] Horizontal + vertical split views
+- [ ] Drag-to-resize divider
+- [ ] Independent scrolling
+- [ ] Platform-specific optimizations
 
-### 4.2 Cork Board View
-**Priority: Medium** | **Effort: 2-3 weeks**
+### Track B: Search (Week 7-8)
+- [ ] Full-text search across project
+- [ ] Find-in-document (⌘F)
+- [ ] Find-and-replace
+- [ ] Search result highlighting
 
-- [ ] Design card component (title, synopsis, status, label color)
-- [ ] Implement grid layout view
-- [ ] Add drag-and-drop reordering
-- [ ] Support different card sizes
-- [ ] Add keyboard navigation
+### Track C: Composition Mode (Week 9)
+- [ ] Fullscreen distraction-free mode
+- [ ] Customizable background
+- [ ] Fade-in controls on hover
+- [ ] Keyboard toggle (⌘⇧F)
 
-### 4.3 Outliner View
-**Priority: Medium** | **Effort: 2 weeks**
-
-- [ ] Implement table/spreadsheet-style view
-- [ ] Show columns: Title, Synopsis, Word Count, Status, Label
-- [ ] Add column resizing and reordering
-- [ ] Support inline editing
-- [ ] Add sorting by column
-
----
-
-## Phase 5: Sync & Export (Q3-Q4 2026)
-
-### 5.1 CloudKit Sync
-**Priority: High** | **Effort: 3-4 weeks**
-
-- [ ] Set up CloudKit container properly
-- [ ] Implement CKRecord mapping for documents
-- [ ] Handle conflict resolution
-- [ ] Add sync status indicators
-- [ ] Test extensively across devices
-- [ ] Handle offline/online transitions
-
-### 5.2 Multi-Format Export
-**Priority: High** | **Effort: 3-4 weeks**
-
-- [ ] Implement compile/export UI (format selection, options)
-- [ ] Add DOCX export (using native APIs or lightweight library)
-- [ ] Add EPUB export
-- [ ] Add HTML export
-- [ ] Add LaTeX export
-- [ ] Add Fountain export (for screenwriters)
-- [ ] Add export templates/presets
+### Track D: Snapshots (Week 9-10)
+- [ ] Snapshot storage format
+- [ ] Auto-snapshot on significant changes
+- [ ] Manual snapshot command
+- [ ] Snapshot browser + restore
+- [ ] **Ship v0.3 with core UI features**
 
 ---
 
-## Phase 6: Advanced Features (Q4 2026+)
+## Sprint 7-8: Organization + Sync (Week 11-14 - Mar 24 - Apr 20)
 
-### 6.1 Research Folder
-**Priority: Low** | **Effort: 2 weeks**
+### Track A: Labels & Status (Week 11)
+- [ ] Label model (name, color)
+- [ ] Status model (To Do → Done)
+- [ ] Binder color indicators
+- [ ] Batch operations
 
-- [ ] Design research item model (PDFs, images, web links, notes)
-- [ ] Implement file import for research
-- [ ] Add in-app viewer for research materials
-- [ ] Link research items to documents
+### Track B: Cork Board (Week 11-12)
+- [ ] Card component design
+- [ ] Grid layout with drag-and-drop
+- [ ] Card size options
+- [ ] Keyboard navigation
 
-### 6.2 Writing Statistics
-**Priority: Low** | **Effort: 1-2 weeks**
+### Track C: Outliner (Week 12-13)
+- [ ] Table view implementation
+- [ ] Sortable columns
+- [ ] Inline editing
+- [ ] Column customization
 
-- [ ] Track word count history per document
-- [ ] Track writing sessions (time, words written)
-- [ ] Add daily/weekly/monthly statistics view
-- [ ] Add word count goals and deadlines
-- [ ] Add progress visualization
-
-### 6.3 AI Integration
-**Priority: Medium** | **Effort: 2-3 weeks**
-
-- [ ] Integrate Apple Foundation Models (on-device)
-- [ ] Add writing suggestions
-- [ ] Add grammar/style checking
-- [ ] Implement BYOK (Bring Your Own Key) for external APIs
-- [ ] Add AI settings/preferences UI
+### Track D: CloudKit Sync (Week 11-14)
+- [ ] CloudKit container setup
+- [ ] CKRecord mapping
+- [ ] Conflict resolution (last-write-wins initially)
+- [ ] Sync status indicators
+- [ ] Offline/online handling
+- [ ] **Ship v0.4 with organization + sync**
 
 ---
 
-## Immediate Next Actions (This Week)
+## Sprint 9-10: Export + Polish (Week 15-18 - Apr 21 - May 18)
 
-1. **Create a new branch** for Phase 0 foundation fixes
-2. **Fix `ManuscriptDocument`** class → struct conversion
-3. **Add basic test coverage** for document operations
-4. **Update iCloud container ID** from literati-ai to manuscript
-5. **Test on both iOS and macOS** after each fix
+### Week 15-16: Multi-Format Export
+- [ ] Compile/export UI
+- [ ] DOCX export
+- [ ] EPUB export
+- [ ] HTML export
+- [ ] PDF improvements
+
+### Week 17: Additional Formats
+- [ ] LaTeX export
+- [ ] Fountain export (screenwriters)
+- [ ] Export templates/presets
+
+### Week 18: Polish Sprint
+- [ ] Bug fixes from beta feedback
+- [ ] Performance optimization
+- [ ] Accessibility audit
+- [ ] **Ship v0.5 with full export**
+
+---
+
+## Sprint 11-12: Advanced Features + Launch (Week 19-22 - May 19 - Jun 15)
+
+### Week 19-20: AI Integration
+- [ ] Apple Foundation Models integration
+- [ ] Writing suggestions
+- [ ] Grammar/style checking
+- [ ] BYOK API key support
+
+### Week 21: Research Folder + Stats
+- [ ] Research item model
+- [ ] File import for research
+- [ ] Writing statistics tracking
+- [ ] Word count goals
+
+### Week 22: Launch Prep
+- [ ] Final bug bash
+- [ ] App Store screenshots + metadata
+- [ ] Marketing site update
+- [ ] **Launch v1.0**
+
+---
+
+## Parallel Execution Strategy
+
+```
+Week    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17   18   19   20   21   22
+        |----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+Found.  ████
+Rich    ░░░░████████████
+Scriv        ░░░░░░░░████████████
+Split                            ████████
+Search                           ████████
+Compose                                  ████
+Snaps                                    ████████
+Labels                                           ████
+Cork                                             ████████
+Outline                                              ████████
+Sync                                             ████████████████
+Export                                                           ████████████████
+AI                                                                               ████████
+Research                                                                                 ████
+Launch                                                                                       ████
+```
+
+---
+
+## Weekly Milestones
+
+| Week | Date | Deliverable |
+|------|------|-------------|
+| 1 | Jan 19 | Foundation fixes complete, CI running |
+| 2 | Jan 26 | Rich text MVP (bold/italic/underline) |
+| 4 | Feb 9 | Scrivener parser working |
+| 6 | Feb 23 | **v0.2 Release**: Rich text + Scrivener import |
+| 8 | Mar 9 | Split editor + search working |
+| 10 | Mar 23 | **v0.3 Release**: Core UI complete |
+| 14 | Apr 20 | **v0.4 Release**: Organization + CloudKit sync |
+| 18 | May 18 | **v0.5 Release**: Full export suite |
+| 22 | Jun 15 | **v1.0 Launch**: Feature parity achieved |
+
+---
+
+## Daily Standup Questions
+
+1. What did I ship yesterday?
+2. What am I shipping today?
+3. What's blocking me?
+
+**Rule**: If blocked for >2 hours, cut scope or find workaround. Ship something.
+
+---
+
+## Scope Cuts (If Behind Schedule)
+
+If we fall behind, cut in this order:
+
+1. **LaTeX/Fountain export** - Niche formats, add post-launch
+2. **Research folder** - Users can use Finder/Files
+3. **Writing statistics** - Nice-to-have, not core
+4. **Cork board** - Outliner covers similar use case
+5. **Advanced AI** - Basic suggestions sufficient for v1.0
+
+**Never cut**: Rich text, Scrivener import, search, sync, basic export
 
 ---
 
 ## Success Metrics
 
-| Milestone | Target Date | Success Criteria |
-|-----------|-------------|------------------|
-| Foundation Fixes | End of Jan 2026 | All tests pass, no document corruption |
-| Rich Text MVP | Mar 2026 | Bold/italic/underline working on iOS + macOS |
-| Scrivener Import | May 2026 | Successfully import sample .scriv projects |
-| Core Features | Jul 2026 | Split editor, search, composition mode |
-| CloudKit Sync | Sep 2026 | Sync working across iPhone, iPad, Mac |
-| Feature Parity | Dec 2026 | 80% of Scrivener core features |
+| Metric | Target | Measure |
+|--------|--------|---------|
+| Time to feature parity | 22 weeks | Ship v1.0 by Jun 15 |
+| Release cadence | Every 4 weeks | 5 releases before v1.0 |
+| Test coverage | >70% | Unit + integration tests |
+| Crash-free rate | >99% | TestFlight metrics |
+| Scrivener import success | >95% | Test with 20 real projects |
 
 ---
 
-## Risk Mitigation
+## Immediate Actions (Today)
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| iOS 26 API changes | Medium | High | Monitor WWDC, have fallback plan |
-| CloudKit complexity | High | Medium | Start with simple sync, iterate |
-| Scope creep | High | Medium | Stick to this plan, defer nice-to-haves |
-| Solo developer burnout | Medium | High | Focus on MVP, ship incrementally |
-| RTF conversion edge cases | High | Low | Accept 90% fidelity, document limitations |
+1. [ ] Start Sprint 1 - fix `ManuscriptDocument` struct conversion
+2. [ ] Set up CI pipeline (GitHub Actions)
+3. [ ] Create Sprint 1 branch
+4. [ ] Block calendar for focused development
+5. [ ] Recruit beta testers for Feb 23 release
 
 ---
 
-## Resources & References
+## Resources
 
-- `meta/PLAN_TEXT_FORMATTING.md` - Detailed rich text implementation plan
-- `meta/SCRIVENER_IMPORT_PLAN.md` - Complete import specification
-- `meta/DOCUMENTGROUP_AUDIT.md` - Architecture issues and fixes
+- `meta/PLAN_TEXT_FORMATTING.md` - Rich text details
+- `meta/SCRIVENER_IMPORT_PLAN.md` - Import specification
+- `meta/DOCUMENTGROUP_AUDIT.md` - Architecture fixes
 - `meta/FEATURE_PARITY.md` - Competitive analysis
-- `meta/TRANSFORMATION_GUIDE.md` - Codebase transformation roadmap
 
 ---
 
@@ -304,3 +301,4 @@ These features are table-stakes for a serious writing app.
 | Date | Change |
 |------|--------|
 | Jan 2026 | Initial action plan created |
+| Jan 2026 | Compressed to aggressive 22-week timeline |
