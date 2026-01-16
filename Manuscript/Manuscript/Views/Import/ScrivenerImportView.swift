@@ -1,5 +1,8 @@
 import SwiftUI
 import UniformTypeIdentifiers
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// View for importing Scrivener projects
 struct ScrivenerImportView: View {
@@ -340,14 +343,30 @@ struct ScrivenerImportView: View {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = true
-        panel.canChooseFiles = true
-        panel.allowedContentTypes = [.folder, UTType(filenameExtension: "scriv") ?? .folder]
-        panel.message = "Select a Scrivener project (.scriv)"
+        panel.canChooseFiles = true  // Allow files to show .scrivx inside bundles
+        panel.treatsFilePackagesAsDirectories = true  // Allow navigating into .scriv bundles
+
+        panel.message = "Select a Scrivener project (.scriv folder) or navigate inside and select the .scrivx file"
         panel.prompt = "Select"
 
         if panel.runModal() == .OK, let url = panel.url {
-            selectedURL = url
-            validateSelectedFile()
+            // Check if it's a .scriv bundle
+            if url.pathExtension.lowercased() == "scriv" {
+                selectedURL = url
+                validateSelectedFile()
+            } else if url.pathExtension.lowercased() == "scrivx" {
+                // User selected the .scrivx file inside - use the parent directory
+                selectedURL = url.deletingLastPathComponent()
+                validateSelectedFile()
+            } else {
+                // Show error - not a .scriv file
+                error = NSError(
+                    domain: "ScrivenerImport",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Please select a Scrivener project (.scriv) or the .scrivx file inside it"]
+                )
+                importState = .error
+            }
         }
         #else
         // On iOS, we'll need to use a document picker

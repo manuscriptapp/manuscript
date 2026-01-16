@@ -517,5 +517,3 @@ class ManuscriptViewModel: ObservableObject {
         objectWillChange.send()
     }
 }
-
-// Note: This class was formerly named LiteratiViewModel

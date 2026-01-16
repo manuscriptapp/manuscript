@@ -388,6 +388,3 @@ class DocumentViewModel: ObservableObject {
         itemToRename = nil
     }
 }
-
-// Note: LiteratiViewModel exists in BooksViewModel.swift for backward compatibility
-// Once migration is complete, use DocumentViewModel directly

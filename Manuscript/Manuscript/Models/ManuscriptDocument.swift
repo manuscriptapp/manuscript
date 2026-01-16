@@ -357,7 +357,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         return markdown
     }
 
-    private func createPackageFileWrapper() throws -> FileWrapper {
+    func createPackageFileWrapper() throws -> FileWrapper {
         let rootWrapper = FileWrapper(directoryWithFileWrappers: [:])
 
         let encoder = JSONEncoder()

@@ -140,5 +140,3 @@ extension ManuscriptDocument {
         return document
     }
 }
-
-// Note: LiteratiProjectView alias has been removed. Use ManuscriptProjectView directly.

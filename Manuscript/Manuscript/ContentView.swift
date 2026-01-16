@@ -64,22 +64,11 @@ extension Color {
 }
 
 #if DEBUG
-extension ManuscriptDocument {
-    // Factory method for previews (ManuscriptDocument is now a struct)
-    static func preview(title: String, author: String) -> ManuscriptDocument {
-        var doc = ManuscriptDocument()
-        doc.title = title
-        doc.author = author
-        return doc
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView(document: ManuscriptDocument.preview(title: "Preview Document", author: "Preview Author"))
+            .previewDisplayName("With Document")
     }
-}
-
-#Preview("With Document") {
-    ContentView(document: ManuscriptDocument.preview(title: "Preview Document", author: "Preview Author"))
-}
-
-#Preview("Empty Document") {
-    ContentView(document: ManuscriptDocument.preview(title: "Empty Document", author: "Preview Author"))
 }
 #endif
 
