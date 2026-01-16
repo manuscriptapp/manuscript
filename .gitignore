@@ -64,3 +64,12 @@ crashlytics.properties
 
 # Claude Code
 .claude/settings.local.json
+
+# Test Projects - exclude entire folder
+TestProjects/
+
+# Test documents - exclude any *.manuscript test files
+*.manuscript
+test*.manuscript
+*test.manuscript
+Untitled*.manuscript
