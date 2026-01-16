@@ -34,8 +34,8 @@
 		<dict>
 			<key>UTTypeConformsTo</key>
 			<array>
-				<string>public.data</string>
-				<string>public.content</string>
+				<string>com.apple.package</string>
+				<string>public.composite-content</string>
 			</array>
 			<key>UTTypeDescription</key>
 			<string>Manuscript Document</string>
@@ -50,6 +50,8 @@
 					<string>manuscript</string>
 				</array>
 			</dict>
+			<key>LSTypeIsPackage</key>
+			<true/>
 		</dict>
 	</array>
 </dict>
