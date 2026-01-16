@@ -8,6 +8,9 @@
 import SwiftUI
 import UserNotifications
 import UniformTypeIdentifiers
+#if canImport(AppKit)
+import AppKit
+#endif
 
 @main
 struct ManuscriptApp: App {
@@ -15,6 +18,40 @@ struct ManuscriptApp: App {
     @StateObject private var recentDocumentsManager = RecentDocumentsManager()
     @State private var isShowingWelcomeScreen = true
     @State private var documentURL: URL?
+
+    init() {
+        // Debug: Print iCloud status on launch
+        printICloudDebugInfo()
+    }
+
+    private func printICloudDebugInfo() {
+        print("=== iCloud Debug Info ===")
+        #if os(iOS)
+        print("Platform: iOS")
+        #else
+        print("Platform: macOS")
+        #endif
+        print("Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")")
+
+        // Check default container (nil) - should be generic iCloud Drive
+        if let defaultURL = FileManager.default.url(forUbiquityContainerIdentifier: nil) {
+            print("✅ iCloud container accessible at:")
+            print("   \(defaultURL.path)")
+
+            let documentsURL = defaultURL.appendingPathComponent("Documents")
+            if FileManager.default.fileExists(atPath: documentsURL.path) {
+                if let files = try? FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil) {
+                    print("   Found \(files.count) file(s) in Documents/:")
+                    for file in files.prefix(10) {
+                        print("   - \(file.lastPathComponent)")
+                    }
+                }
+            }
+        } else {
+            print("❌ Cannot access iCloud container")
+        }
+        print("========================\n")
+    }
 
     var body: some Scene {
         #if os(macOS)
@@ -43,11 +80,6 @@ struct ManuscriptApp: App {
             )
             .environmentObject(recentDocumentsManager)
             .environmentObject(notificationManager)
-            .onDisappear {
-                if !isShowingWelcomeScreen {
-                    NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "welcome" })?.close()
-                }
-            }
         }
         .windowResizability(.contentSize)
         .defaultSize(width: 800, height: 600)
@@ -87,34 +119,49 @@ struct ManuscriptApp: App {
     }
 
     #if os(macOS)
-    /// Save an imported document to a temporary file and open it
+    /// Save an imported document and prompt user to choose save location
     private func saveAndOpenImportedDocument(_ document: ManuscriptDocument) {
-        // Create a temporary file for the imported document
-        let tempDir = FileManager.default.temporaryDirectory
-        let fileName = document.title.isEmpty ? "Imported Project" : document.title
-        let sanitizedFileName = fileName.replacingOccurrences(of: "/", with: "-")
-        let tempURL = tempDir.appendingPathComponent("\(sanitizedFileName).manuscript")
-
         do {
-            // Encode the document
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(document)
+            // Create the package using the document's createPackageFileWrapper method
+            let fileWrapper = try document.createPackageFileWrapper()
 
-            // Write to temp file
-            try data.write(to: tempURL)
+            // Create a save panel to let user choose where to save
+            let savePanel = NSSavePanel()
+            savePanel.allowedContentTypes = [.manuscriptDocument]
+            savePanel.canCreateDirectories = true
+            savePanel.isExtensionHidden = false
+            savePanel.title = "Save Imported Project"
+            savePanel.message = "Choose where to save your imported Scrivener project"
+            savePanel.nameFieldStringValue = document.title.isEmpty ? "Imported Project.manuscript" : "\(document.title).manuscript"
 
-            // Open the document
-            NSDocumentController.shared.openDocument(withContentsOf: tempURL, display: true) { nsDocument, _, error in
-                if let error = error {
-                    print("Error opening imported document: \(error.localizedDescription)")
-                } else if let nsDocument = nsDocument {
-                    // Mark as unsaved so user is prompted to save to a permanent location
-                    nsDocument.updateChangeCount(.changeDone)
+            savePanel.begin { response in
+                guard response == .OK, let url = savePanel.url else {
+                    print("User cancelled save")
+                    return
+                }
+
+                do {
+                    // Write the file wrapper to the chosen location
+                    try fileWrapper.write(
+                        to: url,
+                        options: [.atomic],
+                        originalContentsURL: nil
+                    )
+
+                    // Open the document from its new location
+                    NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { nsDocument, _, error in
+                        if let error = error {
+                            print("Error opening imported document: \(error.localizedDescription)")
+                        } else {
+                            print("Successfully opened imported document at: \(url.path)")
+                        }
+                    }
+                } catch {
+                    print("Error saving imported document: \(error.localizedDescription)")
                 }
             }
         } catch {
-            print("Error saving imported document: \(error.localizedDescription)")
+            print("Error creating file wrapper for imported document: \(error.localizedDescription)")
         }
     }
     #endif
