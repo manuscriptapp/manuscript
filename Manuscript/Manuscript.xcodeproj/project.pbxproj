@@ -199,7 +199,7 @@
 					};
 				};
 			};
-			buildConfigurationList = E629AD4E2F13CBC700C8831E /* Build configuration list for PBXProject "manuscript" */;
+			buildConfigurationList = E629AD4E2F13CBC700C8831E /* Build configuration list for PBXProject "Manuscript" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -428,7 +428,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dahlsjoo.manuscript;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -474,7 +474,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dahlsjoo.manuscript;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -595,7 +595,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E629AD4E2F13CBC700C8831E /* Build configuration list for PBXProject "manuscript" */ = {
+		E629AD4E2F13CBC700C8831E /* Build configuration list for PBXProject "Manuscript" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E629AD722F13CBC900C8831E /* Debug */,
