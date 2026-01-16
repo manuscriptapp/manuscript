@@ -1,5 +1,9 @@
 import Foundation
+import SwiftUI
 import UniformTypeIdentifiers
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// Main entry point for Scrivener project import
 final class ScrivenerImporter {
@@ -51,11 +55,10 @@ final class ScrivenerImporter {
             )
         }
 
-        let scrivxPath = url.appendingPathComponent("project.scrivx")
-        guard fileManager.fileExists(atPath: scrivxPath.path) else {
+        guard let scrivxPath = findScrivxFile(at: url) else {
             return ScrivenerValidationResult(
                 isValid: false,
-                errors: ["Missing project.scrivx file - this may not be a valid Scrivener project"]
+                errors: ["Missing .scrivx file - this may not be a valid Scrivener project"]
             )
         }
 
@@ -85,6 +88,11 @@ final class ScrivenerImporter {
             }
         } catch {
             errors.append("Could not parse project file: \(error.localizedDescription)")
+        }
+
+        // If no title found in XML, use the .scriv bundle name as fallback
+        if projectTitle.isEmpty || projectTitle == "Untitled Project" {
+            projectTitle = url.deletingPathExtension().lastPathComponent
         }
 
         return ScrivenerValidationResult(
@@ -117,7 +125,9 @@ final class ScrivenerImporter {
 
         // 2. Parse
         progress?(0.10, "Reading project structure...")
-        let scrivxURL = url.appendingPathComponent("project.scrivx")
+        guard let scrivxURL = findScrivxFile(at: url) else {
+            throw ImportError.missingProjectFile
+        }
         let scrivProject = try xmlParser.parse(projectURL: scrivxURL)
 
         // 3. Detect version
@@ -127,7 +137,16 @@ final class ScrivenerImporter {
         // 4. Create manuscript and map Scrivener metadata
         var manuscript = ManuscriptDocument()
         manuscript.formatVersion = .current
-        manuscript.title = scrivProject.title
+
+        // Set title - use project title from XML, or fall back to .scriv bundle name
+        if !scrivProject.title.isEmpty && scrivProject.title != "Untitled Project" {
+            manuscript.title = scrivProject.title
+        } else {
+            // Use the .scriv bundle name (without extension) as fallback
+            let bundleName = url.deletingPathExtension().lastPathComponent
+            manuscript.title = bundleName
+        }
+
         manuscript.creationDate = Date()
         manuscript.modifiedDate = Date()
 
@@ -241,6 +260,15 @@ final class ScrivenerImporter {
 
     // MARK: - Private Methods
 
+    /// Find the .scrivx file in the bundle (can be named after project or just "project.scrivx")
+    private func findScrivxFile(at url: URL) -> URL? {
+        guard let contents = try? fileManager.contentsOfDirectory(at: url, includingPropertiesForKeys: nil) else {
+            return nil
+        }
+
+        return contents.first { $0.pathExtension == "scrivx" }
+    }
+
     private func validateBundle(at url: URL) throws {
         var isDirectory: ObjCBool = false
         guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
@@ -248,8 +276,7 @@ final class ScrivenerImporter {
             throw ImportError.notABundle
         }
 
-        let scrivxPath = url.appendingPathComponent("project.scrivx")
-        guard fileManager.fileExists(atPath: scrivxPath.path) else {
+        guard findScrivxFile(at: url) != nil else {
             throw ImportError.missingProjectFile
         }
     }
@@ -467,13 +494,13 @@ final class ScrivenerImporter {
         // Convert SwiftUI Color to hex string
         // This is a simplified implementation
         #if canImport(AppKit)
-        guard let nsColor = NSColor(color).usingColorSpace(.deviceRGB) else {
-            return "#808080"
+        if let nsColor = NSColor(color).usingColorSpace(.deviceRGB) {
+            let r = Int(nsColor.redComponent * 255)
+            let g = Int(nsColor.greenComponent * 255)
+            let b = Int(nsColor.blueComponent * 255)
+            return String(format: "#%02X%02X%02X", r, g, b)
         }
-        let r = Int(nsColor.redComponent * 255)
-        let g = Int(nsColor.greenComponent * 255)
-        let b = Int(nsColor.blueComponent * 255)
-        return String(format: "#%02X%02X%02X", r, g, b)
+        return "#808080"
         #else
         // iOS fallback - return gray
         return "#808080"
