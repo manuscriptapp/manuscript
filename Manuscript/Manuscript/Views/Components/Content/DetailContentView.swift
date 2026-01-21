@@ -3,15 +3,17 @@ import SwiftData
 
 struct DetailContentView: View {
     @ObservedObject var viewModel: DocumentViewModel
-    let selection: DetailSelection
+    @Binding var selection: DetailSelection?
 
     var body: some View {
-        detailContent(for: selection)
+        if let currentSelection = selection {
+            detailContent(for: currentSelection)
+        }
     }
 
     @ViewBuilder
-    private func detailContent(for selection: DetailSelection) -> some View {
-        switch selection {
+    private func detailContent(for currentSelection: DetailSelection) -> some View {
+        switch currentSelection {
         case .projectInfo:
             ProjectInfoView(viewModel: viewModel)
         case .characters:
@@ -21,7 +23,7 @@ struct DetailContentView: View {
         case .writingHistory:
             WritingHistoryView(writingHistory: viewModel.document.writingHistory)
         case .folder(let folder):
-            FolderDetailView(folder: folder, viewModel: viewModel)
+            FolderDetailView(folder: folder, viewModel: viewModel, selection: $selection)
         case .document(let document):
             DocumentDetailView(document: document, viewModel: viewModel)
         case .character(let character):
@@ -34,9 +36,10 @@ struct DetailContentView: View {
 
 #if DEBUG
 #Preview {
+    @Previewable @State var selection: DetailSelection? = .projectInfo
     DetailContentView(
         viewModel: DocumentViewModel(),
-        selection: .projectInfo
+        selection: $selection
     )
 }
 #endif

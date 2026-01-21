@@ -30,10 +30,10 @@ struct ManuscriptProjectView: View {
             #endif
         } detail: {
             // Detail view based on selection
-            if let selection = detailSelection {
+            if detailSelection != nil {
                 DetailContentView(
                     viewModel: viewModel,
-                    selection: selection
+                    selection: $detailSelection
                 )
             } else {
                 // Default empty state or project overview
