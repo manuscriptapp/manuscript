@@ -164,6 +164,9 @@ struct ManuscriptApp: App {
             ManuscriptProjectView(document: file.$document)
                 .environmentObject(notificationManager)
                 .environmentObject(recentDocumentsManager)
+                #if os(macOS)
+                .frame(minWidth: 900, minHeight: 600)
+                #endif
                 .onAppear {
                     // Add to recent documents when opened
                     if let url = file.fileURL {
@@ -172,6 +175,7 @@ struct ManuscriptApp: App {
                 }
         }
         #if os(macOS)
+        .defaultSize(width: 1200, height: 800)
         .commands {
             CommandGroup(after: .appSettings) {
                 Button("Show Welcome Screen") {

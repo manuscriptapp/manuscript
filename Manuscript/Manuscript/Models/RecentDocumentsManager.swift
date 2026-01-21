@@ -17,8 +17,13 @@ class RecentDocumentsManager: ObservableObject {
         recentDocuments.removeAll { $0.url == url }
 
         // Create bookmark data for security-scoped access
+        #if os(macOS)
+        let bookmarkOptions: URL.BookmarkCreationOptions = .withSecurityScope
+        #else
+        let bookmarkOptions: URL.BookmarkCreationOptions = []
+        #endif
         let bookmarkData = try? url.bookmarkData(
-            options: .withSecurityScope,
+            options: bookmarkOptions,
             includingResourceValuesForKeys: nil,
             relativeTo: nil
         )
@@ -60,9 +65,14 @@ class RecentDocumentsManager: ObservableObject {
 
         var isStale = false
         do {
+            #if os(macOS)
+            let resolveOptions: URL.BookmarkResolutionOptions = .withSecurityScope
+            #else
+            let resolveOptions: URL.BookmarkResolutionOptions = []
+            #endif
             let resolvedURL = try URL(
                 resolvingBookmarkData: bookmarkData,
-                options: .withSecurityScope,
+                options: resolveOptions,
                 relativeTo: nil,
                 bookmarkDataIsStale: &isStale
             )
@@ -82,8 +92,13 @@ class RecentDocumentsManager: ObservableObject {
     private func updateBookmark(for document: RecentDocument, with url: URL) {
         guard let index = recentDocuments.firstIndex(where: { $0.url == document.url }) else { return }
 
+        #if os(macOS)
+        let bookmarkOptions: URL.BookmarkCreationOptions = .withSecurityScope
+        #else
+        let bookmarkOptions: URL.BookmarkCreationOptions = []
+        #endif
         let newBookmarkData = try? url.bookmarkData(
-            options: .withSecurityScope,
+            options: bookmarkOptions,
             includingResourceValuesForKeys: nil,
             relativeTo: nil
         )

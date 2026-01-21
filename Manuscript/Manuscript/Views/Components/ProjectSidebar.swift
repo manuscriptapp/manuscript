@@ -38,17 +38,27 @@ struct ProjectSidebar: View {
             // Basic project info
             Section("Project") {
                 NavigationLink(value: DetailSelection.projectInfo) {
-                    Label("Project Info", systemImage: "info.circle")
+                    Label {
+                        Text("Project Info")
+                    } icon: {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.brown)
+                    }
                 }
-                
+
                 // Characters in a disclosure group
                 DisclosureGroup(isExpanded: $isCharactersExpanded) {
                     ForEach(viewModel.document.characters) { character in
                         NavigationLink(value: DetailSelection.character(character)) {
-                            Label(character.name, systemImage: "person")
+                            Label {
+                                Text(character.name)
+                            } icon: {
+                                Image(systemName: "person")
+                                    .foregroundStyle(.brown)
+                            }
                         }
                     }
-                    
+
                     Button {
                         isAddCharacterSheetPresented.toggle()
                     } label: {
@@ -60,15 +70,25 @@ struct ProjectSidebar: View {
                     .padding(.leading, 4)
                     .padding(.top, 4)
                 } label: {
-                    Label("Characters", systemImage: "person.2")
-                        .badge(viewModel.document.characters.count)
+                    Label {
+                        Text("Characters")
+                    } icon: {
+                        Image(systemName: "person.2")
+                            .foregroundStyle(.brown)
+                    }
+                    .badge(viewModel.document.characters.count)
                 }
-                
+
                 // Locations in a disclosure group
                 DisclosureGroup(isExpanded: $isLocationsExpanded) {
                     ForEach(viewModel.document.locations) { location in
                         NavigationLink(value: DetailSelection.location(location)) {
-                            Label(location.name, systemImage: "mappin")
+                            Label {
+                                Text(location.name)
+                            } icon: {
+                                Image(systemName: "mappin")
+                                    .foregroundStyle(.brown)
+                            }
                         }
                     }
 
@@ -83,14 +103,24 @@ struct ProjectSidebar: View {
                     .padding(.leading, 4)
                     .padding(.top, 4)
                 } label: {
-                    Label("Locations", systemImage: "mappin.and.ellipse")
-                        .badge(viewModel.document.locations.count)
+                    Label {
+                        Text("Locations")
+                    } icon: {
+                        Image(systemName: "mappin.and.ellipse")
+                            .foregroundStyle(.brown)
+                    }
+                    .badge(viewModel.document.locations.count)
                 }
 
                 // Writing History
                 NavigationLink(value: DetailSelection.writingHistory) {
-                    Label("Writing History", systemImage: "chart.bar.fill")
-                        .badge(viewModel.document.writingHistory.entries.count)
+                    Label {
+                        Text("Writing History")
+                    } icon: {
+                        Image(systemName: "chart.bar.fill")
+                            .foregroundStyle(.brown)
+                    }
+                    .badge(viewModel.document.writingHistory.entries.count)
                 }
             }
             
