@@ -109,12 +109,73 @@ struct WritingHistory: Codable, Equatable {
 
     /// Longest writing streak ever
     var longestStreak: Int {
-        guard !entries.isEmpty else { return 0 }
+        longestStreakInfo.length
+    }
+
+    /// Information about the longest streak (length and date range)
+    var longestStreakInfo: (length: Int, startDate: Date?, endDate: Date?) {
+        guard !entries.isEmpty else { return (0, nil, nil) }
 
         let calendar = Calendar.current
         let sortedEntries = entries.sorted { $0.date < $1.date }
 
         var maxStreak = 1
+        var currentStreak = 1
+        var previousDate = calendar.startOfDay(for: sortedEntries[0].date)
+        var currentStreakStart = previousDate
+        var maxStreakStart = previousDate
+        var maxStreakEnd = previousDate
+
+        for entry in sortedEntries.dropFirst() {
+            let entryDate = calendar.startOfDay(for: entry.date)
+            let daysDiff = calendar.dateComponents([.day], from: previousDate, to: entryDate).day ?? 0
+
+            if daysDiff == 1 {
+                currentStreak += 1
+                if currentStreak > maxStreak {
+                    maxStreak = currentStreak
+                    maxStreakStart = currentStreakStart
+                    maxStreakEnd = entryDate
+                }
+            } else if daysDiff > 1 {
+                currentStreak = 1
+                currentStreakStart = entryDate
+            }
+            // daysDiff == 0 means same day, skip
+
+            previousDate = entryDate
+        }
+
+        return (maxStreak, maxStreakStart, maxStreakEnd)
+    }
+
+    /// Formatted date range for the longest streak
+    var longestStreakDateRange: String? {
+        let info = longestStreakInfo
+        guard let start = info.startDate, let end = info.endDate, info.length > 1 else { return nil }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        let yearFormatter = DateFormatter()
+        yearFormatter.dateFormat = "MMM d, yyyy"
+
+        let calendar = Calendar.current
+        if calendar.isDate(start, equalTo: end, toGranularity: .year) {
+            if calendar.isDate(start, equalTo: Date(), toGranularity: .year) {
+                return "\(formatter.string(from: start)) – \(formatter.string(from: end))"
+            }
+        }
+        return "\(yearFormatter.string(from: start)) – \(yearFormatter.string(from: end))"
+    }
+
+    /// Count of streaks longer than a given number of days
+    func streaksLongerThan(_ days: Int) -> Int {
+        guard !entries.isEmpty else { return 0 }
+
+        let calendar = Calendar.current
+        let sortedEntries = entries.sorted { $0.date < $1.date }
+
+        var count = 0
         var currentStreak = 1
         var previousDate = calendar.startOfDay(for: sortedEntries[0].date)
 
@@ -124,16 +185,21 @@ struct WritingHistory: Codable, Equatable {
 
             if daysDiff == 1 {
                 currentStreak += 1
-                maxStreak = max(maxStreak, currentStreak)
             } else if daysDiff > 1 {
+                if currentStreak > days {
+                    count += 1
+                }
                 currentStreak = 1
             }
-            // daysDiff == 0 means same day, skip
-
             previousDate = entryDate
         }
 
-        return maxStreak
+        // Check final streak
+        if currentStreak > days {
+            count += 1
+        }
+
+        return count
     }
 
     /// Words written in the last 7 days

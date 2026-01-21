@@ -15,7 +15,41 @@ Manuscript is an open-source, native writing application for iOS and macOS, desi
 - Swift 5.9+
 - iOS 17.0+ SDK / macOS 14.0+ (Sonoma) SDK
 
-### Building
+### Building with XcodeBuildMCP
+
+This project uses XcodeBuildMCP for building. Set session defaults first:
+
+```
+session-set-defaults:
+  projectPath: /path/to/Manuscript/Manuscript.xcodeproj
+  scheme: manuscript
+```
+
+**Note:** The scheme name is lowercase `manuscript` (not `Manuscript`).
+
+**Common build commands:**
+
+| Command | Description |
+|---------|-------------|
+| `build_macos` | Build for macOS |
+| `build_sim` | Build for iOS Simulator (requires `simulatorId` or `simulatorName`) |
+| `build_run_macos` | Build and run on macOS |
+| `build_run_sim` | Build and run on iOS Simulator |
+| `test_macos` | Run tests on macOS |
+| `test_sim` | Run tests on iOS Simulator |
+| `list_schemes` | List available schemes |
+| `list_sims` | List available simulators |
+
+**Useful simulator commands:**
+
+| Command | Description |
+|---------|-------------|
+| `screenshot` | Capture simulator screenshot |
+| `describe_ui` | Get view hierarchy with coordinates |
+| `tap` | Tap at coordinates or by accessibility ID |
+| `type_text` | Type text in focused field |
+
+### Building manually
 ```bash
 open Manuscript/Manuscript.xcodeproj
 ```
