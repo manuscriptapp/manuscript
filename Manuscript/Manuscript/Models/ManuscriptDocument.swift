@@ -316,6 +316,8 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                             content: extractContentFromMarkdown(content),
                             creationDate: item.created ?? Date(),
                             order: folder.documents.count,
+                            iconName: item.iconName ?? "doc.text",
+                            iconColor: item.iconColor,
                             labelId: item.label,
                             statusId: item.status,
                             keywords: item.keywords ?? [],
@@ -461,7 +463,9 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 synopsis: document.outline.isEmpty ? nil : document.outline,
                 includeInCompile: document.includeInCompile,
                 created: document.creationDate,
-                modified: Date()
+                modified: Date(),
+                iconName: document.iconName == "doc.text" ? nil : document.iconName,
+                iconColor: document.iconColor
             )
             items.append(item)
 
@@ -681,6 +685,7 @@ extension ManuscriptDocument {
         var order: Int
         var colorName: String
         var iconName: String
+        var iconColor: String?  // Optional hex color for icon tint (e.g., "#FF0000")
 
         // Scrivener-compatible metadata
         var labelId: String?
@@ -703,6 +708,7 @@ extension ManuscriptDocument {
             order: Int = 0,
             colorName: String = "Brown",
             iconName: String = "doc.text",
+            iconColor: String? = nil,
             labelId: String? = nil,
             statusId: String? = nil,
             keywords: [String] = [],
@@ -720,6 +726,7 @@ extension ManuscriptDocument {
             self.order = order
             self.colorName = colorName
             self.iconName = iconName
+            self.iconColor = iconColor
             self.labelId = labelId
             self.statusId = statusId
             self.keywords = keywords
@@ -777,6 +784,8 @@ private struct FolderItem: Codable {
     var includeInCompile: Bool?
     var created: Date?
     var modified: Date?
+    var iconName: String?
+    var iconColor: String?  // Hex color for icon tint (e.g., "#FF0000")
 }
 
 // MARK: - String Extension

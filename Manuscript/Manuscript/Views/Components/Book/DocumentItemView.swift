@@ -44,6 +44,17 @@ struct DocumentItemView: View {
         ]
         return colorMap[document.colorName] ?? .brown
     }
+
+    /// Returns the icon color, prioritizing iconColor (from Scrivener import) over colorName
+    private func iconColorForDocument(_ document: ManuscriptDocument.Document) -> Color {
+        // Use icon-specific color if available (from Scrivener import)
+        if let hexColor = document.iconColor, let color = Color(hex: hexColor) {
+            return isSelected ? color.darker(by: 0.3) : color
+        }
+        // Fallback to document colorName
+        let baseColor = colorForDocument(document)
+        return isSelected && document.colorName == "Brown" ? baseColor.darker(by: 0.4) : baseColor
+    }
     
     private func updateIcon(_ iconName: String) {
         viewModel.updateDocumentIcon(document, iconName: iconName)
@@ -54,7 +65,7 @@ struct DocumentItemView: View {
             Text(document.title)
         } icon: {
             Image(systemName: document.iconName)
-                .foregroundStyle(isSelected ? (document.colorName == "Brown" ? colorForDocument(document).darker(by: 0.4) : colorForDocument(document)) : colorForDocument(document))
+                .foregroundStyle(iconColorForDocument(document))
         }
         .tag(DetailSelection.document(document))
         #if !os(macOS)
