@@ -306,6 +306,38 @@ final class ScrivenerImporter {
         return false
     }
 
+    /// Check if a binder item has associated content (RTF file)
+    private func itemHasContent(
+        _ item: ScrivenerBinderItem,
+        projectURL: URL,
+        contentPath: String,
+        version: ScrivenerVersion
+    ) -> Bool {
+        let contentURL = getContentURL(for: item, projectURL: projectURL, contentPath: contentPath, version: version)
+        return fileManager.fileExists(atPath: contentURL.path)
+    }
+
+    /// Get the content URL for a binder item
+    private func getContentURL(
+        for item: ScrivenerBinderItem,
+        projectURL: URL,
+        contentPath: String,
+        version: ScrivenerVersion
+    ) -> URL {
+        if version == .v3, let uuid = item.uuid {
+            return projectURL
+                .appendingPathComponent(contentPath)
+                .appendingPathComponent(uuid)
+                .appendingPathComponent("content.rtf")
+        } else {
+            return projectURL
+                .appendingPathComponent(contentPath)
+                .appendingPathComponent("\(item.id).rtf")
+        }
+    }
+
+    /// Convert a binder item to either a folder or document based on its actual content
+    /// In Scrivener, ANY item (folder or text) can have both content AND children
     private func convertBinderItem(
         _ item: ScrivenerBinderItem,
         projectURL: URL,
@@ -314,6 +346,9 @@ final class ScrivenerImporter {
         options: ScrivenerImportOptions,
         onProgress: (Int) -> Void
     ) async throws -> ManuscriptFolder {
+        let hasContent = itemHasContent(item, projectURL: projectURL, contentPath: contentPath, version: version)
+        let hasChildren = !item.children.isEmpty
+
         var folder = ManuscriptFolder(
             title: item.title,
             folderType: .subfolder,
@@ -322,40 +357,124 @@ final class ScrivenerImporter {
 
         importedFolders += 1
 
+        // If this folder/item has its own content, add it as a document
+        // This handles the case where a "Folder" type in Scrivener has content
+        if hasContent {
+            do {
+                let document = try await convertTextItem(
+                    item,
+                    projectURL: projectURL,
+                    contentPath: contentPath,
+                    version: version,
+                    order: 0
+                )
+                folder.documents.append(document)
+                importedDocuments += 1
+                onProgress(1)
+            } catch {
+                warnings.append(ImportWarning(
+                    message: "Could not import folder content: \(error.localizedDescription)",
+                    itemTitle: item.title,
+                    severity: .warning
+                ))
+            }
+        }
+
+        // Process all children - note that in Scrivener, BOTH folder and text types can have children
         for (index, child) in item.children.enumerated() {
+            // Calculate order: offset by 1 if the parent folder has its own content
+            let order = hasContent ? index + 1 : index
+
             switch child.type {
             case .text:
-                do {
-                    let document = try await convertTextItem(
+                // Text items can also have children in Scrivener
+                let childHasChildren = !child.children.isEmpty
+
+                if childHasChildren {
+                    // Text with children: treat as a folder containing a document + subfolders/docs
+                    let subfolder = try await convertBinderItem(
                         child,
                         projectURL: projectURL,
                         contentPath: contentPath,
                         version: version,
-                        order: index
+                        options: options,
+                        onProgress: onProgress
                     )
-                    folder.documents.append(document)
-                    importedDocuments += 1
-                    onProgress(1)
-                } catch {
-                    warnings.append(ImportWarning(
-                        message: "Could not import document: \(error.localizedDescription)",
-                        itemTitle: child.title,
-                        severity: .warning
-                    ))
-                    skippedItems += 1
-                    onProgress(1)
+                    folder.subfolders.append(subfolder)
+                } else {
+                    // Text without children: convert to document as usual
+                    do {
+                        let document = try await convertTextItem(
+                            child,
+                            projectURL: projectURL,
+                            contentPath: contentPath,
+                            version: version,
+                            order: order
+                        )
+                        folder.documents.append(document)
+                        importedDocuments += 1
+                        onProgress(1)
+                    } catch {
+                        warnings.append(ImportWarning(
+                            message: "Could not import document: \(error.localizedDescription)",
+                            itemTitle: child.title,
+                            severity: .warning
+                        ))
+                        skippedItems += 1
+                        onProgress(1)
+                    }
                 }
 
             case .folder, .draftFolder, .researchFolder:
-                let subfolder = try await convertBinderItem(
-                    child,
-                    projectURL: projectURL,
-                    contentPath: contentPath,
-                    version: version,
-                    options: options,
-                    onProgress: onProgress
-                )
-                folder.subfolders.append(subfolder)
+                // In Scrivener, Folder types can have content AND/OR children
+                let folderHasContent = itemHasContent(child, projectURL: projectURL, contentPath: contentPath, version: version)
+                let folderHasChildren = !child.children.isEmpty
+
+                if folderHasChildren {
+                    // Has children: create as subfolder (content will be loaded inside convertBinderItem)
+                    let subfolder = try await convertBinderItem(
+                        child,
+                        projectURL: projectURL,
+                        contentPath: contentPath,
+                        version: version,
+                        options: options,
+                        onProgress: onProgress
+                    )
+                    folder.subfolders.append(subfolder)
+                } else if folderHasContent {
+                    // Has content but no children: treat as a document
+                    // This is the "Arbetsdagbok" case - a folder icon in Scrivener that's really a document
+                    do {
+                        let document = try await convertTextItem(
+                            child,
+                            projectURL: projectURL,
+                            contentPath: contentPath,
+                            version: version,
+                            order: order
+                        )
+                        folder.documents.append(document)
+                        importedDocuments += 1
+                        onProgress(1)
+                    } catch {
+                        warnings.append(ImportWarning(
+                            message: "Could not import folder as document: \(error.localizedDescription)",
+                            itemTitle: child.title,
+                            severity: .warning
+                        ))
+                        skippedItems += 1
+                        onProgress(1)
+                    }
+                } else {
+                    // No content and no children: create empty folder to preserve structure
+                    let emptyFolder = ManuscriptFolder(
+                        title: child.title,
+                        folderType: .subfolder,
+                        creationDate: child.created ?? Date()
+                    )
+                    folder.subfolders.append(emptyFolder)
+                    importedFolders += 1
+                    onProgress(1)
+                }
 
             case .pdf, .image, .webPage:
                 warnings.append(ImportWarning(
