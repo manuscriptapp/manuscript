@@ -38,6 +38,7 @@ struct ScrivenerBinderItem {
     let includeInCompile: Bool
     let children: [ScrivenerBinderItem]
     let targetWordCount: Int?
+    let iconFileName: String?           // Custom icon name e.g., "Flag (Red)"
 
     init(
         id: String,
@@ -51,7 +52,8 @@ struct ScrivenerBinderItem {
         statusID: Int? = nil,
         includeInCompile: Bool = true,
         children: [ScrivenerBinderItem] = [],
-        targetWordCount: Int? = nil
+        targetWordCount: Int? = nil,
+        iconFileName: String? = nil
     ) {
         self.id = id
         self.uuid = uuid
@@ -65,6 +67,7 @@ struct ScrivenerBinderItem {
         self.includeInCompile = includeInCompile
         self.children = children
         self.targetWordCount = targetWordCount
+        self.iconFileName = iconFileName
     }
 }
 
