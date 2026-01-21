@@ -626,6 +626,12 @@ final class ScrivenerImporter {
             statusId = status.id
         }
 
+        // Map Scrivener icon to SF Symbol with optional color
+        let iconMapping = ScrivenerIconMapper.map(
+            scrivenerIcon: item.iconFileName,
+            itemType: item.type
+        )
+
         return ManuscriptDocument.Document(
             id: UUID(),
             title: item.title,
@@ -636,7 +642,8 @@ final class ScrivenerImporter {
             creationDate: item.created ?? Date(),
             order: order,
             colorName: colorName,
-            iconName: "doc.text",
+            iconName: iconMapping.sfSymbol,
+            iconColor: iconMapping.colorHex,
             labelId: labelId,
             statusId: statusId,
             keywords: [],

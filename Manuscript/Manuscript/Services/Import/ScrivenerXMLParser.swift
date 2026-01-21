@@ -46,6 +46,7 @@ final class ScrivenerXMLParser: NSObject {
         var statusID: Int?
         var includeInCompile: Bool = true
         var targetWordCount: Int?
+        var iconFileName: String?
     }
 
     // MARK: - Public Methods
@@ -288,6 +289,11 @@ extension ScrivenerXMLParser: XMLParserDelegate {
                 itemStack[itemStack.count - 1].targetWordCount = target
             }
 
+        case "IconFileName":
+            if !itemStack.isEmpty && !trimmedText.isEmpty {
+                itemStack[itemStack.count - 1].iconFileName = trimmedText
+            }
+
         case "BinderItem":
             // Complete the current binder item
             if let partialItem = itemStack.popLast() {
@@ -305,7 +311,8 @@ extension ScrivenerXMLParser: XMLParserDelegate {
                     statusID: partialItem.statusID,
                     includeInCompile: partialItem.includeInCompile,
                     children: children,
-                    targetWordCount: partialItem.targetWordCount
+                    targetWordCount: partialItem.targetWordCount,
+                    iconFileName: partialItem.iconFileName
                 )
 
                 // Add to parent's children or root
