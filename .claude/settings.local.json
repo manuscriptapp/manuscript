@@ -46,7 +46,9 @@
       "Bash(brew search:*)",
       "WebFetch(domain:github.com)",
       "Bash(git fetch:*)",
-      "Bash(git cherry-pick:*)"
+      "Bash(git cherry-pick:*)",
+      "Bash(ruby -e '\nrequire \"\"xcodeproj\"\"\n\nproject_path = \"\"Manuscript.xcodeproj\"\"\nproject = Xcodeproj::Project.open\\(project_path\\)\n\n# Find the manuscript target\ntarget = project.targets.find { |t| t.name == \"\"manuscript\"\" }\n\n# Find the Models group\nmodels_group = project.main_group.find_subpath\\(\"\"Manuscript/Models\"\", true\\)\n\n# Add WritingHistory.swift\nwriting_history_path = \"\"Manuscript/Models/WritingHistory.swift\"\"\nif !models_group.files.any? { |f| f.path == \"\"WritingHistory.swift\"\" }\n  file_ref = models_group.new_file\\(writing_history_path\\)\n  target.source_build_phase.add_file_reference\\(file_ref\\)\n  puts \"\"Added WritingHistory.swift\"\"\nend\n\n# Find the Components group\ncomponents_group = project.main_group.find_subpath\\(\"\"Manuscript/Views/Components\"\", true\\)\n\n# Add WritingHistoryView.swift\nwriting_history_view_path = \"\"Manuscript/Views/Components/WritingHistoryView.swift\"\"\nif !components_group.files.any? { |f| f.path == \"\"WritingHistoryView.swift\"\" }\n  file_ref = components_group.new_file\\(writing_history_view_path\\)\n  target.source_build_phase.add_file_reference\\(file_ref\\)\n  puts \"\"Added WritingHistoryView.swift\"\"\nend\n\nproject.save\nputs \"\"Project saved\"\"\n')",
+      "Bash(ruby -e:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"

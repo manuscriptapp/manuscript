@@ -226,6 +226,8 @@ final class ScrivenerWritingHistoryParser: NSObject {
 
     private var entries: [WritingHistoryEntry] = []
     private var currentElement = ""
+    private var currentDateText = ""
+    private var currentAttributes: [String: String] = [:]
     private var parseError: Error?
 
     /// Parse writing.history XML data
@@ -268,41 +270,57 @@ extension ScrivenerWritingHistoryParser: XMLParserDelegate {
         currentElement = elementName
 
         if elementName == "Day" {
-            // Parse day entry attributes
-            // Format: <Day Date="2025-01-15" WordCount="1500" DraftWordCount="50000"/>
+            // Store attributes for processing when we get the date from element content
+            // Scrivener format: <Day dwc="2455" dtwc="2455" ...>2025-04-12</Day>
+            // dwc = draft word count (words written that day)
+            // dtwc = draft total word count
+            // dcc = draft character count
+            // dtcc = draft total character count
+            // owc = other word count
+            // occ = other character count
+            currentAttributes = attributeDict
+            currentDateText = ""
+        }
+    }
 
-            guard let dateStr = attributeDict["Date"] else { return }
+    func parser(_ parser: XMLParser, foundCharacters string: String) {
+        if currentElement == "Day" {
+            currentDateText += string.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
 
-            // Parse date (YYYY-MM-DD format)
+    func parser(
+        _ parser: XMLParser,
+        didEndElement elementName: String,
+        namespaceURI: String?,
+        qualifiedName qName: String?
+    ) {
+        if elementName == "Day" {
+            // Parse date from element content (YYYY-MM-DD format)
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
             dateFormatter.locale = Locale(identifier: "en_US_POSIX")
 
-            guard let date = dateFormatter.date(from: dateStr) else { return }
-
-            // Parse word count (session words written)
-            let wordsWritten = Int(attributeDict["WordCount"] ?? attributeDict["Words"] ?? "0") ?? 0
-
-            // Parse draft word count (total at end of day)
-            let draftWordCount = Int(attributeDict["DraftWordCount"] ?? attributeDict["TotalWords"] ?? "")
-
-            // Parse session duration if available
-            let sessionDuration: TimeInterval?
-            if let durationStr = attributeDict["Duration"] ?? attributeDict["SessionDuration"],
-               let duration = Double(durationStr) {
-                sessionDuration = duration
-            } else {
-                sessionDuration = nil
+            guard let date = dateFormatter.date(from: currentDateText) else {
+                currentElement = ""
+                return
             }
+
+            // Parse word count - dwc is "draft word count" (words written that day)
+            let wordsWritten = Int(currentAttributes["dwc"] ?? "0") ?? 0
+
+            // Parse draft total word count - dtwc is running total
+            let draftWordCount = Int(currentAttributes["dtwc"] ?? "")
 
             let entry = WritingHistoryEntry(
                 date: date,
                 wordsWritten: wordsWritten,
                 draftWordCount: draftWordCount,
-                sessionDuration: sessionDuration
+                sessionDuration: nil
             )
             entries.append(entry)
         }
+        currentElement = ""
     }
 
     func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {

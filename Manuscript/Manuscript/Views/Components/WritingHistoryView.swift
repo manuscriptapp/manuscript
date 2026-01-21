@@ -135,6 +135,7 @@ struct WritingHistoryView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
                 .frame(maxWidth: 300)
             }
 

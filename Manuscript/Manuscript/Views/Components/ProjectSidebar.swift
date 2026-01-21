@@ -71,7 +71,7 @@ struct ProjectSidebar: View {
                             Label(location.name, systemImage: "mappin")
                         }
                     }
-                    
+
                     Button {
                         isAddLocationSheetPresented.toggle()
                     } label: {
@@ -85,6 +85,12 @@ struct ProjectSidebar: View {
                 } label: {
                     Label("Locations", systemImage: "mappin.and.ellipse")
                         .badge(viewModel.document.locations.count)
+                }
+
+                // Writing History
+                NavigationLink(value: DetailSelection.writingHistory) {
+                    Label("Writing History", systemImage: "chart.bar.fill")
+                        .badge(viewModel.document.writingHistory.entries.count)
                 }
             }
             

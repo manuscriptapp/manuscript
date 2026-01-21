@@ -18,6 +18,8 @@ struct DetailContentView: View {
             CharactersView(viewModel: viewModel)
         case .locations:
             LocationsView(viewModel: viewModel)
+        case .writingHistory:
+            WritingHistoryView(writingHistory: viewModel.document.writingHistory)
         case .folder(let folder):
             FolderDetailView(folder: folder, viewModel: viewModel)
         case .document(let document):

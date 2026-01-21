@@ -82,12 +82,6 @@ struct ProjectInfoView: View {
                     Label("Synopsis", systemImage: "doc.text")
                 }
                 .tag(3)
-
-            writingHistoryTab
-                .tabItem {
-                    Label("History", systemImage: "chart.bar.fill")
-                }
-                .tag(4)
         }
         .navigationTitle("Project Info")
         .onAppear {
@@ -322,10 +316,6 @@ struct ProjectInfoView: View {
                 }
             }
         }
-    }
-
-    private var writingHistoryTab: some View {
-        WritingHistoryView(writingHistory: viewModel.document.writingHistory)
     }
 
     private func styleSelectionGrid(styles: [String], selectedStyle: Binding<String>) -> some View {

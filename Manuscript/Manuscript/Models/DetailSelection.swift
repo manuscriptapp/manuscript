@@ -6,6 +6,7 @@ enum DetailSelection: Hashable {
     case projectInfo
     case characters
     case locations
+    case writingHistory
     case folder(ManuscriptFolder)
     case document(ManuscriptDocument.Document)
     case character(ManuscriptCharacter)
@@ -20,17 +21,19 @@ enum DetailSelection: Hashable {
             hasher.combine(1)
         case .locations:
             hasher.combine(2)
-        case .folder(let folder):
+        case .writingHistory:
             hasher.combine(3)
+        case .folder(let folder):
+            hasher.combine(4)
             hasher.combine(folder.id)
         case .document(let document):
-            hasher.combine(4)
+            hasher.combine(5)
             hasher.combine(document.id)
         case .character(let character):
-            hasher.combine(5)
+            hasher.combine(6)
             hasher.combine(character.id)
         case .location(let location):
-            hasher.combine(6)
+            hasher.combine(7)
             hasher.combine(location.id)
         }
     }
@@ -43,6 +46,8 @@ enum DetailSelection: Hashable {
         case (.characters, .characters):
             return true
         case (.locations, .locations):
+            return true
+        case (.writingHistory, .writingHistory):
             return true
         case (.folder(let f1), .folder(let f2)):
             return f1.id == f2.id
