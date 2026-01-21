@@ -103,14 +103,10 @@ class DocumentDetailViewModel: ObservableObject {
     func generateText(type: GenerationType, prompt: String) async -> String {
         isGenerating = true
         generationType = type
+        generationError = nil
 
         do {
-            // Call your AI service here
-            // For now, we'll just simulate a delay
-            try await Task.sleep(nanoseconds: 2_000_000_000)
-
-            // Simulate generated text
-            let result = "This is simulated generated text based on your prompt: \(prompt)"
+            let result = try await TextGenerationService.shared.generateText(prompt: prompt)
 
             await MainActor.run {
                 generatedText = result
