@@ -247,6 +247,10 @@ final class ScrivenerImporter {
             manuscript.trashFolder?.folderType = .trash
         }
 
+        // 10. Import writing history
+        progress?(0.95, "Importing writing history...")
+        manuscript.writingHistory = importWritingHistory(from: url)
+
         progress?(1.0, "Import complete!")
 
         return ImportResult(
@@ -304,6 +308,39 @@ final class ScrivenerImporter {
             }
         }
         return false
+    }
+
+    /// Import writing history from Scrivener's writing.history file
+    /// Located at: ProjectName.scriv/Files/writing.history
+    private func importWritingHistory(from projectURL: URL) -> WritingHistory {
+        let writingHistoryURL = projectURL
+            .appendingPathComponent("Files")
+            .appendingPathComponent("writing.history")
+
+        guard fileManager.fileExists(atPath: writingHistoryURL.path) else {
+            // No writing history file - this is not an error, just return empty history
+            return WritingHistory()
+        }
+
+        do {
+            let parser = ScrivenerWritingHistoryParser()
+            let history = try parser.parse(url: writingHistoryURL)
+
+            if !history.isEmpty {
+                // Log success for debugging
+                print("Imported writing history: \(history.entries.count) days, \(history.totalWordsWritten) total words")
+            }
+
+            return history
+        } catch {
+            // Log warning but don't fail the import
+            warnings.append(ImportWarning(
+                message: "Could not import writing history: \(error.localizedDescription)",
+                itemTitle: "writing.history",
+                severity: .info
+            ))
+            return WritingHistory()
+        }
     }
 
     /// Check if a binder item has associated content (RTF file)

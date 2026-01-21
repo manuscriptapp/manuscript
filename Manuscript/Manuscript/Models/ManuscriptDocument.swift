@@ -165,6 +165,9 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     var settings: ManuscriptSettings
     var compileSettings: ManuscriptCompileSettings
 
+    // Writing history (imported from Scrivener or tracked in-app)
+    var writingHistory: WritingHistory
+
     // Required for FileDocument
     // Include .package and .folder as fallbacks for when custom UTType isn't registered (e.g., running from Xcode)
     // .folder is needed because macOS may identify .manuscript directories as folders rather than packages
@@ -193,6 +196,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         self.targets = ManuscriptTargets()
         self.settings = ManuscriptSettings()
         self.compileSettings = ManuscriptCompileSettings()
+        self.writingHistory = WritingHistory()
     }
 
     // MARK: - FileDocument Implementation
@@ -244,6 +248,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         self.statuses = projectData.statuses ?? ManuscriptStatus.defaults
         self.characters = projectData.characters ?? []
         self.locations = projectData.locations ?? []
+        self.writingHistory = projectData.writingHistory ?? WritingHistory()
 
         // Read contents folder
         if let contentsWrapper = children["contents"], contentsWrapper.isDirectory {
@@ -383,7 +388,8 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             labels: labels,
             statuses: statuses,
             characters: characters.isEmpty ? nil : characters,
-            locations: locations.isEmpty ? nil : locations
+            locations: locations.isEmpty ? nil : locations,
+            writingHistory: writingHistory.isEmpty ? nil : writingHistory
         )
         let projectJsonData = try encoder.encode(projectData)
         rootWrapper.addRegularFile(withContents: projectJsonData, preferredFilename: "project.json")
@@ -744,6 +750,7 @@ private struct ProjectJSON: Codable {
     var statuses: [ManuscriptStatus]?
     var characters: [ManuscriptCharacter]?
     var locations: [ManuscriptLocation]?
+    var writingHistory: WritingHistory?
 }
 
 /// Schema for folder.json

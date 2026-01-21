@@ -44,7 +44,9 @@
       "Bash(mdls:*)",
       "mcp__XcodeBuildMCP__doctor",
       "Bash(brew search:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(git fetch:*)",
+      "Bash(git cherry-pick:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"

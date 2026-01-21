@@ -25,14 +25,14 @@ struct ProjectOverview: View {
                     Text("\(viewModel.document.rootFolder.totalDocumentCount)")
                         .foregroundColor(.secondary)
                 }
-                
+
                 HStack {
                     Text("Characters:")
                     Spacer()
                     Text("\(viewModel.document.characters.count)")
                         .foregroundColor(.secondary)
                 }
-                
+
                 HStack {
                     Text("Locations:")
                     Spacer()
@@ -42,7 +42,14 @@ struct ProjectOverview: View {
             }
             .padding()
             .frame(maxWidth: 300)
-            
+
+            // Writing History Summary
+            if !viewModel.document.writingHistory.isEmpty {
+                CompactWritingHistoryView(writingHistory: viewModel.document.writingHistory)
+                    .frame(maxWidth: 400)
+                    .padding(.horizontal)
+            }
+
             Spacer()
             
             // Help and Feedback links

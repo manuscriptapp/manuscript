@@ -82,6 +82,12 @@ struct ProjectInfoView: View {
                     Label("Synopsis", systemImage: "doc.text")
                 }
                 .tag(3)
+
+            writingHistoryTab
+                .tabItem {
+                    Label("History", systemImage: "chart.bar.fill")
+                }
+                .tag(4)
         }
         .navigationTitle("Project Info")
         .onAppear {
@@ -299,11 +305,11 @@ struct ProjectInfoView: View {
                         .frame(minHeight: 300)
                         .onChange(of: editedSynopsis) { viewModel.document.synopsis = $1 }
                 }
-                
+
                 Section("Writing tips") {
                     Text("A good synopsis should include:")
                         .font(.subheadline)
-                    
+
                     Group {
                         Text("• Main plot points and story arc")
                         Text("• Key character motivations")
@@ -317,7 +323,11 @@ struct ProjectInfoView: View {
             }
         }
     }
-    
+
+    private var writingHistoryTab: some View {
+        WritingHistoryView(writingHistory: viewModel.document.writingHistory)
+    }
+
     private func styleSelectionGrid(styles: [String], selectedStyle: Binding<String>) -> some View {
         LazyVGrid(columns: [GridItem(.flexible())], spacing: 8) {
             ForEach(styles, id: \.self) { style in
