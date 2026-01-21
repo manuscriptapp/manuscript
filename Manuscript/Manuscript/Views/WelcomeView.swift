@@ -1,13 +1,12 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import Foundation
+#if os(macOS)
+import AppKit
+#endif
 
 struct WelcomeView: View {
     @EnvironmentObject private var recentDocumentsManager: RecentDocumentsManager
-    #if os(macOS)
-    @Environment(\.newDocument) private var newDocument
-    @Environment(\.openDocument) private var openDocument
-    #endif
     @State private var isShowingNewProjectSheet = false
     @State private var isShowingFileImporter = false
     @State private var isShowingScrivenerImporter = false
@@ -118,7 +117,7 @@ struct WelcomeView: View {
             quickActionButton(
                 title: "Open Project",
                 systemImage: "folder",
-                action: { isShowingFileImporter = true }
+                action: { openProjectWithPanel() }
             )
 
             quickActionButton(
@@ -180,7 +179,7 @@ struct WelcomeView: View {
                 HStack(spacing: 12) {
                     ForEach(recentDocumentsManager.recentDocuments) { document in
                         RecentDocumentCard(document: document) {
-                            openExistingDocument(at: document.url)
+                            openRecentDocument(document)
                         }
                         .frame(width: 180)
                         .contextMenu {
@@ -205,7 +204,7 @@ struct WelcomeView: View {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(recentDocumentsManager.recentDocuments) { document in
                     RecentDocumentCard(document: document) {
-                        openExistingDocument(at: document.url)
+                        openRecentDocument(document)
                     }
                     .contextMenu {
                         Button(action: {
@@ -306,8 +305,47 @@ struct WelcomeView: View {
     }
 
     private func openExistingDocument(at url: URL) {
-        // Use the callback to open the document
+        // Use the callback - on macOS this goes through WelcomeWindowContent
+        // which has access to the openDocument environment action
         onOpenDocument(url)
+    }
+
+    #if os(macOS)
+    /// Opens an NSOpenPanel configured for .manuscript package documents
+    private func openProjectWithPanel() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = true
+        panel.treatsFilePackagesAsDirectories = false  // Treat .manuscript packages as single selectable items
+        panel.allowedContentTypes = [.folder, .package, .item]  // Allow folders and packages
+        panel.message = "Select a Manuscript project (.manuscript)"
+        panel.prompt = "Open"
+
+        if panel.runModal() == .OK, let url = panel.url {
+            // Verify it's a .manuscript package
+            if url.pathExtension.lowercased() == "manuscript" {
+                openExistingDocument(at: url)
+            }
+        }
+    }
+    #endif
+
+    /// Opens a recent document, resolving its security-scoped bookmark first
+    private func openRecentDocument(_ document: RecentDocument) {
+        #if os(macOS)
+        // Try to resolve the bookmark first for security-scoped access
+        if let resolvedURL = recentDocumentsManager.resolveBookmark(for: document) {
+            openExistingDocument(at: resolvedURL)
+        } else {
+            // Fallback: try opening directly (may fail for iCloud files without bookmark)
+            print("Warning: Could not resolve bookmark for \(document.title), trying direct URL")
+            openExistingDocument(at: document.url)
+        }
+        #else
+        // On iOS, just open directly - the system handles sandbox access differently
+        openExistingDocument(at: document.url)
+        #endif
     }
 
     // Helper method to save a document on iOS

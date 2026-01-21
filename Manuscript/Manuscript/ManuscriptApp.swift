@@ -12,6 +12,51 @@ import UniformTypeIdentifiers
 import AppKit
 #endif
 
+#if os(macOS)
+/// Wrapper view for WelcomeView that provides access to openDocument environment action
+struct WelcomeWindowContent: View {
+    @ObservedObject var recentDocumentsManager: RecentDocumentsManager
+    @ObservedObject var notificationManager: NotificationManager
+    var onImportDocument: (ManuscriptDocument) -> Void
+
+    @Environment(\.openDocument) private var openDocument
+
+    var body: some View {
+        WelcomeView(
+            onOpenDocument: { url in
+                openDocumentAtURL(url)
+            },
+            onCreateNewDocument: {
+                NSApp.sendAction(#selector(NSDocumentController.newDocument(_:)), to: nil, from: nil)
+            },
+            onImportDocument: onImportDocument
+        )
+        .environmentObject(recentDocumentsManager)
+        .environmentObject(notificationManager)
+    }
+
+    private func openDocumentAtURL(_ url: URL) {
+        // Start security-scoped access
+        let didStartAccessing = url.startAccessingSecurityScopedResource()
+
+        Task {
+            do {
+                try await openDocument(at: url)
+            } catch {
+                print("Error opening document: \(error.localizedDescription)")
+            }
+
+            // Stop accessing after a delay to ensure document is loaded
+            if didStartAccessing {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+        }
+    }
+}
+#endif
+
 @main
 struct ManuscriptApp: App {
     @StateObject private var notificationManager = NotificationManager()
@@ -57,29 +102,13 @@ struct ManuscriptApp: App {
         #if os(macOS)
         // Welcome window (macOS only)
         WindowGroup("Welcome to Manuscript", id: "welcome") {
-            WelcomeView(
-                onOpenDocument: { url in
-                    documentURL = url
-                    isShowingWelcomeScreen = false
-                    NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
-                },
-                onCreateNewDocument: {
-                    documentURL = nil
-                    isShowingWelcomeScreen = false
-                    do {
-                        try NSDocumentController.shared.openUntitledDocumentAndDisplay(true)
-                    } catch {
-                        print("Error creating new document: \(error.localizedDescription)")
-                    }
-                },
+            WelcomeWindowContent(
+                recentDocumentsManager: recentDocumentsManager,
+                notificationManager: notificationManager,
                 onImportDocument: { importedDocument in
-                    // Save the imported document and open it
                     saveAndOpenImportedDocument(importedDocument)
-                    isShowingWelcomeScreen = false
                 }
             )
-            .environmentObject(recentDocumentsManager)
-            .environmentObject(notificationManager)
         }
         .windowResizability(.contentSize)
         .defaultSize(width: 800, height: 600)
@@ -89,6 +118,7 @@ struct ManuscriptApp: App {
         DocumentGroup(newDocument: ManuscriptDocument()) { file in
             ManuscriptProjectView(document: file.$document)
                 .environmentObject(notificationManager)
+                .environmentObject(recentDocumentsManager)
                 .onAppear {
                     // Add to recent documents when opened
                     if let url = file.fileURL {
@@ -120,7 +150,7 @@ struct ManuscriptApp: App {
 
     #if os(macOS)
     /// Save an imported document and prompt user to choose save location
-    private func saveAndOpenImportedDocument(_ document: ManuscriptDocument) {
+    func saveAndOpenImportedDocument(_ document: ManuscriptDocument) {
         do {
             // Create the package using the document's createPackageFileWrapper method
             let fileWrapper = try document.createPackageFileWrapper()
@@ -148,14 +178,9 @@ struct ManuscriptApp: App {
                         originalContentsURL: nil
                     )
 
-                    // Open the document from its new location
-                    NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { nsDocument, _, error in
-                        if let error = error {
-                            print("Error opening imported document: \(error.localizedDescription)")
-                        } else {
-                            print("Successfully opened imported document at: \(url.path)")
-                        }
-                    }
+                    // Open the document from its new location using NSWorkspace
+                    // This triggers DocumentGroup to handle it properly
+                    NSWorkspace.shared.open(url)
                 } catch {
                     print("Error saving imported document: \(error.localizedDescription)")
                 }
