@@ -166,8 +166,9 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     var compileSettings: ManuscriptCompileSettings
 
     // Required for FileDocument
-    // Include .package as fallback for when custom UTType isn't registered (e.g., running from Xcode)
-    static var readableContentTypes: [UTType] { [.manuscriptDocument, .package] }
+    // Include .package and .folder as fallbacks for when custom UTType isn't registered (e.g., running from Xcode)
+    // .folder is needed because macOS may identify .manuscript directories as folders rather than packages
+    static var readableContentTypes: [UTType] { [.manuscriptDocument, .package, .folder] }
 
     // MARK: - Initialization
 

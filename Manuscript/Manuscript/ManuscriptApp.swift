@@ -17,7 +17,6 @@ import AppKit
 struct WelcomeWindowContent: View {
     @ObservedObject var recentDocumentsManager: RecentDocumentsManager
     @ObservedObject var notificationManager: NotificationManager
-    var onImportDocument: (ManuscriptDocument) -> Void
 
     @Environment(\.openDocument) private var openDocument
 
@@ -29,7 +28,9 @@ struct WelcomeWindowContent: View {
             onCreateNewDocument: {
                 NSApp.sendAction(#selector(NSDocumentController.newDocument(_:)), to: nil, from: nil)
             },
-            onImportDocument: onImportDocument
+            onImportDocument: { importedDocument in
+                saveAndOpenImportedDocument(importedDocument)
+            }
         )
         .environmentObject(recentDocumentsManager)
         .environmentObject(notificationManager)
@@ -52,6 +53,53 @@ struct WelcomeWindowContent: View {
                     url.stopAccessingSecurityScopedResource()
                 }
             }
+        }
+    }
+
+    /// Save an imported document and prompt user to choose save location
+    private func saveAndOpenImportedDocument(_ document: ManuscriptDocument) {
+        do {
+            // Create the package using the document's createPackageFileWrapper method
+            let fileWrapper = try document.createPackageFileWrapper()
+
+            // Create a save panel to let user choose where to save
+            let savePanel = NSSavePanel()
+            savePanel.allowedContentTypes = [.manuscriptDocument]
+            savePanel.canCreateDirectories = true
+            savePanel.isExtensionHidden = false
+            savePanel.title = "Save Imported Project"
+            savePanel.message = "Choose where to save your imported Scrivener project"
+            savePanel.nameFieldStringValue = document.title.isEmpty ? "Imported Project.manuscript" : "\(document.title).manuscript"
+
+            savePanel.begin { response in
+                guard response == .OK, let url = savePanel.url else {
+                    print("User cancelled save")
+                    return
+                }
+
+                do {
+                    // Write the file wrapper to the chosen location
+                    try fileWrapper.write(
+                        to: url,
+                        options: [.atomic],
+                        originalContentsURL: nil
+                    )
+
+                    // Open the document using SwiftUI's openDocument environment action
+                    // This properly handles the UTType through DocumentGroup
+                    Task {
+                        do {
+                            try await openDocument(at: url)
+                        } catch {
+                            print("Error opening imported document: \(error.localizedDescription)")
+                        }
+                    }
+                } catch {
+                    print("Error saving imported document: \(error.localizedDescription)")
+                }
+            }
+        } catch {
+            print("Error creating file wrapper for imported document: \(error.localizedDescription)")
         }
     }
 }
@@ -104,10 +152,7 @@ struct ManuscriptApp: App {
         WindowGroup("Welcome to Manuscript", id: "welcome") {
             WelcomeWindowContent(
                 recentDocumentsManager: recentDocumentsManager,
-                notificationManager: notificationManager,
-                onImportDocument: { importedDocument in
-                    saveAndOpenImportedDocument(importedDocument)
-                }
+                notificationManager: notificationManager
             )
         }
         .windowResizability(.contentSize)
@@ -148,46 +193,4 @@ struct ManuscriptApp: App {
         #endif
     }
 
-    #if os(macOS)
-    /// Save an imported document and prompt user to choose save location
-    func saveAndOpenImportedDocument(_ document: ManuscriptDocument) {
-        do {
-            // Create the package using the document's createPackageFileWrapper method
-            let fileWrapper = try document.createPackageFileWrapper()
-
-            // Create a save panel to let user choose where to save
-            let savePanel = NSSavePanel()
-            savePanel.allowedContentTypes = [.manuscriptDocument]
-            savePanel.canCreateDirectories = true
-            savePanel.isExtensionHidden = false
-            savePanel.title = "Save Imported Project"
-            savePanel.message = "Choose where to save your imported Scrivener project"
-            savePanel.nameFieldStringValue = document.title.isEmpty ? "Imported Project.manuscript" : "\(document.title).manuscript"
-
-            savePanel.begin { response in
-                guard response == .OK, let url = savePanel.url else {
-                    print("User cancelled save")
-                    return
-                }
-
-                do {
-                    // Write the file wrapper to the chosen location
-                    try fileWrapper.write(
-                        to: url,
-                        options: [.atomic],
-                        originalContentsURL: nil
-                    )
-
-                    // Open the document from its new location using NSWorkspace
-                    // This triggers DocumentGroup to handle it properly
-                    NSWorkspace.shared.open(url)
-                } catch {
-                    print("Error saving imported document: \(error.localizedDescription)")
-                }
-            }
-        } catch {
-            print("Error creating file wrapper for imported document: \(error.localizedDescription)")
-        }
-    }
-    #endif
 }
