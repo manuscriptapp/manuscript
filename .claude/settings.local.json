@@ -40,7 +40,11 @@
       "Bash(mdfind:*)",
       "Bash(brctl log:*)",
       "Bash(brctl download:*)",
-      "Bash(defaults delete:*)"
+      "Bash(defaults delete:*)",
+      "Bash(mdls:*)",
+      "mcp__XcodeBuildMCP__doctor",
+      "Bash(brew search:*)",
+      "WebFetch(domain:github.com)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"
