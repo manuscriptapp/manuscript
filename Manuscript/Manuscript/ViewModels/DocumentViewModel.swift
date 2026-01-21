@@ -10,6 +10,9 @@ class DocumentViewModel: ObservableObject {
     @Published var selectedDocument: ManuscriptDocument.Document?
     @Published var detailSelection: DetailSelection?
 
+    // Sidebar expansion state - tracks which folders are expanded
+    @Published var expandedFolderIds: Set<UUID> = []
+
     // Rename state
     @Published var isRenameAlertPresented = false
     @Published var renameAlertTitle = ""
@@ -34,6 +37,82 @@ class DocumentViewModel: ObservableObject {
     func bind(to document: Binding<ManuscriptDocument>) {
         self.documentBinding = document
         self.currentFolder = document.wrappedValue.rootFolder
+        // Auto-expand root folder
+        expandedFolderIds.insert(document.wrappedValue.rootFolder.id)
+    }
+
+    // MARK: - Folder Expansion
+
+    func isFolderExpanded(_ folder: ManuscriptFolder) -> Bool {
+        expandedFolderIds.contains(folder.id)
+    }
+
+    func toggleFolderExpansion(_ folder: ManuscriptFolder) {
+        if expandedFolderIds.contains(folder.id) {
+            expandedFolderIds.remove(folder.id)
+        } else {
+            expandedFolderIds.insert(folder.id)
+        }
+    }
+
+    func setFolderExpanded(_ folder: ManuscriptFolder, expanded: Bool) {
+        if expanded {
+            expandedFolderIds.insert(folder.id)
+        } else {
+            expandedFolderIds.remove(folder.id)
+        }
+    }
+
+    /// Expands all ancestor folders to make the given folder visible in the sidebar
+    func expandToFolder(_ targetFolder: ManuscriptFolder) {
+        let ancestorIds = findAncestorIdsForFolder(targetFolder.id, in: document.rootFolder, path: [])
+        for id in ancestorIds {
+            expandedFolderIds.insert(id)
+        }
+    }
+
+    /// Expands all ancestor folders to make the given document visible in the sidebar
+    func expandToDocument(_ targetDocument: ManuscriptDocument.Document) {
+        let ancestorIds = findAncestorIdsForDocument(targetDocument.id, in: document.rootFolder, path: [])
+        for id in ancestorIds {
+            expandedFolderIds.insert(id)
+        }
+    }
+
+    /// Returns the path of folder IDs from root to the target folder (exclusive of target)
+    private func findAncestorIdsForFolder(_ targetId: UUID, in folder: ManuscriptFolder, path: [UUID]) -> [UUID] {
+        // Check if target is a direct child subfolder
+        if folder.subfolders.contains(where: { $0.id == targetId }) {
+            return path + [folder.id]
+        }
+
+        // Recursively search in subfolders
+        for subfolder in folder.subfolders {
+            let result = findAncestorIdsForFolder(targetId, in: subfolder, path: path + [folder.id])
+            if !result.isEmpty {
+                return result
+            }
+        }
+
+        return []
+    }
+
+    /// Returns the path of folder IDs from root to the folder containing the target document
+    private func findAncestorIdsForDocument(_ targetDocId: UUID, in folder: ManuscriptFolder, path: [UUID]) -> [UUID] {
+        // Check if target document is in this folder
+        if folder.documents.contains(where: { $0.id == targetDocId }) {
+            return path + [folder.id]
+        }
+
+        // Recursively search in subfolders
+        for subfolder in folder.subfolders {
+            let result = findAncestorIdsForDocument(targetDocId, in: subfolder, path: path + [folder.id])
+            if !result.isEmpty {
+                return result
+            }
+        }
+
+        return []
     }
 
     /// Sync current folder when document changes externally

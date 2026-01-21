@@ -39,7 +39,7 @@ struct FolderDetailView: View {
 
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 200))], spacing: 16) {
                             ForEach(folder.documents) { document in
-                                FolderDocumentCard(document: document, viewModel: viewModel)
+                                FolderDocumentCard(document: document, viewModel: viewModel, selection: $selection)
                                     .frame(height: 220)
                             }
                         }
@@ -89,6 +89,8 @@ struct FolderCard: View {
 
     var body: some View {
         Button {
+            // Expand ancestors so this folder is visible in sidebar
+            viewModel.expandToFolder(folder)
             selection = .folder(folder)
         } label: {
             VStack(alignment: .leading, spacing: 8) {
@@ -142,10 +144,14 @@ struct FolderCard: View {
 struct FolderDocumentCard: View {
     let document: ManuscriptDocument.Document
     @ObservedObject var viewModel: DocumentViewModel
+    @Binding var selection: DetailSelection?
 
     var body: some View {
         Button {
-            viewModel.selectDocument(document)
+            // Expand ancestors so document's folder is visible in sidebar
+            viewModel.expandToDocument(document)
+            // Select the document in the sidebar
+            selection = .document(document)
         } label: {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {

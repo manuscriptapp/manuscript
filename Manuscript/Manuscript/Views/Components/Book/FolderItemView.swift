@@ -11,14 +11,19 @@ struct FolderItemView: View {
         @Binding var detailSelection: DetailSelection?
         @State private var isAddFolderSheetPresented = false
         @State private var isAddDocumentSheetPresented = false
-        @State private var isExpanded: Bool
+
+        // Computed binding to the view model's expansion state
+        private var isExpanded: Binding<Bool> {
+            Binding(
+                get: { viewModel.isFolderExpanded(folder) },
+                set: { viewModel.setFolderExpanded(folder, expanded: $0) }
+            )
+        }
 
         init(folder: ManuscriptFolder, viewModel: DocumentViewModel, detailSelection: Binding<DetailSelection?>) {
             self.folder = folder
             self.viewModel = viewModel
             self._detailSelection = detailSelection
-            // Only auto-expand if this is the root folder
-            _isExpanded = State(initialValue: folder.id == viewModel.document.rootFolder.id)
         }
         
         private func colorForDocument(_ document: ManuscriptDocument.Document) -> Color {
@@ -74,7 +79,7 @@ struct FolderItemView: View {
         }
         
         var body: some View {
-            DisclosureGroup(isExpanded: $isExpanded) {
+            DisclosureGroup(isExpanded: isExpanded) {
                 // Documents in this folder
                 ForEach(folder.documents) { document in
                     DocumentItemView(
