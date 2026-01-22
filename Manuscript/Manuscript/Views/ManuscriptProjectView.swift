@@ -135,12 +135,19 @@ struct ManuscriptProjectView: View {
                 viewModel.syncWithDocument(newDocument)
             }
             .onChange(of: detailSelection) { _, newSelection in
-                // Save state when selection changes
-                viewModel.saveProjectState(selection: newSelection)
+                // Save state when selection changes (debounced to avoid interfering with selection)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    // Only save if selection is still the same after the delay
+                    if detailSelection == newSelection {
+                        viewModel.saveProjectState(selection: newSelection)
+                    }
+                }
             }
             .onChange(of: viewModel.expandedFolderIds) { _, _ in
-                // Save state when expanded folders change
-                viewModel.saveExpandedFolderIds()
+                // Save state when expanded folders change (debounced)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    viewModel.saveExpandedFolderIds()
+                }
             }
             .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
                 TextField("Name", text: $viewModel.newItemName)

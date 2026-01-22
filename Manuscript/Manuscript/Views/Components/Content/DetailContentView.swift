@@ -26,10 +26,13 @@ struct DetailContentView: View {
             FolderDetailView(folder: folder, viewModel: viewModel, selection: $selection)
         case .document(let document):
             // Look up fresh document from view model to get latest content
+            // Use .id() to force SwiftUI to create a new view when document changes
             if let freshDocument = viewModel.findDocument(withId: document.id) {
                 DocumentDetailView(document: freshDocument, viewModel: viewModel)
+                    .id(freshDocument.id)
             } else {
                 DocumentDetailView(document: document, viewModel: viewModel)
+                    .id(document.id)
             }
         case .character(let character):
             CharacterDetailView(character: character, viewModel: viewModel)
