@@ -69,6 +69,10 @@ class DocumentDetailViewModel: ObservableObject {
         case notes
     }
 
+    /// Zero-width space used as placeholder for empty documents to preserve font attributes
+    /// This ensures RichTextKit reads the correct font when the document appears empty
+    static let emptyDocumentPlaceholder = "\u{200B}"
+
     init(document: ManuscriptDocument.Document, documentViewModel: DocumentViewModel) {
         self.document = document
         self.documentViewModel = documentViewModel
@@ -85,8 +89,12 @@ class DocumentDetailViewModel: ObservableObject {
         let contentFont = Self.defaultContentFont
         let notesFont = Self.defaultNotesFont
 
+        // For empty content, use a zero-width space placeholder with correct font attributes
+        // This ensures RichTextKit reads the correct font instead of falling back to system font
+        let contentToProcess = document.content.isEmpty ? Self.emptyDocumentPlaceholder : document.content
+
         let baseContent = MarkdownParser.attributedString(
-            from: document.content,
+            from: contentToProcess,
             baseFont: contentFont,
             textColor: Self.defaultTextColor
         )
@@ -102,8 +110,11 @@ class DocumentDetailViewModel: ObservableObject {
             comments: commentRanges
         )
 
+        // For empty notes, also use the placeholder
+        let notesToProcess = document.notes.isEmpty ? Self.emptyDocumentPlaceholder : document.notes
+
         self.attributedNotes = MarkdownParser.attributedString(
-            from: document.notes,
+            from: notesToProcess,
             baseFont: notesFont,
             textColor: Self.defaultTextColor
         )

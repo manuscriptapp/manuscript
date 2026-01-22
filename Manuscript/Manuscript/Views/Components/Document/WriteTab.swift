@@ -141,12 +141,6 @@ struct WriteTab: View {
 
         richTextContext.setAttributedString(to: contentToSet)
 
-        // Set default formatting if content is empty
-        if viewModel.attributedContent.string.isEmpty {
-            richTextContext.fontName = defaultFontName
-            richTextContext.fontSize = CGFloat(defaultFontSize)
-        }
-
         // Configure paragraph style via RichTextKit's paragraphStyle property
         configureParagraphStyle()
     }

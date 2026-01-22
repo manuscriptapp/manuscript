@@ -241,6 +241,9 @@ enum MarkdownParser {
 
     // MARK: - Attributed String to Markdown
 
+    /// Zero-width space used as placeholder for empty documents
+    private static let emptyDocumentPlaceholder = "\u{200B}"
+
     /// Converts an NSAttributedString back to Markdown format
     /// - Parameter attributedString: The attributed string to convert
     /// - Returns: A markdown string representation
@@ -317,6 +320,10 @@ enum MarkdownParser {
 
         // Clean up redundant formatting (e.g., **text****more** -> **textmore**)
         result = cleanupMarkdown(result)
+
+        // Strip the empty document placeholder if present
+        // This ensures we don't persist the invisible placeholder character
+        result = result.replacingOccurrences(of: emptyDocumentPlaceholder, with: "")
 
         return result
     }
