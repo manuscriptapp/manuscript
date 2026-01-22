@@ -65,7 +65,7 @@ struct DocumentItemView: View {
         viewModel.updateDocumentIcon(document, iconName: iconName)
     }
     
-    var body: some View {
+    private var documentLabel: some View {
         Label {
             Text(document.title)
         } icon: {
@@ -73,8 +73,13 @@ struct DocumentItemView: View {
                 .foregroundStyle(iconColorForDocument(document))
         }
         .id("\(documentId)-\(document.iconName)-\(document.colorName)")
-        .tag(DetailSelection.document(document))
-        #if !os(macOS)
+    }
+
+    var body: some View {
+        #if os(iOS)
+        NavigationLink(value: DetailSelection.document(document)) {
+            documentLabel
+        }
         .contextMenu {
             Menu("Change Icon") {
                 ForEach(iconOptions, id: \.0) { name, icon in
@@ -126,8 +131,10 @@ struct DocumentItemView: View {
             }
         }
         #else
-        .contextMenu {
-            Menu("Change Icon") {
+        documentLabel
+            .tag(DetailSelection.document(document))
+            .contextMenu {
+                Menu("Change Icon") {
                 ForEach(iconOptions, id: \.0) { name, icon in
                     Button(action: { updateIcon(icon) }) {
                         Label(name, systemImage: icon)

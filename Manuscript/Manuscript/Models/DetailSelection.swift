@@ -2,7 +2,20 @@ import Foundation
 import SwiftUI
 
 // Define selection type for navigation links
-enum DetailSelection: Hashable {
+enum DetailSelection: Hashable, Identifiable {
+    var id: String {
+        switch self {
+        case .projectInfo: return "projectInfo"
+        case .characters: return "characters"
+        case .locations: return "locations"
+        case .writingHistory: return "writingHistory"
+        case .folder(let folder): return "folder-\(folder.id)"
+        case .document(let document): return "document-\(document.id)"
+        case .character(let character): return "character-\(character.id)"
+        case .location(let location): return "location-\(location.id)"
+        }
+    }
+
     case projectInfo
     case characters
     case locations

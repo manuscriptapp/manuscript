@@ -75,8 +75,48 @@ struct ManuscriptProjectView: View {
     @State private var showOnboarding = false
 
     var body: some View {
-        NavigationSplitView {
-            // Sidebar with project structure
+        mainContent
+            .sheet(isPresented: $isAddDocumentSheetPresented) {
+                AddDocumentSheet(viewModel: viewModel)
+            }
+            .sheet(isPresented: $isAddFolderSheetPresented) {
+                AddFolderSheet(viewModel: viewModel)
+            }
+            .sheet(isPresented: $isAddCharacterSheetPresented) {
+                AddCharacterSheet(viewModel: viewModel)
+            }
+            .sheet(isPresented: $isAddLocationSheetPresented) {
+                AddLocationSheet(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showOnboarding) {
+                OnboardingView()
+                    .interactiveDismissDisabled(!UserDefaults.standard.bool(forKey: "hasSeenOnboarding"))
+                    .onDisappear {
+                        UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
+                    }
+            }
+            .onAppear {
+                viewModel.bind(to: $document)
+                checkOnboarding()
+            }
+            .onChange(of: document) { _, newDocument in
+                viewModel.syncWithDocument(newDocument)
+            }
+            .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
+                TextField("Name", text: $viewModel.newItemName)
+                Button("Cancel", role: .cancel) { }
+                Button("Rename") {
+                    viewModel.performRename()
+                }
+            } message: {
+                Text("Enter new name")
+            }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        #if os(iOS)
+        NavigationStack {
             ProjectSidebar(
                 viewModel: viewModel,
                 detailSelection: $detailSelection,
@@ -85,62 +125,35 @@ struct ManuscriptProjectView: View {
                 isAddCharacterSheetPresented: $isAddCharacterSheetPresented,
                 isAddLocationSheetPresented: $isAddLocationSheetPresented
             )
-            #if os(macOS)
+            .navigationDestination(for: DetailSelection.self) { selection in
+                DetailContentView(
+                    viewModel: viewModel,
+                    selection: .constant(selection)
+                )
+            }
+        }
+        .background(NavigationBarHider())
+        #else
+        NavigationSplitView {
+            ProjectSidebar(
+                viewModel: viewModel,
+                detailSelection: $detailSelection,
+                isAddDocumentSheetPresented: $isAddDocumentSheetPresented,
+                isAddFolderSheetPresented: $isAddFolderSheetPresented,
+                isAddCharacterSheetPresented: $isAddCharacterSheetPresented,
+                isAddLocationSheetPresented: $isAddLocationSheetPresented
+            )
             .frame(minWidth: 190)
-            #endif
-            #if os(macOS)
-            // No changes for macOS
-            #endif
         } detail: {
-            // Detail view based on selection
             if detailSelection != nil {
                 DetailContentView(
                     viewModel: viewModel,
                     selection: $detailSelection
                 )
             } else {
-                // Default empty state or project overview
                 ProjectOverview(viewModel: viewModel)
             }
         }
-        .sheet(isPresented: $isAddDocumentSheetPresented) {
-            AddDocumentSheet(viewModel: viewModel)
-        }
-        .sheet(isPresented: $isAddFolderSheetPresented) {
-            AddFolderSheet(viewModel: viewModel)
-        }
-        .sheet(isPresented: $isAddCharacterSheetPresented) {
-            AddCharacterSheet(viewModel: viewModel)
-        }
-        .sheet(isPresented: $isAddLocationSheetPresented) {
-            AddLocationSheet(viewModel: viewModel)
-        }
-        .sheet(isPresented: $showOnboarding) {
-            OnboardingView()
-                .interactiveDismissDisabled(!UserDefaults.standard.bool(forKey: "hasSeenOnboarding"))
-                .onDisappear {
-                    UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-                }
-        }
-        .onAppear {
-            viewModel.bind(to: $document)
-            checkOnboarding()
-        }
-        .onChange(of: document) { _, newDocument in
-            viewModel.syncWithDocument(newDocument)
-        }
-        .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
-            TextField("Name", text: $viewModel.newItemName)
-            Button("Cancel", role: .cancel) { }
-            Button("Rename") {
-                viewModel.performRename()
-            }
-        } message: {
-            Text("Enter new name")
-        }
-        #if os(iOS)
-        .navigationSplitViewStyle(.balanced)
-        .background(NavigationBarHider())
         #endif
     }
 

@@ -126,13 +126,9 @@ struct ProjectSidebar: View {
         }
         
         // Use the pre-defined content in the List
-        List(selection: typedSelection) {
-            listContent
-        }
-        .listStyle(.sidebar)
-        #if os(macOS)
-        .navigationTitle(viewModel.document.title.isEmpty ? "Untitled" : viewModel.document.title)
-        #endif
+        // On iOS with NavigationStack, don't use selection binding - NavigationLinks handle navigation
+        // On macOS with NavigationSplitView, use selection binding for sidebar selection
+        sidebarList(content: listContent, selection: typedSelection)
         .toolbar {
             #if os(macOS)
             ToolbarItem(placement: .navigation) {
@@ -193,5 +189,21 @@ struct ProjectSidebar: View {
         } message: {
             Text("Enter new name")
         }
+    }
+
+    @ViewBuilder
+    private func sidebarList<Content: View>(content: Content, selection: Binding<DetailSelection?>) -> some View {
+        #if os(iOS)
+        List {
+            content
+        }
+        .listStyle(.sidebar)
+        #else
+        List(selection: selection) {
+            content
+        }
+        .listStyle(.sidebar)
+        .navigationTitle(viewModel.document.title.isEmpty ? "Untitled" : viewModel.document.title)
+        #endif
     }
 } 

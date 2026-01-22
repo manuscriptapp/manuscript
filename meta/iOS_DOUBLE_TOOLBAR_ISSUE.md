@@ -4,13 +4,15 @@
 
 | Approach | Effort | Solves Double Toolbar | Correct Back Button Behavior |
 |----------|--------|----------------------|------------------------------|
-| `.toolbarRole(.automatic)` | Low | ❌ No | N/A |
-| `NavigationBarHiderController` (UIKit) | Medium | ✅ **WORKING** | ⚠️ Partial (see below) |
+| **NavigationStack + NavigationBarHider (CURRENT)** | Medium | ✅ **WORKING** | ✅ **WORKING** |
+| `NavigationBarHider` + `.toolbarRole(.automatic)` | Medium | ✅ Working | ❌ No |
+| `.toolbarRole(.automatic)` alone | Low | ❌ No | N/A |
+| Custom back button in DetailContentView | Medium | N/A | ❌ Creates double back buttons |
 | Switch to `WindowGroup` (like Morning Pages) | High | ✅ | ✅ |
 
-**Current solution (January 2026):** `NavigationBarHiderController` in `ManuscriptProjectView.swift` - uses UIKit to traverse the view controller hierarchy and hide DocumentGroup's implicit navigation bar.
+**Current solution (January 2026):** Use explicit `NavigationStack` on iOS with `navigationDestination(for:)`, `NavigationBarHider` to hide DocumentGroup's bar, and `List` without selection binding so `NavigationLink(value:)` works.
 
-**Remaining issue:** Back button in detail views closes the document instead of navigating to the sidebar. This needs further work.
+**Result:** ✅ Single toolbar, ✅ Back button correctly navigates within the project (not closing document).
 
 ---
 
@@ -55,11 +57,102 @@ This is a known architectural limitation of SwiftUI. As noted in the [Apple Deve
 
 **As of January 2026:**
 
-The codebase has the following iOS-specific navigation handling:
-- `ManuscriptProjectView.swift:29` - `.toolbar(.hidden, for: .navigationBar)` on sidebar
-- `ProjectSidebar.swift:133-135` - macOS-only `.navigationTitle`
+### ✅ SOLVED: Both Double Toolbar AND Back Button Navigation
 
-This partially hides the inner navigation bar but doesn't fully resolve the issue.
+The solution involves three key components:
+
+1. **Use explicit `NavigationStack` on iOS** (not NavigationSplitView)
+2. **Use `NavigationBarHider`** to hide DocumentGroup's implicit navigation bar
+3. **Use `List` without `selection:` binding on iOS** so NavigationLinks work
+
+```swift
+// ManuscriptProjectView.swift
+@ViewBuilder
+private var mainContent: some View {
+    #if os(iOS)
+    NavigationStack {
+        ProjectSidebar(
+            viewModel: viewModel,
+            detailSelection: $detailSelection,
+            // ... other bindings
+        )
+        .navigationDestination(for: DetailSelection.self) { selection in
+            DetailContentView(
+                viewModel: viewModel,
+                selection: .constant(selection)
+            )
+        }
+    }
+    .background(NavigationBarHider())
+    #else
+    // macOS: Use NavigationSplitView as before
+    NavigationSplitView {
+        ProjectSidebar(...)
+    } detail: {
+        // ...
+    }
+    #endif
+}
+```
+
+**Result:**
+- ✅ Single toolbar displaying document title
+- ✅ Back button navigates within the project (to sidebar)
+- ✅ NavigationLink with `value:` pattern works naturally
+
+### Why This Works
+
+1. **Explicit NavigationStack** - We control our own navigation context
+2. **NavigationBarHider** - Hides DocumentGroup's implicit navigation bar via UIKit
+3. **`List` without selection** - On iOS, `List(selection:)` intercepts taps for selection instead of letting NavigationLinks navigate. Plain `List` lets NavigationLinks work.
+4. **`navigationDestination(for:)`** - Tells SwiftUI how to handle DetailSelection navigation
+5. **NavigationLink(value:)** in sidebar items - Pushes onto our NavigationStack naturally
+6. **Back button** - Pops within our navigation flow, not closing the document
+
+### Required Changes
+
+#### 1. ProjectSidebar: Platform-specific List
+
+```swift
+// ProjectSidebar.swift
+@ViewBuilder
+private func sidebarList<Content: View>(content: Content, selection: Binding<DetailSelection?>) -> some View {
+    #if os(iOS)
+    // iOS: Don't use selection binding - NavigationLinks handle navigation
+    List {
+        content
+    }
+    .listStyle(.sidebar)
+    #else
+    // macOS: Use selection binding for NavigationSplitView
+    List(selection: selection) {
+        content
+    }
+    .listStyle(.sidebar)
+    .navigationTitle(viewModel.document.title.isEmpty ? "Untitled" : viewModel.document.title)
+    #endif
+}
+```
+
+#### 2. DocumentItemView: NavigationLink on iOS
+
+```swift
+// DocumentItemView.swift
+var body: some View {
+    #if os(iOS)
+    NavigationLink(value: DetailSelection.document(document)) {
+        documentLabel
+    }
+    // ... modifiers
+    #else
+    documentLabel
+        .tag(DetailSelection.document(document))
+    // ... modifiers
+    #endif
+}
+```
+
+The `.tag()` approach works with `List(selection:)` binding (used by NavigationSplitView) but doesn't work with `navigationDestination(for:)`. NavigationLink(value:) is required for the navigation to actually push.
 
 ---
 
@@ -333,6 +426,58 @@ NavigationSplitView { ... }
 **Result:** ✅ **WORKING** - Successfully hides the DocumentGroup's navigation bar, leaving only the NavigationSplitView's bar visible.
 
 **Remaining Issue:** The back button in detail views still triggers document close instead of navigating within the project. This is a separate navigation hierarchy issue.
+
+---
+
+### Approach 7: Custom Back Button in DetailContentView
+
+**Theory:** Hide the system back button and provide a custom one that sets `selection = nil` to navigate back to sidebar.
+
+**Implementation:**
+```swift
+// In DetailContentView.swift
+var body: some View {
+    if let currentSelection = selection {
+        detailContent(for: currentSelection)
+            #if os(iOS)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        selection = nil
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                            Text("Project")
+                        }
+                    }
+                }
+            }
+            #endif
+    }
+}
+```
+
+**Result:** ❌ Creates **double back buttons** - DocumentGroup's back button still appears alongside our custom button. The `.navigationBarBackButtonHidden(true)` only hides NavigationSplitView's back button, not DocumentGroup's.
+
+---
+
+### Approach 8: `.navigationBarBackButtonHidden(true)` at ManuscriptProjectView Level
+
+**Theory:** Apply `.navigationBarBackButtonHidden(true)` at the root level to hide DocumentGroup's back button.
+
+**Implementation:**
+```swift
+// In ManuscriptProjectView.swift
+#if os(iOS)
+.navigationSplitViewStyle(.balanced)
+.navigationBarBackButtonHidden(true)
+.background(NavigationBarHider())
+.toolbarRole(.automatic)
+#endif
+```
+
+**Result:** ❌ Does NOT hide DocumentGroup's back button. The modifier doesn't reach the DocumentGroup's implicit NavigationStack.
 
 ---
 
