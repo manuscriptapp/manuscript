@@ -1,6 +1,69 @@
 import SwiftUI
 import SwiftData
 
+#if os(iOS)
+/// Hides the parent navigation bar from DocumentGroup's implicit NavigationStack
+struct NavigationBarHider: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        let controller = NavigationBarHiderController()
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        (uiViewController as? NavigationBarHiderController)?.hideNavigationBar()
+    }
+}
+
+class NavigationBarHiderController: UIViewController {
+    private var observer: NSObjectProtocol?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .clear
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        hideNavigationBar()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        hideNavigationBar()
+
+        // Keep checking periodically
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.hideNavigationBar()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.hideNavigationBar()
+        }
+    }
+
+    func hideNavigationBar() {
+        // Try to find and hide all parent navigation controllers
+        var current: UIViewController? = self
+        while let vc = current {
+            if let nav = vc.navigationController {
+                nav.setNavigationBarHidden(true, animated: false)
+                nav.navigationBar.isHidden = true
+            }
+            current = vc.parent
+        }
+
+        // Also try via responder chain
+        var responder: UIResponder? = self
+        while let r = responder {
+            if let nav = r as? UINavigationController {
+                nav.setNavigationBarHidden(true, animated: false)
+                nav.navigationBar.isHidden = true
+            }
+            responder = r.next
+        }
+    }
+}
+#endif
+
 struct ManuscriptProjectView: View {
     @Binding var document: ManuscriptDocument
     @StateObject private var viewModel = DocumentViewModel()
@@ -25,8 +88,8 @@ struct ManuscriptProjectView: View {
             #if os(macOS)
             .frame(minWidth: 190)
             #endif
-            #if os(iOS)
-            .toolbar(.hidden, for: .navigationBar)
+            #if os(macOS)
+            // No changes for macOS
             #endif
         } detail: {
             // Detail view based on selection
@@ -75,6 +138,10 @@ struct ManuscriptProjectView: View {
         } message: {
             Text("Enter new name")
         }
+        #if os(iOS)
+        .navigationSplitViewStyle(.balanced)
+        .background(NavigationBarHider())
+        #endif
     }
 
     private func checkOnboarding() {
