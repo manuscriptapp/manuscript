@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 struct CharacterDetailView: View {
     let character: ManuscriptCharacter

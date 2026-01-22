@@ -28,7 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		E629AD532F13CBC700C8831E /* manuscript.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = manuscript.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E629AD532F13CBC700C8831E /* Manuscript.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Manuscript.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E629AD602F13CBC900C8831E /* manuscriptTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = manuscriptTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E629AD6A2F13CBC900C8831E /* manuscriptUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = manuscriptUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -103,7 +103,7 @@
 		E629AD542F13CBC700C8831E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E629AD532F13CBC700C8831E /* manuscript.app */,
+				E629AD532F13CBC700C8831E /* Manuscript.app */,
 				E629AD602F13CBC900C8831E /* manuscriptTests.xctest */,
 				E629AD6A2F13CBC900C8831E /* manuscriptUITests.xctest */,
 			);
@@ -134,7 +134,7 @@
 				E6RICH0012F22000000000002 /* RichTextKit */,
 			);
 			productName = manuscript;
-			productReference = E629AD532F13CBC700C8831E /* manuscript.app */;
+			productReference = E629AD532F13CBC700C8831E /* Manuscript.app */;
 			productType = "com.apple.product-type.application";
 		};
 		E629AD5F2F13CBC900C8831E /* manuscriptTests */ = {
