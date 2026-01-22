@@ -261,6 +261,10 @@ struct ProjectSidebar: View {
                 }
             }
             #else
+            ToolbarItem(placement: .topBarTrailing) {
+                EditButton()
+            }
+
             ToolbarItem(placement: .bottomBar) {
                 Spacer()
             }

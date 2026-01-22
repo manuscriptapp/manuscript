@@ -592,6 +592,44 @@ class DocumentViewModel: ObservableObject {
         return updatedFolder
     }
 
+    // MARK: - Reordering
+
+    /// Move documents within a folder from source indices to a destination index
+    func moveDocuments(in folder: ManuscriptFolder, from source: IndexSet, to destination: Int) {
+        var doc = document
+        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+            var updated = f
+            updated.documents.move(fromOffsets: source, toOffset: destination)
+            // Update order property to match new positions
+            for (index, _) in updated.documents.enumerated() {
+                updated.documents[index].order = index
+            }
+            return updated
+        }
+        document = doc
+        if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
+            currentFolder = updated
+        }
+    }
+
+    /// Move subfolders within a folder from source indices to a destination index
+    func moveSubfolders(in folder: ManuscriptFolder, from source: IndexSet, to destination: Int) {
+        var doc = document
+        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+            var updated = f
+            updated.subfolders.move(fromOffsets: source, toOffset: destination)
+            // Update order property to match new positions
+            for (index, _) in updated.subfolders.enumerated() {
+                updated.subfolders[index].order = index
+            }
+            return updated
+        }
+        document = doc
+        if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
+            currentFolder = updated
+        }
+    }
+
     // MARK: - Rename UI Management
 
     func showRenameAlert(for item: Any) {

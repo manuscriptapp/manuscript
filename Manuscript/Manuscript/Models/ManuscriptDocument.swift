@@ -371,8 +371,11 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         // Build items array for folder.json
         var items: [FolderItem] = []
 
+        // Sort documents by order before writing
+        let sortedDocuments = folder.documents.sorted { $0.order < $1.order }
+
         // Add documents
-        for (index, document) in folder.documents.enumerated() {
+        for (index, document) in sortedDocuments.enumerated() {
             let filename = String(format: "%02d-%@.md", index + 1, document.title.slugified)
 
             let item = FolderItem(
@@ -415,9 +418,12 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             }
         }
 
+        // Sort subfolders by order before writing
+        let sortedSubfolders = folder.subfolders.sorted { $0.order < $1.order }
+
         // Add subfolders
-        for (index, subfolder) in folder.subfolders.enumerated() {
-            let folderName = String(format: "%02d-%@", index + folder.documents.count + 1, subfolder.title.slugified)
+        for (index, subfolder) in sortedSubfolders.enumerated() {
+            let folderName = String(format: "%02d-%@", index + sortedDocuments.count + 1, subfolder.title.slugified)
 
             let item = FolderItem(
                 id: subfolder.id.uuidString,

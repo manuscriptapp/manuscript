@@ -148,22 +148,28 @@ struct FolderItemView: View {
         
         var body: some View {
             DisclosureGroup(isExpanded: isExpanded) {
-                // Documents in this folder
-                ForEach(folder.documents) { document in
+                // Documents in this folder (sorted by order)
+                ForEach(folder.documents.sorted { $0.order < $1.order }) { document in
                     DocumentItemView(
                         documentId: document.id,
                         viewModel: viewModel,
                         detailSelection: $detailSelection
                     )
                 }
-                
-                // Subfolders
-                ForEach(folder.subfolders) { subfolder in
+                .onMove { source, destination in
+                    viewModel.moveDocuments(in: folder, from: source, to: destination)
+                }
+
+                // Subfolders (sorted by order)
+                ForEach(folder.subfolders.sorted { $0.order < $1.order }) { subfolder in
                     RecursiveFolderView(
                         folderId: subfolder.id,
                         viewModel: viewModel,
                         detailSelection: $detailSelection
                     )
+                }
+                .onMove { source, destination in
+                    viewModel.moveSubfolders(in: folder, from: source, to: destination)
                 }
             } label: {
                 Label {
