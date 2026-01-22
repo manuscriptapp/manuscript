@@ -39,7 +39,7 @@ struct ProjectSidebar: View {
         // Create the content as a separate variable
         let listContent = Group {
             #if os(iOS)
-            Text(viewModel.document.title.isEmpty ? "Untitled" : viewModel.document.title)
+            Text(viewModel.documentTitle.isEmpty ? "Untitled" : viewModel.documentTitle)
                 .font(.title)
                 .bold()
                 .listRowSeparator(.hidden)
@@ -248,12 +248,24 @@ struct ProjectSidebar: View {
             content
         }
         .listStyle(.sidebar)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            SidebarStatsView(
+                totalWords: viewModel.rootFolder.totalWordCount,
+                writingHistory: viewModel.document.writingHistory
+            )
+        }
         #else
         List(selection: selection) {
             content
         }
         .listStyle(.sidebar)
-        .navigationTitle(viewModel.document.title.isEmpty ? "Untitled" : viewModel.document.title)
+        .navigationTitle(viewModel.documentTitle.isEmpty ? "Untitled" : viewModel.documentTitle)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            SidebarStatsView(
+                totalWords: viewModel.rootFolder.totalWordCount,
+                writingHistory: viewModel.document.writingHistory
+            )
+        }
         #endif
     }
 } 

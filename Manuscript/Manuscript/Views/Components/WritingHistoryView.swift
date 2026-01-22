@@ -44,9 +44,6 @@ struct WritingHistoryView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // Statistics Cards
-                statisticsSection
-
                 // Chart Section
                 chartSection
 
@@ -59,77 +56,6 @@ struct WritingHistoryView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
-    }
-
-    // MARK: - Statistics Section
-
-    private var statisticsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Overview")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
-                StatCard(
-                    title: "Total Words",
-                    value: "\(writingHistory.totalWordsWritten.formatted())",
-                    icon: "character.cursor.ibeam",
-                    color: .blue
-                )
-
-                StatCard(
-                    title: "Days Written",
-                    value: "\(writingHistory.daysWritten)",
-                    icon: "calendar",
-                    color: .green
-                )
-
-                StatCard(
-                    title: "Current Streak",
-                    value: "\(writingHistory.currentStreak) days",
-                    icon: "flame.fill",
-                    color: .orange
-                )
-
-                StatCard(
-                    title: "Longest Streak",
-                    value: "\(writingHistory.longestStreak) days",
-                    subtitle: writingHistory.longestStreakDateRange,
-                    icon: "trophy.fill",
-                    color: .yellow
-                )
-
-                StatCard(
-                    title: "Avg Words/Day",
-                    value: "\(writingHistory.averageWordsPerDay.formatted())",
-                    icon: "chart.line.uptrend.xyaxis",
-                    color: .purple
-                )
-
-                let longStreaks = writingHistory.streaksLongerThan(3)
-                if longStreaks > 0 {
-                    StatCard(
-                        title: "3+ Day Streaks",
-                        value: "\(longStreaks)",
-                        icon: "flame.circle.fill",
-                        color: .red
-                    )
-                }
-
-                if let bestDay = writingHistory.bestDay {
-                    StatCard(
-                        title: "Best Day",
-                        value: "\(bestDay.wordsWritten.formatted())",
-                        subtitle: bestDay.shortDate,
-                        icon: "star.fill",
-                        color: .pink
-                    )
-                }
-            }
-        }
     }
 
     // MARK: - Chart Section

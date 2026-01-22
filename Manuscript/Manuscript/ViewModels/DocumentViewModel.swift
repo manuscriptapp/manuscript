@@ -16,6 +16,9 @@ class DocumentViewModel: ObservableObject {
     // Published root folder for sidebar display - this is the source of truth for UI
     @Published private(set) var rootFolder: ManuscriptFolder = ManuscriptFolder(title: "Draft")
 
+    // Published document title for sidebar display
+    @Published private(set) var documentTitle: String = ""
+
     // Rename state
     @Published var isRenameAlertPresented = false
     @Published var renameAlertTitle = ""
@@ -33,6 +36,8 @@ class DocumentViewModel: ObservableObject {
             documentBinding?.wrappedValue = newValue
             // Update the published rootFolder for immediate UI updates
             rootFolder = newValue.rootFolder
+            // Update the published title for sidebar display
+            documentTitle = newValue.title
         }
     }
 
@@ -45,6 +50,7 @@ class DocumentViewModel: ObservableObject {
         self.documentBinding = document
         self.rootFolder = document.wrappedValue.rootFolder
         self.currentFolder = document.wrappedValue.rootFolder
+        self.documentTitle = document.wrappedValue.title
         // Auto-expand root folder
         expandedFolderIds.insert(document.wrappedValue.rootFolder.id)
     }
@@ -127,6 +133,8 @@ class DocumentViewModel: ObservableObject {
     func syncWithDocument(_ newDocument: ManuscriptDocument) {
         // Update the published rootFolder for sidebar display
         rootFolder = newDocument.rootFolder
+        // Update the published title
+        documentTitle = newDocument.title
         // Update current folder if it still exists, otherwise go to root
         if let updatedFolder = findFolder(withId: currentFolder.id, in: newDocument.rootFolder) {
             currentFolder = updatedFolder

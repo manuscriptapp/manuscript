@@ -25,7 +25,12 @@ struct DetailContentView: View {
         case .folder(let folder):
             FolderDetailView(folder: folder, viewModel: viewModel, selection: $selection)
         case .document(let document):
-            DocumentDetailView(document: document, viewModel: viewModel)
+            // Look up fresh document from view model to get latest content
+            if let freshDocument = viewModel.findDocument(withId: document.id) {
+                DocumentDetailView(document: freshDocument, viewModel: viewModel)
+            } else {
+                DocumentDetailView(document: document, viewModel: viewModel)
+            }
         case .character(let character):
             CharacterDetailView(character: character, viewModel: viewModel)
         case .location(let location):

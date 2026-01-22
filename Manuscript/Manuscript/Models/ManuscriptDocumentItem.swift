@@ -63,5 +63,12 @@ extension ManuscriptDocument {
             self.characterIds = characterIds
             self.locationIds = locationIds
         }
+
+        /// Word count for this document's content
+        var wordCount: Int {
+            let words = content.components(separatedBy: .whitespacesAndNewlines)
+                .filter { !$0.isEmpty }
+            return words.count
+        }
     }
 }

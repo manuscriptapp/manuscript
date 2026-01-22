@@ -77,4 +77,11 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
     var isEmpty: Bool {
         documents.isEmpty && subfolders.isEmpty
     }
+
+    /// Total word count across all documents in this folder and subfolders
+    var totalWordCount: Int {
+        let documentWords = documents.reduce(0) { $0 + $1.wordCount }
+        let subfolderWords = subfolders.reduce(0) { $0 + $1.totalWordCount }
+        return documentWords + subfolderWords
+    }
 }
