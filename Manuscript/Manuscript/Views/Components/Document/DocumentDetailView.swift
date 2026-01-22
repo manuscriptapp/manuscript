@@ -184,11 +184,13 @@ struct DocumentDetailView: View {
                 Label("Document Info", systemImage: "info.circle")
             }
 
+            #if os(iOS)
             Button {
                 showSettings = true
             } label: {
                 Label("Settings", systemImage: "gear")
             }
+            #endif
         } label: {
             Label("More", systemImage: "ellipsis.circle")
         }
