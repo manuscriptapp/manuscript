@@ -160,7 +160,6 @@ struct TemplateDetailSheet: View {
             }
             .sheet(isPresented: $showingNewBookSheet) {
                 NewBookSheet(
-                    manuscriptViewModel: ManuscriptViewModel(document: ManuscriptDocument()),
                     preSelectedTemplate: template
                 ) { _ in
                     // Call the completion handler

@@ -73,7 +73,8 @@
       "mcp__XcodeBuildMCP__gesture",
       "mcp__XcodeBuildMCP__type_text",
       "mcp__XcodeBuildMCP__button",
-      "mcp__XcodeBuildMCP__start_sim_log_cap"
+      "mcp__XcodeBuildMCP__start_sim_log_cap",
+      "Bash(wc:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"

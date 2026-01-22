@@ -3,11 +3,10 @@ import Foundation
 import UniformTypeIdentifiers
 
 struct NewBookSheet: View {
-    @ObservedObject var manuscriptViewModel: ManuscriptViewModel
     let preSelectedTemplate: BookTemplate?
     @Environment(\.dismiss) private var dismiss
     @AppStorage("defaultAuthorName") private var defaultAuthorName = ""
-    
+
     @State private var title = ""
     @State private var author: String
     @State private var metaInfo = ""
@@ -15,11 +14,10 @@ struct NewBookSheet: View {
     @State private var showingTemplateInfo = false
     @State private var showingSavePanel = false
     @State private var document: ManuscriptDocument?
-    
+
     var onComplete: (ManuscriptDocument) -> Void
-    
-    init(manuscriptViewModel: ManuscriptViewModel, preSelectedTemplate: BookTemplate? = nil, onComplete: @escaping (ManuscriptDocument) -> Void = { _ in }) {
-        self.manuscriptViewModel = manuscriptViewModel
+
+    init(preSelectedTemplate: BookTemplate? = nil, onComplete: @escaping (ManuscriptDocument) -> Void = { _ in }) {
         self.preSelectedTemplate = preSelectedTemplate
         self.onComplete = onComplete
         _selectedTemplate = State(initialValue: preSelectedTemplate)
@@ -332,5 +330,5 @@ struct ManuscriptDocumentWrapper: FileDocument {
 
 // MARK: - Preview
 #Preview {
-    NewBookSheet(manuscriptViewModel: ManuscriptViewModel(document: ManuscriptDocument()))
+    NewBookSheet()
 }

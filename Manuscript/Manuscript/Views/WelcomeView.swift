@@ -62,7 +62,7 @@ struct WelcomeView: View {
                 }
             }
             .sheet(isPresented: $isShowingNewProjectSheet) {
-                NewBookSheet(manuscriptViewModel: ManuscriptViewModel(document: ManuscriptDocument())) { document in
+                NewBookSheet { document in
                     // Create a new document and open it
                     #if os(macOS)
                     // On macOS, the document is already saved by the NewBookSheet
