@@ -27,8 +27,18 @@ struct DocumentDetailView: View {
             #if os(macOS)
             .inspectorColumnWidth(min: 280, ideal: 320, max: 450)
             #endif
-            .onChange(of: detailViewModel.editedTitle) { _, newValue in
-                viewModel.updateDocument(document, title: newValue)
+            .onChange(of: detailViewModel.editedTitle) { oldValue, newValue in
+                // Only update if the value actually changed (prevents overwriting on view load)
+                guard oldValue != newValue else { return }
+                // Don't overwrite a non-empty title with an empty one (prevents stale state overwriting)
+                if let currentDoc = viewModel.findDocument(withId: document.id) {
+                    if newValue.isEmpty && !currentDoc.title.isEmpty {
+                        return  // Don't overwrite existing title with empty
+                    }
+                    if currentDoc.title != newValue {
+                        viewModel.updateDocument(document, title: newValue)
+                    }
+                }
             }
             .onChange(of: detailViewModel.editedOutline) { _, newValue in
                 viewModel.updateDocument(document, outline: newValue)

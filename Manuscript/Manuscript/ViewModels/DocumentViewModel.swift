@@ -24,6 +24,9 @@ class DocumentViewModel: ObservableObject {
     @Published var renameAlertTitle = ""
     @Published var newItemName = ""
 
+    // Inline editing state for sidebar items
+    @Published var documentIdBeingRenamed: UUID?
+
     private var itemToRename: Any?
 
     // Reference to the document binding - set by the view
@@ -211,6 +214,25 @@ class DocumentViewModel: ObservableObject {
         return nil
     }
 
+    /// Finds the parent folder containing a given document
+    func findParentFolder(of doc: ManuscriptDocument.Document) -> ManuscriptFolder? {
+        return findParentFolderRecursively(of: doc.id, in: rootFolder)
+    }
+
+    private func findParentFolderRecursively(of docId: UUID, in folder: ManuscriptFolder) -> ManuscriptFolder? {
+        // Check if this folder contains the document
+        if folder.documents.contains(where: { $0.id == docId }) {
+            return folder
+        }
+        // Search in subfolders
+        for subfolder in folder.subfolders {
+            if let found = findParentFolderRecursively(of: docId, in: subfolder) {
+                return found
+            }
+        }
+        return nil
+    }
+
     // MARK: - Project Management
 
     func updateProject(title: String, author: String, metaInfo: String) {
@@ -337,6 +359,43 @@ class DocumentViewModel: ObservableObject {
     }
 
     // MARK: - Document Management
+
+    /// Creates a new untitled document and triggers inline renaming in the sidebar
+    func addUntitledDocument(to folder: ManuscriptFolder) {
+        let nextOrder = folder.documents.count
+        let newDoc = ManuscriptDocument.Document(
+            title: "",
+            outline: "",
+            notes: "",
+            content: "",
+            order: nextOrder,
+            colorName: "Brown"
+        )
+
+        var doc = document
+        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+            var updated = f
+            updated.documents.append(newDoc)
+            return updated
+        }
+        document = doc
+
+        if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
+            currentFolder = updated
+        }
+
+        // Expand all ancestor folders and the target folder to show the new document
+        expandToDocument(newDoc)
+        setFolderExpanded(folder, expanded: true)
+
+        // Auto-select the new document
+        detailSelection = .document(newDoc)
+
+        // Trigger inline renaming after a short delay to allow the UI to update
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.documentIdBeingRenamed = newDoc.id
+        }
+    }
 
     func addDocument(to folder: ManuscriptFolder, title: String, outline: String = "", notes: String = "", content: String = "") {
         let nextOrder = folder.documents.count

@@ -5,10 +5,17 @@ struct DocumentItemView: View {
     let documentId: UUID
     @ObservedObject var viewModel: DocumentViewModel
     @Binding var detailSelection: DetailSelection?
+    @State private var editingTitle: String = ""
+    @FocusState private var isTitleFocused: Bool
 
     /// Look up the current document from the viewModel to ensure we always have fresh data
     private var document: ManuscriptDocument.Document {
         viewModel.findDocument(withId: documentId) ?? ManuscriptDocument.Document(title: "Unknown")
+    }
+
+    /// Check if this document is being renamed inline
+    private var isBeingRenamed: Bool {
+        viewModel.documentIdBeingRenamed == documentId
     }
 
     private let iconOptions: [(String, String)] = [
@@ -65,14 +72,66 @@ struct DocumentItemView: View {
         viewModel.updateDocumentIcon(document, iconName: iconName)
     }
     
-    private var documentLabel: some View {
-        Label {
+    /// The display title for the document, showing "Untitled Document" in italic when empty
+    @ViewBuilder
+    private var titleText: some View {
+        if document.title.isEmpty {
+            Text("Untitled Document")
+                .italic()
+                .foregroundStyle(.secondary)
+        } else {
             Text(document.title)
+        }
+    }
+
+    /// Inline rename text field shown when the document is being renamed
+    @ViewBuilder
+    private var inlineRenameField: some View {
+        Label {
+            TextField("Document name", text: $editingTitle)
+                .focused($isTitleFocused)
+                .textFieldStyle(.plain)
+                .onSubmit {
+                    commitRename()
+                }
+                .onAppear {
+                    editingTitle = document.title
+                    isTitleFocused = true
+                }
+                .onChange(of: isTitleFocused) { _, focused in
+                    if !focused {
+                        commitRename()
+                    }
+                }
         } icon: {
             Image(systemName: document.iconName)
                 .foregroundStyle(iconColorForDocument(document))
         }
-        .id("\(documentId)-\(document.iconName)-\(document.colorName)")
+    }
+
+    private func commitRename() {
+        // Guard against being called when not actively renaming
+        guard viewModel.documentIdBeingRenamed == documentId else { return }
+
+        let trimmedTitle = editingTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Save the title if it's not empty
+        if !trimmedTitle.isEmpty {
+            viewModel.updateDocument(document, title: trimmedTitle)
+        }
+
+        // Clear the rename state
+        viewModel.documentIdBeingRenamed = nil
+    }
+
+    private var documentLabel: some View {
+        Label {
+            titleText
+        } icon: {
+            Image(systemName: document.iconName)
+                .foregroundStyle(iconColorForDocument(document))
+        }
+        .id("\(documentId)-\(document.iconName)-\(document.colorName)-\(document.title.isEmpty)")
     }
 
     var body: some View {
@@ -131,42 +190,50 @@ struct DocumentItemView: View {
             }
         }
         #else
-        documentLabel
-            .tag(DetailSelection.document(document))
-            .contextMenu {
-                Menu("Change Icon") {
-                ForEach(iconOptions, id: \.0) { name, icon in
-                    Button(action: { updateIcon(icon) }) {
-                        Label(name, systemImage: icon)
-                            .foregroundStyle(colorForDocument(document))
-                    }
-                }
-            }
-            
-            Menu("Change Color") {
-                ForEach(colorOptions, id: \.0) { name, color in
-                    Button(action: { updateNoteColor(color) }) {
-                        HStack {
-                            Image(systemName: document.colorName == name ? "checkmark.circle.fill" : "circle.fill")
-                                .foregroundColor(color)
-                            Text(name)
+        Group {
+            if isBeingRenamed {
+                inlineRenameField
+                    .tag(DetailSelection.document(document))
+            } else {
+                documentLabel
+                    .tag(DetailSelection.document(document))
+                    .contextMenu {
+                        Menu("Change Icon") {
+                        ForEach(iconOptions, id: \.0) { name, icon in
+                            Button(action: { updateIcon(icon) }) {
+                                Label(name, systemImage: icon)
+                                    .foregroundStyle(colorForDocument(document))
+                            }
                         }
                     }
+
+                    Menu("Change Color") {
+                        ForEach(colorOptions, id: \.0) { name, color in
+                            Button(action: { updateNoteColor(color) }) {
+                                HStack {
+                                    Image(systemName: document.colorName == name ? "checkmark.circle.fill" : "circle.fill")
+                                        .foregroundColor(color)
+                                    Text(name)
+                                }
+                            }
+                        }
+                    }
+
+                    Divider()
+
+                    Button(action: {
+                        editingTitle = document.title
+                        viewModel.documentIdBeingRenamed = documentId
+                    }) {
+                        Label("Rename Document", systemImage: "pencil")
+                    }
+
+                    Button(role: .destructive, action: {
+                        viewModel.deleteDocument(document)
+                    }) {
+                        Label("Delete Document", systemImage: "trash")
+                    }
                 }
-            }
-            
-            Divider()
-            
-            Button(action: {
-                viewModel.showRenameAlert(for: document)
-            }) {
-                Label("Rename Document", systemImage: "pencil")
-            }
-            
-            Button(role: .destructive, action: {
-                viewModel.deleteDocument(document)
-            }) {
-                Label("Delete Document", systemImage: "trash")
             }
         }
         #endif

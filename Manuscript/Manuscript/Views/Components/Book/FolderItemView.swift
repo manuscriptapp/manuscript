@@ -10,7 +10,6 @@ struct FolderItemView: View {
         @ObservedObject var viewModel: DocumentViewModel
         @Binding var detailSelection: DetailSelection?
         @State private var isAddFolderSheetPresented = false
-        @State private var isAddDocumentSheetPresented = false
 
         /// Look up the current folder from the published rootFolder to ensure we always have fresh data
         private var folder: ManuscriptFolder {
@@ -251,7 +250,7 @@ struct FolderItemView: View {
                     }
 
                     Button(action: {
-                        isAddDocumentSheetPresented = true
+                        viewModel.addUntitledDocument(to: folder)
                     }) {
                         Label("Add Document", systemImage: "doc.badge.plus")
                     }
@@ -291,12 +290,6 @@ struct FolderItemView: View {
                 #endif
                 .sheet(isPresented: $isAddFolderSheetPresented) {
                     AddFolderSheet(
-                        viewModel: viewModel,
-                        initialFolder: folder
-                    )
-                }
-                .sheet(isPresented: $isAddDocumentSheetPresented) {
-                    AddDocumentSheet(
                         viewModel: viewModel,
                         initialFolder: folder
                     )

@@ -243,7 +243,7 @@ struct ProjectSidebar: View {
                         Label("Add Folder", systemImage: "folder.badge.plus")
                     }
 
-                    Button(action: { isAddDocumentSheetPresented.toggle() }) {
+                    Button(action: { addDocumentToSelectedFolder() }) {
                         Label("Add Document", systemImage: "doc.badge.plus")
                     }
 
@@ -289,7 +289,7 @@ struct ProjectSidebar: View {
                         Label("Add Folder", systemImage: "folder.badge.plus")
                     }
 
-                    Button(action: { isAddDocumentSheetPresented.toggle() }) {
+                    Button(action: { addDocumentToSelectedFolder() }) {
                         Label("Add Document", systemImage: "doc.badge.plus")
                     }
 
@@ -323,6 +323,21 @@ struct ProjectSidebar: View {
         } message: {
             Text("Enter new name")
         }
+    }
+
+    /// Creates a new untitled document in the currently selected folder, or root folder if none selected
+    private func addDocumentToSelectedFolder() {
+        // Determine target folder based on current selection
+        let targetFolder: ManuscriptFolder
+        if case .folder(let folder) = detailSelection {
+            targetFolder = folder
+        } else if case .document(let doc) = detailSelection {
+            // If a document is selected, find its parent folder
+            targetFolder = viewModel.findParentFolder(of: doc) ?? viewModel.rootFolder
+        } else {
+            targetFolder = viewModel.rootFolder
+        }
+        viewModel.addUntitledDocument(to: targetFolder)
     }
 
     @ViewBuilder

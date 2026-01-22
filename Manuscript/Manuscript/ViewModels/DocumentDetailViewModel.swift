@@ -161,9 +161,14 @@ class DocumentDetailViewModel: ObservableObject {
     }
 
     func saveChanges() {
+        // Get the current document title from the viewModel to avoid overwriting with stale data
+        // This handles the case where the title was changed externally (e.g., sidebar rename)
+        let currentTitle = documentViewModel.findDocument(withId: document.id)?.title ?? editedTitle
+        let titleToSave = editedTitle.isEmpty ? currentTitle : editedTitle
+
         documentViewModel.updateDocument(
             document,
-            title: editedTitle,
+            title: titleToSave,
             outline: editedOutline,
             notes: editedNotes,
             content: editedContent,
