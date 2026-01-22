@@ -18,7 +18,7 @@
                BlueprintIdentifier = "E629AD522F13CBC700C8831E"
                BuildableName = "manuscript.app"
                BlueprintName = "manuscript"
-               ReferencedContainer = "container:Manuscript.xcodeproj">
+               ReferencedContainer = "container:manuscript.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -38,7 +38,7 @@
                BlueprintIdentifier = "E629AD5F2F13CBC900C8831E"
                BuildableName = "manuscriptTests.xctest"
                BlueprintName = "manuscriptTests"
-               ReferencedContainer = "container:Manuscript.xcodeproj">
+               ReferencedContainer = "container:manuscript.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -49,7 +49,7 @@
                BlueprintIdentifier = "E629AD692F13CBC900C8831E"
                BuildableName = "manuscriptUITests.xctest"
                BlueprintName = "manuscriptUITests"
-               ReferencedContainer = "container:Manuscript.xcodeproj">
+               ReferencedContainer = "container:manuscript.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -71,7 +71,7 @@
             BlueprintIdentifier = "E629AD522F13CBC700C8831E"
             BuildableName = "manuscript.app"
             BlueprintName = "manuscript"
-            ReferencedContainer = "container:Manuscript.xcodeproj">
+            ReferencedContainer = "container:manuscript.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -88,7 +88,7 @@
             BlueprintIdentifier = "E629AD522F13CBC700C8831E"
             BuildableName = "manuscript.app"
             BlueprintName = "manuscript"
-            ReferencedContainer = "container:Manuscript.xcodeproj">
+            ReferencedContainer = "container:manuscript.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
