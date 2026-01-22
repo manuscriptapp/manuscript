@@ -5,6 +5,7 @@ struct DocumentDetailView: View {
     @StateObject private var detailViewModel: DocumentDetailViewModel
     @State private var inspectorDetent: PresentationDetent = .medium
     @State private var isReadMode = false
+    @State private var showSettings = false
 
     let document: ManuscriptDocument.Document
     @ObservedObject var viewModel: DocumentViewModel
@@ -44,6 +45,18 @@ struct DocumentDetailView: View {
             .navigationTitle(detailViewModel.editedTitle)
             .toolbar {
                 toolbarContent
+            }
+            .sheet(isPresented: $showSettings) {
+                NavigationStack {
+                    SettingsView()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done") {
+                                    showSettings = false
+                                }
+                            }
+                        }
+                }
             }
     }
 
@@ -108,9 +121,15 @@ struct DocumentDetailView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        #if os(macOS)
+        ToolbarItem(placement: .primaryAction) {
+            moreMenu
+        }
+        #else
         ToolbarItem(placement: .secondaryAction) {
             moreMenu
         }
+        #endif
 
         ToolbarItem(placement: .primaryAction) {
             Button {
@@ -163,6 +182,12 @@ struct DocumentDetailView: View {
                 detailViewModel.isInspectorPresented = true
             } label: {
                 Label("Document Info", systemImage: "info.circle")
+            }
+
+            Button {
+                showSettings = true
+            } label: {
+                Label("Settings", systemImage: "gear")
             }
         } label: {
             Label("More", systemImage: "ellipsis.circle")
