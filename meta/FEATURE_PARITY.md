@@ -2,7 +2,7 @@
 
 Manuscript vs Scrivener vs Ulysses.
 
-**Legend:** ✅ Yes | 🔜 Planned | ❌ No | ➖ N/A
+**Legend:** ✅ Yes | ⚡ Partial/Import | 🔜 Planned | ❌ No | ➖ N/A
 
 ---
 
@@ -111,8 +111,8 @@ Manuscript vs Scrivener vs Ulysses.
 | Project targets | ✅ | ✅ | 🔜 |
 | Session targets | ✅ | ✅ | 🔜 |
 | Deadline tracking | ✅ | ✅ | 🔜 |
-| Writing history | ✅ | ✅ | 🔜 |
-| Statistics | ✅ | ✅ | 🔜 |
+| Writing history | ✅ | ✅ | ⚡ Import |
+| Statistics | ✅ | ✅ | ⚡ Import |
 
 ---
 
@@ -125,6 +125,7 @@ Manuscript vs Scrivener vs Ulysses.
 | Import HTML | ✅ | ✅ | 🔜 |
 | Import folder | ✅ | ✅ | 🔜 |
 | Import & split | ✅ | ❌ | 🔜 |
+| Import Scrivener | ➖ | ❌ | ✅ |
 
 ---
 
@@ -187,4 +188,4 @@ Manuscript vs Scrivener vs Ulysses.
 
 ---
 
-*Last updated: January 2026*
+*Last updated: January 22, 2026*
