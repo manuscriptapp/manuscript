@@ -10,9 +10,10 @@ struct ManuscriptProjectView: View {
     @State private var isAddCharacterSheetPresented = false
     @State private var isAddLocationSheetPresented = false
     @State private var showOnboarding = false
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar with project structure
             ProjectSidebar(
                 viewModel: viewModel,
@@ -39,7 +40,26 @@ struct ManuscriptProjectView: View {
                 // Default empty state or project overview
                 ProjectOverview(viewModel: viewModel)
             }
+        #if os(iOS)
         }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                if detailSelection != nil {
+                    Button {
+                        detailSelection = nil
+                        columnVisibility = .all
+                    } label: {
+                        Label("Projects", systemImage: "chevron.backward")
+                    }
+                }
+            }
+        }
+        .navigationTitle("")
+        .navigationBarBackButtonHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+        #else
+        }
+        #endif
         .sheet(isPresented: $isAddDocumentSheetPresented) {
             AddDocumentSheet(viewModel: viewModel)
         }
@@ -62,6 +82,11 @@ struct ManuscriptProjectView: View {
         .onAppear {
             viewModel.bind(to: $document)
             checkOnboarding()
+        }
+        .onChange(of: detailSelection) { _, newValue in
+            #if os(iOS)
+            columnVisibility = newValue == nil ? .all : .detailOnly
+            #endif
         }
         .onChange(of: document) { _, newDocument in
             viewModel.syncWithDocument(newDocument)
