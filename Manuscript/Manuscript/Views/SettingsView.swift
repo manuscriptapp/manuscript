@@ -58,6 +58,10 @@ struct SettingsView: View {
                 LabeledContent("Build", value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1")
             }
         }
+        #if os(macOS)
+        .formStyle(.grouped)
+        .frame(minWidth: 450, minHeight: 500)
+        #endif
         .navigationTitle("Settings")
         .onAppear {
             loadExistingKeys()
