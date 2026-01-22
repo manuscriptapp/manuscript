@@ -718,7 +718,7 @@ struct DocumentInspectorView: View {
                         .font(.body)
                         .foregroundStyle(.white)
                         .padding(12)
-                        .background(Color.orange)
+                        .background(Color(red: 0.55, green: 0.35, blue: 0.2))
                         .clipShape(RoundedRectangle(cornerRadius: 16))
 
                     // Menu button
