@@ -35,7 +35,7 @@ struct SplitEditorContainerView: View {
             if splitEditorState.orientation == .horizontal {
                 // Side by side
                 HStack(spacing: 0) {
-                    DocumentDetailView(document: primary, viewModel: viewModel, fileURL: fileURL, splitEditorState: $splitEditorState)
+                    splitPaneWithLabel(document: primary, isPrimary: true)
                         .frame(width: geometry.size.width * splitEditorState.splitRatio)
 
                     MacOSSplitDivider(
@@ -44,13 +44,13 @@ struct SplitEditorContainerView: View {
                         totalSize: geometry.size.width
                     )
 
-                    DocumentDetailView(document: secondary, viewModel: viewModel, fileURL: fileURL, splitEditorState: $splitEditorState)
+                    splitPaneWithLabel(document: secondary, isPrimary: false)
                         .frame(maxWidth: .infinity)
                 }
             } else {
                 // Top and bottom
                 VStack(spacing: 0) {
-                    DocumentDetailView(document: primary, viewModel: viewModel, fileURL: fileURL, splitEditorState: $splitEditorState)
+                    splitPaneWithLabel(document: primary, isPrimary: true)
                         .frame(height: geometry.size.height * splitEditorState.splitRatio)
 
                     MacOSSplitDivider(
@@ -59,10 +59,32 @@ struct SplitEditorContainerView: View {
                         totalSize: geometry.size.height
                     )
 
-                    DocumentDetailView(document: secondary, viewModel: viewModel, fileURL: fileURL, splitEditorState: $splitEditorState)
+                    splitPaneWithLabel(document: secondary, isPrimary: false)
                         .frame(maxHeight: .infinity)
                 }
             }
+        }
+    }
+
+    /// Wraps a document view with a small title label
+    @ViewBuilder
+    private func splitPaneWithLabel(document: ManuscriptDocument.Document, isPrimary: Bool) -> some View {
+        VStack(spacing: 0) {
+            // Small document name header
+            HStack(spacing: 4) {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 9))
+                Text(document.title.isEmpty ? "Untitled" : document.title)
+                    .font(.system(size: 11))
+                    .lineLimit(1)
+                Spacer()
+            }
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color(nsColor: .windowBackgroundColor).opacity(0.8))
+
+            DocumentDetailView(document: document, viewModel: viewModel, fileURL: fileURL, splitEditorState: $splitEditorState)
         }
     }
 
