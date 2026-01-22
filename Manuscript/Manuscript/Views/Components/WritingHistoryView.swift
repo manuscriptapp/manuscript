@@ -632,7 +632,7 @@ struct CompactWritingHistoryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Image(systemName: "chart.bar.fill")
+                Image(systemName: "clock.arrow.circlepath")
                     .foregroundColor(.blue)
                 Text("Writing History")
                     .font(.headline)
