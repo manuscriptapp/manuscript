@@ -13,6 +13,8 @@ struct SettingsView: View {
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
     @AppStorage("defaultFontSize") private var defaultFontSize: Double = 16
     @AppStorage("defaultLineSpacing") private var defaultLineSpacing: String = "single"
+    @AppStorage("enableParagraphIndent") private var enableParagraphIndent: Bool = false
+    @AppStorage("paragraphIndentSize") private var paragraphIndentSize: Double = 24
 
     // API Key input states
     @State private var openAIKeyInput: String = ""
@@ -38,6 +40,7 @@ struct SettingsView: View {
         ("1.5", "1.5"),
         ("Double", "double")
     ]
+    private let indentSizeOptions = [12, 18, 24, 30, 36, 48]
 
     var body: some View {
         Form {
@@ -97,10 +100,25 @@ struct SettingsView: View {
                     Text(option.0).tag(option.1)
                 }
             }
+
+            // Paragraph indent toggle
+            Toggle("First Line Indent", isOn: $enableParagraphIndent)
+
+            // Indent size picker (only shown when indent is enabled)
+            if enableParagraphIndent {
+                Picker("Indent Size", selection: Binding(
+                    get: { Int(paragraphIndentSize) },
+                    set: { paragraphIndentSize = Double($0) }
+                )) {
+                    ForEach(indentSizeOptions, id: \.self) { size in
+                        Text("\(size) pt").tag(size)
+                    }
+                }
+            }
         } header: {
             Text("Formatting")
         } footer: {
-            Text("These settings apply to new documents and empty content.")
+            Text("These settings apply to new documents and empty content. Use Shift+Return for line breaks without paragraph indent.")
         }
     }
 

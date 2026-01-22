@@ -14,6 +14,7 @@ struct WriteTab: View {
 
     #if os(macOS)
     @State private var textViewRef: NSTextView? = nil
+    @State private var keyMonitor: Any? = nil
     #else
     @State private var textViewRef: UITextView? = nil
     #endif
@@ -22,6 +23,8 @@ struct WriteTab: View {
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
     @AppStorage("defaultFontSize") private var defaultFontSize: Double = 16
     @AppStorage("defaultLineSpacing") private var defaultLineSpacing: String = "single"
+    @AppStorage("enableParagraphIndent") private var enableParagraphIndent: Bool = false
+    @AppStorage("paragraphIndentSize") private var paragraphIndentSize: Double = 24
 
     // Maximum width for comfortable prose reading (similar to A4 page)
     private let maxProseWidth: CGFloat = 700
@@ -97,10 +100,16 @@ struct WriteTab: View {
                 setupContext()
                 hasInitialized = true
             }
+            #if os(macOS)
+            setupKeyMonitor()
+            #endif
         }
         .onDisappear {
             // Save content when leaving the view
             saveContent()
+            #if os(macOS)
+            removeKeyMonitor()
+            #endif
         }
         .onChange(of: richTextContext.attributedString) { _, newValue in
             // Sync changes back to viewModel immediately
@@ -123,23 +132,98 @@ struct WriteTab: View {
 
     private func setupContext() {
         // Initialize context with current content
-        richTextContext.setAttributedString(to: viewModel.attributedContent)
+        var contentToSet = viewModel.attributedContent
+
+        // Apply paragraph styling to existing content if indent is enabled
+        if enableParagraphIndent && contentToSet.length > 0 {
+            contentToSet = applyParagraphIndent(to: contentToSet)
+        }
+
+        richTextContext.setAttributedString(to: contentToSet)
 
         // Set default formatting if content is empty
         if viewModel.attributedContent.string.isEmpty {
             richTextContext.fontName = defaultFontName
             richTextContext.fontSize = CGFloat(defaultFontSize)
+        }
 
-            // Apply default line spacing
-            let lineSpacingMultiplier: CGFloat = switch defaultLineSpacing {
-            case "1.15": 1.15
-            case "1.5": 1.5
-            case "double": 2.0
-            default: 1.0
+        // Configure paragraph style via RichTextKit's paragraphStyle property
+        configureParagraphStyle()
+    }
+
+    /// Configures the RichTextContext's paragraph style using RichTextKit's API
+    private func configureParagraphStyle() {
+        // Set first line indent via RichTextKit binding
+        if enableParagraphIndent {
+            let indentBinding = richTextContext.paragraphStyleValueBinding(for: \.firstLineHeadIndent)
+            indentBinding.wrappedValue = CGFloat(paragraphIndentSize)
+        }
+
+        // Set line spacing via RichTextKit binding
+        let lineSpacingMultiplier: CGFloat = switch defaultLineSpacing {
+        case "1.15": 1.15
+        case "1.5": 1.5
+        case "double": 2.0
+        default: 1.0
+        }
+        let lineSpacingBinding = richTextContext.paragraphStyleValueBinding(for: \.lineSpacing)
+        lineSpacingBinding.wrappedValue = lineSpacingMultiplier * 6
+    }
+
+    /// Applies first-line indent to all paragraphs in the attributed string
+    private func applyParagraphIndent(to attributedString: NSAttributedString) -> NSAttributedString {
+        let mutable = NSMutableAttributedString(attributedString: attributedString)
+        let fullRange = NSRange(location: 0, length: mutable.length)
+
+        mutable.enumerateAttribute(.paragraphStyle, in: fullRange, options: []) { value, range, _ in
+            let existingStyle = (value as? NSParagraphStyle) ?? NSParagraphStyle.default
+            let newStyle = existingStyle.mutableCopy() as! NSMutableParagraphStyle
+            newStyle.firstLineHeadIndent = CGFloat(paragraphIndentSize)
+            mutable.addAttribute(.paragraphStyle, value: newStyle, range: range)
+        }
+
+        return mutable
+    }
+
+    // MARK: - Shift+Enter Key Handling
+
+    #if os(macOS)
+    /// Sets up keyboard monitoring to intercept Shift+Enter for soft line breaks
+    private func setupKeyMonitor() {
+        guard enableParagraphIndent else { return }
+
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // Check for Shift+Enter (Return key = keyCode 36)
+            if event.keyCode == 36 && event.modifierFlags.contains(.shift) {
+                // Insert line separator instead of newline
+                if let textView = self.textViewRef, textView.window?.firstResponder == textView {
+                    self.insertLineSeparator(in: textView)
+                    return nil // Consume the event
+                }
             }
-            richTextContext.lineSpacing = lineSpacingMultiplier * 6
+            return event
         }
     }
+
+    /// Removes the key monitor when the view disappears
+    private func removeKeyMonitor() {
+        if let monitor = keyMonitor {
+            NSEvent.removeMonitor(monitor)
+            keyMonitor = nil
+        }
+    }
+
+    /// Inserts a line separator character (U+2028) for soft line break
+    private func insertLineSeparator(in textView: NSTextView) {
+        // Unicode Line Separator character - creates new line without new paragraph
+        let lineSeparator = "\u{2028}"
+
+        if textView.shouldChangeText(in: textView.selectedRange(), replacementString: lineSeparator) {
+            textView.replaceCharacters(in: textView.selectedRange(), with: lineSeparator)
+            textView.didChangeText()
+        }
+    }
+    #endif
 
     private func saveContent() {
         // Ensure the latest content from the editor is saved
