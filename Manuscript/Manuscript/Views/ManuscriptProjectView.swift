@@ -11,7 +11,7 @@ struct ManuscriptProjectView: View {
     @State private var isAddLocationSheetPresented = false
     @State private var showOnboarding = false
     @State private var navigationTitle = ""
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -132,7 +132,7 @@ struct ManuscriptProjectView: View {
 
     private func updateColumnVisibility() {
         #if os(iOS)
-        columnVisibility = detailSelection == nil ? .sidebarOnly : .detailOnly
+        columnVisibility = detailSelection == nil ? .automatic : .detailOnly
         #else
         columnVisibility = .all
         #endif
