@@ -90,96 +90,92 @@ struct ProjectInfoView: View {
     }
     
     private var basicInfoTab: some View {
-        ScrollView {
-            Form {
-                Section("Project Information") {
-                    TextField("Title", text: $editedTitle)
-                        .onChange(of: editedTitle) { viewModel.document.title = $1 }
-                    
-                    TextField("Author", text: $editedAuthor)
-                        .onChange(of: editedAuthor) { viewModel.document.author = $1 }
-                    
-                    TextField("Description", text: $editedDescription, axis: .vertical)
-                        .lineLimit(5...10)
-                        .onChange(of: editedDescription) { viewModel.document.metaDescription = $1 }
-                }
+        Form {
+            Section("Project Information") {
+                TextField("Title", text: $editedTitle)
+                    .onChange(of: editedTitle) { viewModel.document.title = $1 }
+
+                TextField("Author", text: $editedAuthor)
+                    .onChange(of: editedAuthor) { viewModel.document.author = $1 }
+
+                TextField("Description", text: $editedDescription, axis: .vertical)
+                    .lineLimit(5...10)
+                    .onChange(of: editedDescription) { viewModel.document.metaDescription = $1 }
             }
         }
     }
     
     private var genreTab: some View {
-        ScrollView {
-            Form {
-                Section("Selected Genres (max 3)") {
-                    if selectedGenres.isEmpty {
-                        Text("No genres selected")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        GenreFlowLayout(spacing: 8) {
-                            ForEach(Array(selectedGenres).sorted(), id: \.self) { genre in
-                                HStack(spacing: 4) {
-                                    Text(genre)
-                                    Button(action: { 
-                                        selectedGenres.remove(genre)
-                                        updateGenre()
-                                    }) {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    .buttonStyle(.plain)
+        Form {
+            Section("Selected Genres (max 3)") {
+                if selectedGenres.isEmpty {
+                    Text("No genres selected")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    GenreFlowLayout(spacing: 8) {
+                        ForEach(Array(selectedGenres).sorted(), id: \.self) { genre in
+                            HStack(spacing: 4) {
+                                Text(genre)
+                                Button(action: {
+                                    selectedGenres.remove(genre)
+                                    updateGenre()
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
                                 }
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 6)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.accentColor)
-                                )
-                                .foregroundStyle(.white)
+                                .buttonStyle(.plain)
                             }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.accentColor)
+                            )
+                            .foregroundStyle(.white)
                         }
                     }
                 }
-                
-                Section("Common genres") {
-                    LazyVGrid(columns: [
-                        GridItem(.flexible()),
-                        GridItem(.flexible())
-                    ], spacing: 12) {
-                        ForEach(commonGenres, id: \.self) { genre in
-                            Group {
-                                if selectedGenres.contains(genre) {
-                                    Button(action: {
-                                        if selectedGenres.contains(genre) {
-                                            selectedGenres.remove(genre)
-                                        } else if canSelectMoreGenres {
-                                            selectedGenres.insert(genre)
-                                        }
-                                        updateGenre()
-                                    }) {
-                                        Text(genre)
-                                            .padding(10)
-                                            .frame(maxWidth: .infinity)
+            }
+
+            Section("Common genres") {
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 12) {
+                    ForEach(commonGenres, id: \.self) { genre in
+                        Group {
+                            if selectedGenres.contains(genre) {
+                                Button(action: {
+                                    if selectedGenres.contains(genre) {
+                                        selectedGenres.remove(genre)
+                                    } else if canSelectMoreGenres {
+                                        selectedGenres.insert(genre)
                                     }
-                                    .buttonStyle(.borderedProminent)
-                                } else {
-                                    Button(action: {
-                                        if selectedGenres.contains(genre) {
-                                            selectedGenres.remove(genre)
-                                        } else if canSelectMoreGenres {
-                                            selectedGenres.insert(genre)
-                                        }
-                                        updateGenre()
-                                    }) {
-                                        Text(genre)
-                                            .padding(10)
-                                            .frame(maxWidth: .infinity)
+                                    updateGenre()
+                                }) {
+                                    Text(genre)
+                                        .padding(10)
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.borderedProminent)
+                            } else {
+                                Button(action: {
+                                    if selectedGenres.contains(genre) {
+                                        selectedGenres.remove(genre)
+                                    } else if canSelectMoreGenres {
+                                        selectedGenres.insert(genre)
                                     }
+                                    updateGenre()
+                                }) {
+                                    Text(genre)
+                                        .padding(10)
+                                        .frame(maxWidth: .infinity)
                                 }
                             }
-                            .disabled(!selectedGenres.contains(genre) && !canSelectMoreGenres)
-                            .opacity(!selectedGenres.contains(genre) && !canSelectMoreGenres ? 0.5 : 1)
                         }
+                        .disabled(!selectedGenres.contains(genre) && !canSelectMoreGenres)
+                        .opacity(!selectedGenres.contains(genre) && !canSelectMoreGenres ? 0.5 : 1)
                     }
                 }
             }
@@ -292,28 +288,26 @@ struct ProjectInfoView: View {
     }
     
     private var synopsisTab: some View {
-        ScrollView {
-            Form {
-                Section("Synopsis") {
-                    TextEditor(text: $editedSynopsis)
-                        .frame(minHeight: 300)
-                        .onChange(of: editedSynopsis) { viewModel.document.synopsis = $1 }
-                }
+        Form {
+            Section("Synopsis") {
+                TextEditor(text: $editedSynopsis)
+                    .frame(minHeight: 300)
+                    .onChange(of: editedSynopsis) { viewModel.document.synopsis = $1 }
+            }
 
-                Section("Writing tips") {
-                    Text("A good synopsis should include:")
-                        .font(.subheadline)
+            Section("Writing tips") {
+                Text("A good synopsis should include:")
+                    .font(.subheadline)
 
-                    Group {
-                        Text("• Main plot points and story arc")
-                        Text("• Key character motivations")
-                        Text("• Major conflicts and their resolution")
-                        Text("• The story's theme and message")
-                        Text("• The ending (unlike a blurb)")
-                    }
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                Group {
+                    Text("• Main plot points and story arc")
+                    Text("• Key character motivations")
+                    Text("• Major conflicts and their resolution")
+                    Text("• The story's theme and message")
+                    Text("• The ending (unlike a blurb)")
                 }
+                .font(.callout)
+                .foregroundStyle(.secondary)
             }
         }
     }
