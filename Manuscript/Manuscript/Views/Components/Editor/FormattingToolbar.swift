@@ -5,6 +5,8 @@ import RichTextKit
 /// Provides font selection, size, and basic text styling controls
 struct FormattingToolbar: View {
     @ObservedObject var context: RichTextContext
+    @State private var selectedLineSpacing: LineSpacingOption = .single
+    @State private var selectedHighlightColor: HighlightColor = .none
 
     var body: some View {
         #if os(macOS)
@@ -14,13 +16,51 @@ struct FormattingToolbar: View {
         #endif
     }
 
+    // MARK: - Shared Types
+
+    private enum LineSpacingOption: String, CaseIterable {
+        case single = "Single"
+        case onePointFifteen = "1.15"
+        case onePointFive = "1.5"
+        case double = "Double"
+
+        var multiplier: CGFloat {
+            switch self {
+            case .single: return 1.0
+            case .onePointFifteen: return 1.15
+            case .onePointFive: return 1.5
+            case .double: return 2.0
+            }
+        }
+    }
+
+    private enum HighlightColor: String, CaseIterable {
+        case none = "None"
+        case yellow = "Yellow"
+        case green = "Green"
+        case blue = "Blue"
+        case pink = "Pink"
+        case orange = "Orange"
+
+        var color: Color? {
+            switch self {
+            case .none: return nil
+            case .yellow: return .yellow.opacity(0.4)
+            case .green: return .green.opacity(0.4)
+            case .blue: return .blue.opacity(0.4)
+            case .pink: return .pink.opacity(0.4)
+            case .orange: return .orange.opacity(0.4)
+            }
+        }
+    }
+
     // MARK: - macOS Toolbar
 
     #if os(macOS)
     private let fontSizesMac = [10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72]
 
     private var macOSToolbar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             // Font family picker
             Menu {
                 ForEach(availableFontsMac, id: \.self) { fontName in
@@ -40,7 +80,7 @@ struct FormattingToolbar: View {
                 .background(Color(nsColor: .controlBackgroundColor))
                 .cornerRadius(4)
             }
-            .frame(width: 140)
+            .frame(width: 130)
 
             // Font size dropdown
             Menu {
@@ -60,11 +100,11 @@ struct FormattingToolbar: View {
                 HStack(spacing: 4) {
                     Text("\(Int(context.fontSize))")
                         .monospacedDigit()
-                        .frame(width: 24)
+                        .frame(width: 20)
                     Image(systemName: "chevron.down")
                         .font(.caption2)
                 }
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 6)
                 .padding(.vertical, 4)
                 .background(Color(nsColor: .controlBackgroundColor))
                 .cornerRadius(4)
@@ -82,6 +122,56 @@ struct FormattingToolbar: View {
             // Text alignment (no label)
             RichTextAlignment.Picker(selection: $context.textAlignment)
                 .labelsHidden()
+
+            Divider()
+                .frame(height: 20)
+
+            // Line spacing dropdown
+            Menu {
+                ForEach(LineSpacingOption.allCases, id: \.self) { option in
+                    Button {
+                        selectedLineSpacing = option
+                        context.lineSpacing = option.multiplier * 4
+                    } label: {
+                        HStack {
+                            Text(option.rawValue)
+                            if selectedLineSpacing == option {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: "text.line.first.and.arrowtriangle.forward")
+                    .font(.body)
+            }
+            .help("Line Spacing")
+
+            // Text highlight color dropdown
+            Menu {
+                ForEach(HighlightColor.allCases, id: \.self) { option in
+                    Button {
+                        selectedHighlightColor = option
+                        // Note: RichTextKit doesn't support background color directly
+                    } label: {
+                        HStack {
+                            if let color = option.color {
+                                Circle()
+                                    .fill(color)
+                                    .frame(width: 12, height: 12)
+                            }
+                            Text(option.rawValue)
+                            if selectedHighlightColor == option {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: "highlighter")
+                    .font(.body)
+            }
+            .help("Text Highlight")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
