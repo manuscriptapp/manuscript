@@ -9,6 +9,7 @@ import AppKit
 struct WriteTab: View {
     @ObservedObject var viewModel: DocumentDetailViewModel
     @StateObject private var richTextContext = RichTextContext()
+    @StateObject private var findReplaceViewModel = FindReplaceViewModel()
     @State private var hasInitialized = false
 
     #if os(macOS)
@@ -45,6 +46,12 @@ struct WriteTab: View {
             }
             #endif
 
+            // Find & Replace Bar
+            if findReplaceViewModel.isVisible {
+                FindReplaceBar(viewModel: findReplaceViewModel)
+                Divider()
+            }
+
             GeometryReader { geometry in
                 let availableWidth = geometry.size.width
                 let horizontalPadding = max(24, (availableWidth - maxProseWidth) / 2)
@@ -70,6 +77,7 @@ struct WriteTab: View {
                                 nsTextView.enclosingScrollView?.backgroundColor = .clear
                                 DispatchQueue.main.async {
                                     textViewRef = nsTextView
+                                    findReplaceViewModel.textViewRef = nsTextView
                                 }
                             }
                         }
@@ -98,6 +106,7 @@ struct WriteTab: View {
                         if let uiTextView = textView as? UITextView {
                             DispatchQueue.main.async {
                                 textViewRef = uiTextView
+                                findReplaceViewModel.textViewRef = uiTextView
                                 setupKeyboardToolbar(for: uiTextView)
                             }
                         }
@@ -121,6 +130,9 @@ struct WriteTab: View {
             #if os(macOS)
             setupKeyMonitor()
             #endif
+
+            // Connect find/replace view model
+            findReplaceViewModel.documentDetailViewModel = viewModel
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 focusTextEditor()
@@ -156,6 +168,25 @@ struct WriteTab: View {
         .onChange(of: viewModel.tappedComment) { _, tappedComment in
             scrollToComment(tappedComment)
         }
+        .onChange(of: viewModel.showFindBar) { _, showFind in
+            if showFind {
+                findReplaceViewModel.show(replaceMode: false)
+                viewModel.showFindBar = false  // Reset trigger
+            }
+        }
+        .onChange(of: viewModel.showFindReplaceBar) { _, showFindReplace in
+            if showFindReplace {
+                findReplaceViewModel.show(replaceMode: true)
+                viewModel.showFindReplaceBar = false  // Reset trigger
+            }
+        }
+        // Expose find actions for menu commands
+        .focusedValue(\.findActions, FindActions(
+            showFind: { findReplaceViewModel.show(replaceMode: false) },
+            showFindAndReplace: { findReplaceViewModel.show(replaceMode: true) },
+            findNext: { findReplaceViewModel.navigateNext() },
+            findPrevious: { findReplaceViewModel.navigatePrevious() }
+        ))
     }
 
     // MARK: - Setup
@@ -337,6 +368,43 @@ struct WriteTab: View {
                     return nil
                 }
             }
+
+            // MARK: - Find & Replace Shortcuts
+
+            // Cmd+F - Open Find
+            if event.keyCode == 3 && event.modifierFlags.contains(.command) && !event.modifierFlags.contains(.option) {
+                self.findReplaceViewModel.show(replaceMode: false)
+                return nil
+            }
+
+            // Cmd+Option+F - Open Find & Replace
+            if event.keyCode == 3 && event.modifierFlags.contains(.command) && event.modifierFlags.contains(.option) {
+                self.findReplaceViewModel.show(replaceMode: true)
+                return nil
+            }
+
+            // Cmd+G - Find Next
+            if event.keyCode == 5 && event.modifierFlags.contains(.command) && !event.modifierFlags.contains(.shift) {
+                if self.findReplaceViewModel.isVisible {
+                    self.findReplaceViewModel.navigateNext()
+                    return nil
+                }
+            }
+
+            // Cmd+Shift+G - Find Previous
+            if event.keyCode == 5 && event.modifierFlags.contains(.command) && event.modifierFlags.contains(.shift) {
+                if self.findReplaceViewModel.isVisible {
+                    self.findReplaceViewModel.navigatePrevious()
+                    return nil
+                }
+            }
+
+            // Escape - Close Find Bar
+            if event.keyCode == 53 && self.findReplaceViewModel.isVisible {
+                self.findReplaceViewModel.hide()
+                return nil
+            }
+
             return event
         }
     }

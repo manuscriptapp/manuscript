@@ -59,6 +59,10 @@ class DocumentDetailViewModel: ObservableObject {
     @Published var inspectorSelectedTab: Int = 0  // 0 = Chat, 1 = Comments, 2 = Details
     @Published var tappedComment: ManuscriptDocument.DocumentComment? = nil
 
+    // Find & Replace state (controlled from ViewModel so toolbar can trigger it)
+    @Published var showFindBar: Bool = false
+    @Published var showFindReplaceBar: Bool = false
+
     // Character and location selection
     @Published var selectedCharacters: [UUID] = []
     @Published var selectedLocations: [UUID] = []

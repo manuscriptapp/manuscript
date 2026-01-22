@@ -57,6 +57,43 @@ extension ManuscriptDocument {
     }
 }
 
+// MARK: - Find Menu Commands (macOS)
+
+#if os(macOS)
+/// Menu commands for Find functionality in the Edit menu
+struct FindMenuCommands: View {
+    @FocusedValue(\.findActions) var findActions
+
+    var body: some View {
+        Button("Find...") {
+            findActions?.showFind()
+        }
+        .keyboardShortcut("f", modifiers: .command)
+        .disabled(findActions == nil)
+
+        Button("Find and Replace...") {
+            findActions?.showFindAndReplace()
+        }
+        .keyboardShortcut("f", modifiers: [.command, .option])
+        .disabled(findActions == nil)
+
+        Divider()
+
+        Button("Find Next") {
+            findActions?.findNext()
+        }
+        .keyboardShortcut("g", modifiers: .command)
+        .disabled(findActions == nil)
+
+        Button("Find Previous") {
+            findActions?.findPrevious()
+        }
+        .keyboardShortcut("g", modifiers: [.command, .shift])
+        .disabled(findActions == nil)
+    }
+}
+#endif
+
 // MARK: - iOS Template Picker for DocumentGroupLaunchScene
 
 #if os(iOS)
@@ -414,6 +451,11 @@ struct ManuscriptApp: App {
                     NSApp.windows.first(where: { $0.title == "Welcome to Manuscript" })?.makeKeyAndOrderFront(nil)
                 }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
+            }
+
+            // Find menu commands
+            CommandGroup(after: .textEditing) {
+                FindMenuCommands()
             }
         }
         #endif

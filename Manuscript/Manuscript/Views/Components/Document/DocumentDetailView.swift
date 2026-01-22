@@ -160,9 +160,28 @@ struct DocumentDetailView: View {
         ToolbarItem(placement: .primaryAction) {
             moreMenu
         }
+
+        // Find button (macOS)
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                detailViewModel.showFindBar = true
+            } label: {
+                Label("Find", systemImage: "magnifyingglass")
+            }
+            .help("Find (⌘F)")
+        }
         #else
         ToolbarItem(placement: .secondaryAction) {
             moreMenu
+        }
+
+        // Find button (iOS)
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                detailViewModel.showFindBar = true
+            } label: {
+                Label("Find", systemImage: "magnifyingglass")
+            }
         }
         #endif
 
