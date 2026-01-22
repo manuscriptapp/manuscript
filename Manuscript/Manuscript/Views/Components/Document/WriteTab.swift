@@ -53,13 +53,17 @@ struct WriteTab: View {
                             nsTextView.enclosingScrollView?.backgroundColor = .clear
                             // Store reference for scrolling to comments
                             DispatchQueue.main.async {
-                                textViewRef = nsTextView
+                                self.textViewRef = nsTextView
+                                // Set typing attributes for new empty documents
+                                self.configureTypingAttributes(for: nsTextView)
                             }
                         }
                         #else
                         if let uiTextView = textView as? UITextView {
                             DispatchQueue.main.async {
-                                textViewRef = uiTextView
+                                self.textViewRef = uiTextView
+                                // Set typing attributes for new empty documents
+                                self.configureTypingAttributes(for: uiTextView)
                             }
                         }
                         #endif
@@ -139,17 +143,136 @@ struct WriteTab: View {
             contentToSet = applyParagraphIndent(to: contentToSet)
         }
 
+        // For empty documents, create attributed string with proper defaults
+        if contentToSet.string.isEmpty {
+            contentToSet = createDefaultAttributedString()
+        }
+
         richTextContext.setAttributedString(to: contentToSet)
 
-        // Set default formatting if content is empty
-        if viewModel.attributedContent.string.isEmpty {
-            richTextContext.fontName = defaultFontName
-            richTextContext.fontSize = CGFloat(defaultFontSize)
-        }
+        // Set context properties for new typing
+        richTextContext.fontName = defaultFontName
+        richTextContext.fontSize = CGFloat(defaultFontSize)
+
+        // Set foreground color to label color (adapts to dark/light mode)
+        #if os(macOS)
+        richTextContext.setColor(.foreground, to: .labelColor)
+        #else
+        richTextContext.setColor(.foreground, to: .label)
+        #endif
 
         // Configure paragraph style via RichTextKit's paragraphStyle property
         configureParagraphStyle()
     }
+
+    /// Creates an attributed string with default formatting for new documents
+    private func createDefaultAttributedString() -> NSAttributedString {
+        var attributes: [NSAttributedString.Key: Any] = [:]
+
+        // Font
+        #if os(macOS)
+        if let font = NSFont(name: defaultFontName, size: CGFloat(defaultFontSize)) {
+            attributes[.font] = font
+        }
+        attributes[.foregroundColor] = NSColor.labelColor
+        #else
+        if let font = UIFont(name: defaultFontName, size: CGFloat(defaultFontSize)) {
+            attributes[.font] = font
+        }
+        attributes[.foregroundColor] = UIColor.label
+        #endif
+
+        // Paragraph style
+        let paragraphStyle = NSMutableParagraphStyle()
+        if enableParagraphIndent {
+            paragraphStyle.firstLineHeadIndent = CGFloat(paragraphIndentSize)
+        }
+        let lineSpacingMultiplier: CGFloat = switch defaultLineSpacing {
+        case "1.15": 1.15
+        case "1.5": 1.5
+        case "double": 2.0
+        default: 1.0
+        }
+        paragraphStyle.lineSpacing = lineSpacingMultiplier * 6
+        attributes[.paragraphStyle] = paragraphStyle
+
+        return NSAttributedString(string: "", attributes: attributes)
+    }
+
+    /// Configures typing attributes on the text view for new/empty documents
+    #if os(macOS)
+    private func configureTypingAttributes(for textView: NSTextView) {
+        // Build the paragraph style
+        let paragraphStyle = NSMutableParagraphStyle()
+        if enableParagraphIndent {
+            paragraphStyle.firstLineHeadIndent = CGFloat(paragraphIndentSize)
+        }
+        let lineSpacingMultiplier: CGFloat = switch defaultLineSpacing {
+        case "1.15": 1.15
+        case "1.5": 1.5
+        case "double": 2.0
+        default: 1.0
+        }
+        paragraphStyle.lineSpacing = lineSpacingMultiplier * 6
+
+        // Set the default paragraph style for the text view
+        textView.defaultParagraphStyle = paragraphStyle
+
+        // Build typing attributes
+        var typingAttributes: [NSAttributedString.Key: Any] = [:]
+
+        // Font
+        let font = NSFont(name: defaultFontName, size: CGFloat(defaultFontSize))
+            ?? NSFont.userFont(ofSize: CGFloat(defaultFontSize))
+            ?? NSFont.systemFont(ofSize: CGFloat(defaultFontSize))
+        typingAttributes[.font] = font
+
+        // Foreground color - use label color for dark mode support
+        typingAttributes[.foregroundColor] = NSColor.labelColor
+
+        // Paragraph style
+        typingAttributes[.paragraphStyle] = paragraphStyle
+
+        // Set typing attributes
+        textView.typingAttributes = typingAttributes
+
+        // Also set the font on the text view directly for empty documents
+        if textView.string.isEmpty {
+            textView.font = font
+            textView.textColor = NSColor.labelColor
+        }
+    }
+    #else
+    private func configureTypingAttributes(for textView: UITextView) {
+        var typingAttributes: [NSAttributedString.Key: Any] = [:]
+
+        // Font
+        if let font = UIFont(name: defaultFontName, size: CGFloat(defaultFontSize)) {
+            typingAttributes[.font] = font
+        } else {
+            typingAttributes[.font] = UIFont.systemFont(ofSize: CGFloat(defaultFontSize))
+        }
+
+        // Foreground color - use label color for dark mode support
+        typingAttributes[.foregroundColor] = UIColor.label
+
+        // Paragraph style
+        let paragraphStyle = NSMutableParagraphStyle()
+        if enableParagraphIndent {
+            paragraphStyle.firstLineHeadIndent = CGFloat(paragraphIndentSize)
+        }
+        let lineSpacingMultiplier: CGFloat = switch defaultLineSpacing {
+        case "1.15": 1.15
+        case "1.5": 1.5
+        case "double": 2.0
+        default: 1.0
+        }
+        paragraphStyle.lineSpacing = lineSpacingMultiplier * 6
+        typingAttributes[.paragraphStyle] = paragraphStyle
+
+        textView.typingAttributes = typingAttributes
+    }
+    #endif
 
     /// Configures the RichTextContext's paragraph style using RichTextKit's API
     private func configureParagraphStyle() {
