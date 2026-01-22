@@ -1,6 +1,11 @@
 import SwiftUI
 import SwiftData
 import Combine
+#if os(iOS)
+import UIKit
+#else
+import AppKit
+#endif
 
 @MainActor
 class DocumentDetailViewModel: ObservableObject {
@@ -20,6 +25,20 @@ class DocumentDetailViewModel: ObservableObject {
     @Published var generatedText: String = ""
     @Published var generationType: GenerationType = .outline
     @Published var isGenerateSheetPresented: Bool = false
+
+    // Rich text content (NSAttributedString for RichTextKit)
+    @Published var attributedContent: NSAttributedString {
+        didSet {
+            // Convert attributed string back to markdown for persistence
+            editedContent = MarkdownParser.markdown(from: attributedContent)
+        }
+    }
+    @Published var attributedNotes: NSAttributedString {
+        didSet {
+            // Convert attributed string back to markdown for persistence
+            editedNotes = MarkdownParser.markdown(from: attributedNotes)
+        }
+    }
 
     // Selected text tracking
     @Published var selectedText: String = "" {
@@ -50,7 +69,47 @@ class DocumentDetailViewModel: ObservableObject {
         self.editedContent = document.content
         self.selectedCharacters = document.characterIds
         self.selectedLocations = document.locationIds
+
+        // Initialize attributed strings by parsing markdown content
+        // This converts markdown formatting (bold, italic, etc.) to NSAttributedString
+        let contentFont = Self.defaultContentFont
+        let notesFont = Self.defaultNotesFont
+
+        self.attributedContent = MarkdownParser.attributedString(
+            from: document.content,
+            baseFont: contentFont,
+            textColor: Self.defaultTextColor
+        )
+        self.attributedNotes = MarkdownParser.attributedString(
+            from: document.notes,
+            baseFont: notesFont,
+            textColor: Self.defaultTextColor
+        )
     }
+
+    // MARK: - Default Fonts
+
+    #if os(iOS)
+    private static var defaultContentFont: UIFont {
+        UIFont(name: "Palatino", size: 16) ?? UIFont.systemFont(ofSize: 16)
+    }
+    private static var defaultNotesFont: UIFont {
+        UIFont.systemFont(ofSize: 14)
+    }
+    private static var defaultTextColor: UIColor {
+        UIColor.label
+    }
+    #else
+    private static var defaultContentFont: NSFont {
+        NSFont(name: "Palatino", size: 16) ?? NSFont.systemFont(ofSize: 16)
+    }
+    private static var defaultNotesFont: NSFont {
+        NSFont.systemFont(ofSize: 14)
+    }
+    private static var defaultTextColor: NSColor {
+        NSColor.textColor
+    }
+    #endif
 
     var characters: [ManuscriptCharacter] {
         return documentViewModel.document.characters.filter { selectedCharacters.contains($0.id) }
