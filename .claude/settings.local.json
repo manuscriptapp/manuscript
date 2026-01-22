@@ -69,7 +69,11 @@
       "mcp__XcodeBuildMCP__stop_app_sim",
       "mcp__XcodeBuildMCP__clean",
       "mcp__XcodeBuildMCP__launch_app_logs_sim",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "mcp__XcodeBuildMCP__gesture",
+      "mcp__XcodeBuildMCP__type_text",
+      "mcp__XcodeBuildMCP__button",
+      "mcp__XcodeBuildMCP__start_sim_log_cap"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"
