@@ -24,7 +24,10 @@ Manuscript vs Scrivener vs Ulysses.
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
 | Markdown editing | Partial | ✅ | ✅ |
-| Rich text editing | ✅ | ❌ | 🔜 |
+| Rich text editing | ✅ | ❌ | ✅ |
+| Formatting toolbar | ✅ | ✅ | ✅ |
+| Paragraph indentation | ✅ | ✅ | ✅ |
+| Line spacing | ✅ | ✅ | ✅ |
 | Distraction-free mode | ✅ | ✅ | 🔜 |
 | Split editor | ✅ | ✅ | 🔜 |
 | Typewriter scrolling | ✅ | ✅ | 🔜 |
@@ -44,7 +47,9 @@ Manuscript vs Scrivener vs Ulysses.
 | Custom icons | ✅ | ❌ | ✅ |
 | Color labels | ✅ | ✅ | ✅ |
 | State restoration | ✅ | ✅ | ✅ |
-| Drag & drop reorder | ✅ | ✅ | 🔜 |
+| Drag & drop reorder | ✅ | ✅ | ✅ |
+| Move between folders | ✅ | ✅ | ✅ |
+| Inline renaming | ✅ | ✅ | ✅ |
 | Status labels | ✅ | ❌ | ⚡ Data only |
 | Keywords/tags | ✅ | ✅ | 🔜 |
 | Collections/filters | ✅ | ✅ | 🔜 |
@@ -73,7 +78,8 @@ Manuscript vs Scrivener vs Ulysses.
 | Import PDFs | ✅ | ❌ | 🔜 |
 | Document links | ✅ | ✅ | 🔜 |
 | Inline annotations | ✅ | ✅ | 🔜 |
-| Comments | ✅ | ✅ | 🔜 |
+| Comments | ✅ | ✅ | ✅ |
+| Comment inspector | ✅ | ✅ | ✅ |
 | Footnotes | ✅ | ✅ | 🔜 |
 
 ---

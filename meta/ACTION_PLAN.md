@@ -1,6 +1,6 @@
 # Manuscript Action Plan
 
-*Last updated: January 2026*
+*Last updated: January 22, 2026*
 
 This document outlines the prioritized next steps for Manuscript development. **Aggressive timeline targeting feature parity by June 2026.**
 
@@ -8,192 +8,162 @@ This document outlines the prioritized next steps for Manuscript development. **
 
 ## Executive Summary
 
-Manuscript has a solid SwiftUI foundation. We're compressing the roadmap to reach **feature parity with Scrivener by June 2026** - 6 months instead of 12.
+Manuscript has made significant progress. Rich text editing, formatting toolbar, Scrivener import, comments system, drag-and-drop, and inline renaming are all **complete**. We're on track for **feature parity with Scrivener by June 2026**.
 
-**Aggressive Timeline:**
-- **Week 1-2 (Jan 13-26)**: Foundation fixes + start rich text
-- **Week 3-6 (Jan 27 - Feb 23)**: Rich text complete + Scrivener import
-- **Week 7-10 (Feb 24 - Mar 23)**: Core UI features (parallel tracks)
-- **Week 11-14 (Mar 24 - Apr 20)**: Organization + CloudKit sync
-- **Week 15-18 (Apr 21 - May 18)**: Export formats + polish
-- **Week 19-22 (May 19 - Jun 15)**: Advanced features + beta release
+**Progress Update (Jan 22):**
+- ✅ Rich text editing complete (bold, italic, underline, fonts, sizes, colors)
+- ✅ Formatting toolbar with undo/redo support
+- ✅ Paragraph formatting (first-line indent, line spacing)
+- ✅ Comments system with inline highlighting and inspector
+- ✅ Scrivener import with RTF conversion and comments
+- ✅ Drag-and-drop reordering and moving between folders
+- ✅ Inline document renaming (Scrivener-style)
+- ✅ State restoration and window persistence
+
+**Remaining Timeline:**
+- **Now - Feb**: Find & replace, writing targets UI
+- **Mar - Apr**: Core UI features (split editor, composition mode)
+- **Apr - May**: CloudKit sync, advanced views (cork board, outliner)
+- **May - Jun**: Export formats, polish, beta release
 
 **Key Strategy**: Run multiple tracks in parallel. Ship incrementally.
 
 ---
 
-## Sprint 1: Foundation Blitz (Week 1 - Jan 13-19)
+## Sprint 1-4: Foundation & Rich Text ✅ COMPLETE
 
-**Goal**: Fix all architectural debt in ONE week.
+**Completed January 2026**
 
-### Day 1-2: DocumentGroup Architecture
-- [ ] Convert `ManuscriptDocument` from class to struct
-- [ ] Fix `@Binding` with proper value-type semantics
-- [ ] Update `FileDocument` implementation
+### Rich Text Editing ✅
+- [x] Rich text formatting with RichTextKit
+- [x] Bold (⌘B), Italic (⌘I), Underline (⌘U)
+- [x] Font family and size selection
+- [x] Text and highlight color pickers
+- [x] Paragraph first-line indentation
+- [x] Line spacing control
+- [x] Formatting toolbar with undo/redo
+- [x] Markdown ↔ AttributedString persistence
 
-### Day 3: Manager Consolidation
-- [ ] Merge `DocumentManager` + `ManuscriptViewModel` into single manager
-- [ ] Remove all duplicate state
+### Comments System ✅
+- [x] Inline comment highlighting in editor
+- [x] Comment inspector with chat bubble UI
+- [x] Click-to-scroll comment navigation
 
-### Day 4: API Updates
-- [ ] Fix all deprecated `onChange` calls
-- [ ] Update iCloud container ID to "manuscript"
-- [ ] Remove all compiler warnings
+### Scrivener Import ✅
+- [x] `.scriv` bundle parser
+- [x] `project.scrivx` XML parsing
+- [x] Binder hierarchy extraction
+- [x] RTF → Markdown converter
+- [x] Comments import and parsing
+- [x] Icon mapping from Scrivener
+- [x] Import UI with file picker
 
-### Day 5: Tests + Validation
-- [ ] Unit tests for document save/load
-- [ ] Test on iOS Simulator + macOS
-- [ ] Set up CI pipeline
-
----
-
-## Sprint 2: Rich Text MVP (Week 2 - Jan 20-26)
-
-**Goal**: Basic formatting working. Ship it.
-
-### Day 1-3: Core Implementation
-- [ ] `AttributedString` + `TextEditor` integration
-- [ ] Bold (⌘B), Italic (⌘I), Underline (⌘U)
-- [ ] Keyboard shortcuts on both platforms
-
-### Day 4-5: Toolbar + Polish
-- [ ] Formatting toolbar component
-- [ ] Integration with existing editor
-- [ ] Basic Markdown ↔ AttributedString conversion
+### Organization ✅
+- [x] Drag-and-drop reordering in sidebar
+- [x] Drag-and-drop to move between folders
+- [x] Inline document renaming (Scrivener-style)
+- [x] State restoration (last document, expanded folders)
+- [x] Window state persistence
 
 ---
 
-## Sprint 3: Rich Text Complete + Scrivener Import Start (Week 3-4 - Jan 27 - Feb 9)
+## Sprint 5: Search & Polish (Feb - Mar)
 
-**Run in parallel**: Two developers or alternating focus.
+**Current focus**
 
-### Track A: Extended Formatting (Week 3)
-- [ ] Font family selection
-- [ ] Font size controls
-- [ ] Text/highlight color pickers
-- [ ] Full Markdown round-trip fidelity
+### Track A: Find & Replace (High Priority)
+- [ ] Find-in-document (⌘F)
+- [ ] Find-and-replace
+- [ ] Search result highlighting
+- [ ] Full-text search across project
 
-### Track B: Scrivener Parser (Week 3-4)
-- [ ] `.scriv` bundle parser
-- [ ] `project.scrivx` XML parsing
-- [ ] Binder hierarchy extraction
-- [ ] RTF → Markdown converter (core formatting)
-
----
-
-## Sprint 4: Scrivener Import Complete (Week 5-6 - Feb 10-23)
-
-### Week 5: Content Conversion
-- [ ] Complete RTF conversion (lists, headers, etc.)
-- [ ] Metadata preservation (synopsis, notes, labels)
-- [ ] Handle edge cases and malformed files
-
-### Week 6: Integration + Ship
-- [ ] Import UI (file picker, progress indicator)
-- [ ] Import report showing conversion results
-- [ ] Comprehensive test suite with real .scriv files
-- [ ] **Ship v0.2 with rich text + Scrivener import**
+### Track B: Writing Targets UI
+- [ ] Document word count targets
+- [ ] Project targets
+- [ ] Session targets
+- [ ] Progress indicators in sidebar
 
 ---
 
-## Sprint 5-6: Core UI Features (Week 7-10 - Feb 24 - Mar 23)
+## Sprint 6: Core UI Features (Mar - Apr)
 
-**Run ALL tracks in parallel.**
-
-### Track A: Split Editor (Week 7-8)
+### Track A: Split Editor
 - [ ] Horizontal + vertical split views
 - [ ] Drag-to-resize divider
 - [ ] Independent scrolling
 - [ ] Platform-specific optimizations
 
-### Track B: Search (Week 7-8)
-- [ ] Full-text search across project
-- [ ] Find-in-document (⌘F)
-- [ ] Find-and-replace
-- [ ] Search result highlighting
-
-### Track C: Composition Mode (Week 9)
+### Track B: Composition Mode
 - [ ] Fullscreen distraction-free mode
 - [ ] Customizable background
 - [ ] Fade-in controls on hover
 - [ ] Keyboard toggle (⌘⇧F)
 
-### Track D: Snapshots (Week 9-10)
+### Track C: Snapshots
 - [ ] Snapshot storage format
 - [ ] Auto-snapshot on significant changes
 - [ ] Manual snapshot command
 - [ ] Snapshot browser + restore
-- [ ] **Ship v0.3 with core UI features**
 
 ---
 
-## Sprint 7-8: Organization + Sync (Week 11-14 - Mar 24 - Apr 20)
+## Sprint 7: Organization + Sync (Apr - May)
 
-### Track A: Labels & Status (Week 11)
-- [ ] Label model (name, color)
-- [ ] Status model (To Do → Done)
+### Track A: Labels & Status UI
+- [ ] Label model UI (name, color)
+- [ ] Status model UI (To Do → Done)
 - [ ] Binder color indicators
 - [ ] Batch operations
 
-### Track B: Cork Board (Week 11-12)
+### Track B: Cork Board
 - [ ] Card component design
 - [ ] Grid layout with drag-and-drop
 - [ ] Card size options
 - [ ] Keyboard navigation
 
-### Track C: Outliner (Week 12-13)
+### Track C: Outliner
 - [ ] Table view implementation
 - [ ] Sortable columns
 - [ ] Inline editing
 - [ ] Column customization
 
-### Track D: CloudKit Sync (Week 11-14)
+### Track D: CloudKit Sync
 - [ ] CloudKit container setup
 - [ ] CKRecord mapping
 - [ ] Conflict resolution (last-write-wins initially)
 - [ ] Sync status indicators
 - [ ] Offline/online handling
-- [ ] **Ship v0.4 with organization + sync**
 
 ---
 
-## Sprint 9-10: Export + Polish (Week 15-18 - Apr 21 - May 18)
+## Sprint 8: Export + Polish (May - Jun)
 
-### Week 15-16: Multi-Format Export
-- [ ] Compile/export UI
+### Multi-Format Export
+- [ ] Compile/export UI improvements
 - [ ] DOCX export
 - [ ] EPUB export
 - [ ] HTML export
 - [ ] PDF improvements
-
-### Week 17: Additional Formats
 - [ ] LaTeX export
-- [ ] Fountain export (screenwriters)
 - [ ] Export templates/presets
 
-### Week 18: Polish Sprint
+### Polish Sprint
 - [ ] Bug fixes from beta feedback
 - [ ] Performance optimization
 - [ ] Accessibility audit
-- [ ] **Ship v0.5 with full export**
 
 ---
 
-## Sprint 11-12: Advanced Features + Launch (Week 19-22 - May 19 - Jun 15)
+## Sprint 9: Launch Prep (Jun)
 
-### Week 19-20: AI Integration
+### AI Enhancements (Already Partially Complete)
+- [x] AI text generation service
+- [x] Custom API key support (OpenAI, Anthropic)
 - [ ] Apple Foundation Models integration
 - [ ] Writing suggestions
 - [ ] Grammar/style checking
-- [ ] BYOK API key support
 
-### Week 21: Research Folder + Stats
-- [ ] Research item model
-- [ ] File import for research
-- [ ] Writing statistics tracking
-- [ ] Word count goals
-
-### Week 22: Launch Prep
+### Launch Prep
 - [ ] Final bug bash
 - [ ] App Store screenshots + metadata
 - [ ] Marketing site update
@@ -201,43 +171,42 @@ Manuscript has a solid SwiftUI foundation. We're compressing the roadmap to reac
 
 ---
 
-## Parallel Execution Strategy
+## Progress Summary
 
 ```
-Week    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17   18   19   20   21   22
-        |----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
-Found.  ████
-Rich    ░░░░████████████
-Scriv        ░░░░░░░░████████████
-Split                            ████████
-Search                           ████████
-Compose                                  ████
-Snaps                                    ████████
-Labels                                           ████
-Cork                                             ████████
-Outline                                              ████████
-Sync                                             ████████████████
-Export                                                           ████████████████
-AI                                                                               ████████
-Research                                                                                 ████
-Launch                                                                                       ████
+Feature                    Status
+========================= ========
+Rich Text Editing          ✅ DONE
+Formatting Toolbar         ✅ DONE
+Paragraph Formatting       ✅ DONE
+Comments System            ✅ DONE
+Scrivener Import           ✅ DONE
+Drag & Drop Reorder        ✅ DONE
+Move Between Folders       ✅ DONE
+Inline Renaming            ✅ DONE
+State Restoration          ✅ DONE
+AI Integration             ✅ DONE
+Find & Replace             🔜 Next
+Writing Targets UI         🔜 Next
+Split Editor               🔜 Planned
+Composition Mode           🔜 Planned
+Cork Board                 🔜 Planned
+Outliner                   🔜 Planned
+CloudKit Sync              🔜 Planned
+Export Formats             🔜 Planned
 ```
 
 ---
 
-## Weekly Milestones
+## Upcoming Milestones
 
-| Week | Date | Deliverable |
-|------|------|-------------|
-| 1 | Jan 19 | Foundation fixes complete, CI running |
-| 2 | Jan 26 | Rich text MVP (bold/italic/underline) |
-| 4 | Feb 9 | Scrivener parser working |
-| 6 | Feb 23 | **v0.2 Release**: Rich text + Scrivener import |
-| 8 | Mar 9 | Split editor + search working |
-| 10 | Mar 23 | **v0.3 Release**: Core UI complete |
-| 14 | Apr 20 | **v0.4 Release**: Organization + CloudKit sync |
-| 18 | May 18 | **v0.5 Release**: Full export suite |
-| 22 | Jun 15 | **v1.0 Launch**: Feature parity achieved |
+| Target | Deliverable |
+|--------|-------------|
+| Feb 2026 | Find & replace, writing targets UI |
+| Mar 2026 | Split editor working |
+| Apr 2026 | Composition mode, snapshots |
+| May 2026 | CloudKit sync, organization views |
+| Jun 2026 | **v1.0 Launch**: Feature parity achieved |
 
 ---
 
@@ -277,13 +246,13 @@ If we fall behind, cut in this order:
 
 ---
 
-## Immediate Actions (Today)
+## Immediate Actions (Next Steps)
 
-1. [ ] Start Sprint 1 - fix `ManuscriptDocument` struct conversion
-2. [ ] Set up CI pipeline (GitHub Actions)
-3. [ ] Create Sprint 1 branch
-4. [ ] Block calendar for focused development
-5. [ ] Recruit beta testers for Feb 23 release
+1. [ ] Implement find & replace (⌘F)
+2. [ ] Add writing targets UI
+3. [ ] Plan split editor architecture
+4. [ ] Test Scrivener import with more real-world projects
+5. [ ] Recruit beta testers for upcoming release
 
 ---
 
@@ -302,3 +271,4 @@ If we fall behind, cut in this order:
 |------|--------|
 | Jan 2026 | Initial action plan created |
 | Jan 2026 | Compressed to aggressive 22-week timeline |
+| Jan 22, 2026 | Updated: Rich text, comments, drag-drop, inline renaming, Scrivener import all complete |

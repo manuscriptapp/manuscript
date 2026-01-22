@@ -23,16 +23,21 @@ Think Scrivener or Ulysses, but free and open source.
 | Feature | Status | Description |
 |---------|--------|-------------|
 | Project organization | ✅ | Binder sidebar with folders and documents |
-| Markdown editing | ✅ | Tabbed editor with Write, Outline, Notes, and Read views |
+| Rich text editing | ✅ | Bold, italic, underline, fonts, sizes, colors, highlighting |
+| Formatting toolbar | ✅ | Compact toolbar with font, size, color, and style controls |
+| Drag & drop reorder | ✅ | Reorder and move documents/folders between locations |
+| Inline renaming | ✅ | Scrivener-style click-to-rename in sidebar |
 | Document customization | ✅ | Custom icons (20+) and colors for folders and documents |
 | Characters & Locations | ✅ | World-building with character/location tracking |
 | Writing statistics | ✅ | Word counts, daily history, streaks, session tracking |
+| Comments system | ✅ | Inline comments with chat bubble UI and inspector |
 | Templates | ✅ | Hero's Journey and other project templates |
-| Scrivener import | ✅ | Full .scriv import with history and snapshots |
+| Scrivener import | ✅ | Full .scriv import with RTF conversion and comments |
 | Export | ✅ | PDF and Markdown export |
-| AI assistance | ✅ | Text generation with custom API keys (OpenAI, Anthropic, local) |
+| AI assistance | ✅ | Text generation with custom API keys (OpenAI, Anthropic) |
 | State restoration | ✅ | Remembers last open document and expanded folders |
-| Drag & drop reorder | 🔜 | Reorder documents and folders in sidebar |
+| Paragraph formatting | ✅ | First-line indentation, line spacing |
+| Find & replace | 🔜 | Search and replace within documents |
 | Snapshots | 🔜 | Version history (infrastructure ready) |
 | CloudKit sync | 🔜 | iCloud sync across devices |
 | More export formats | 🔜 | DOCX, EPUB, HTML, LaTeX |
@@ -89,7 +94,6 @@ MyNovel.manuscript/
 - [x] iOS app
 
 **Phase 2: Writing Experience** ✅
-- [x] Tabbed editing (Write, Outline, Notes, Read)
 - [x] Document and folder customization (icons, colors)
 - [x] Writing statistics and history tracking
 - [x] Project templates (Hero's Journey)
@@ -100,22 +104,30 @@ MyNovel.manuscript/
 - [x] Document-to-character/location linking
 
 **Phase 4: Import & Export** ✅
-- [x] Scrivener .scriv import (with history and snapshots)
+- [x] Scrivener .scriv import (with RTF conversion, comments, icons)
 - [x] PDF export
 - [x] Markdown export
 
 **Phase 5: AI Integration** ✅
 - [x] AI text generation service
-- [x] Custom API key support (OpenAI, Anthropic, local models)
+- [x] Custom API key support (OpenAI, Anthropic)
 - [x] Chapter generation and rewriting assistance
 
-**Phase 6: Polish** (In Progress)
+**Phase 6: Rich Text & Polish** ✅
+- [x] Rich text formatting (bold, italic, underline, fonts, colors)
+- [x] Formatting toolbar with undo/redo
+- [x] Paragraph first-line indentation
+- [x] Line spacing control
+- [x] Highlight/background color support
+- [x] Comments system with inline highlighting
 - [x] State restoration (last document, expanded folders)
-- [ ] Drag & drop reorder in sidebar
+- [x] Drag & drop reorder in sidebar
+- [x] Move documents/folders between locations
+- [x] Inline document renaming
+
+**Phase 7: Advanced** (In Progress)
 - [ ] Find & replace
 - [ ] Writing targets UI
-
-**Phase 7: Advanced** (Planned)
 - [ ] Split editor (side-by-side documents)
 - [ ] Composition mode (distraction-free)
 - [ ] Cork board view

@@ -41,11 +41,17 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 
 | Feature | Status | Priority |
 |---------|:------:|:--------:|
-| Live word count | 🔴 | High |
+| Live word count | 🟢 | High |
+| Rich text editing | 🟢 | High |
+| Formatting toolbar | 🟢 | High |
+| Comments system | 🟢 | High |
+| Drag & drop reorder | 🟢 | High |
+| Move between folders | 🟢 | High |
+| Inline renaming | 🟢 | High |
+| Scrivener import | 🟢 | High |
+| Compile to single doc | 🟢 | Medium |
+| Export to PDF | 🟢 | Medium |
 | Find & replace | 🔴 | High |
-| Drag & drop reorder | 🔴 | High |
-| Compile to single doc | 🔴 | Medium |
-| Export to PDF | 🔴 | Medium |
 | Distraction-free mode | 🔴 | Medium |
 
 ### Nice to Have (Post-Launch)
@@ -196,4 +202,4 @@ Before clicking "Submit for Review":
 
 ---
 
-*Last updated: January 2026*
+*Last updated: January 22, 2026*
