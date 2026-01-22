@@ -74,7 +74,21 @@
       "mcp__XcodeBuildMCP__type_text",
       "mcp__XcodeBuildMCP__button",
       "mcp__XcodeBuildMCP__start_sim_log_cap",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(/usr/libexec/PlistBuddy:*)",
+      "Bash(git rev-list:*)",
+      "Bash(git -C /Users/jonasdalesjo/code/manuscript status)",
+      "Bash(git -C /Users/jonasdalesjo/code/manuscript diff Manuscript/Manuscript.xcodeproj/project.pbxproj)",
+      "Bash(git -C /Users/jonasdalesjo/code/manuscript log --oneline -5)",
+      "Bash(git -C /Users/jonasdalesjo/code/manuscript add Manuscript/Manuscript.xcodeproj/project.pbxproj)",
+      "Bash(git -C /Users/jonasdalesjo/code/manuscript commit -m \"$\\(cat <<''EOF''\nAdd build phase script to auto-increment build number using git commit count\n\nThe build number \\(CFBundleVersion\\) is now set automatically based on the\ntotal number of git commits. This provides consistent, meaningful build\nnumbers without manual maintenance.\n\nAlso includes RichTextKit package dependency.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "WebFetch(domain:danielsaidi.github.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(git -C /Users/jonasdalesjo/code/manuscript diff CLAUDE.md)",
+      "Bash(git -C /Users/jonasdalesjo/code/manuscript add CLAUDE.md)",
+      "Bash(git -C /Users/jonasdalesjo/code/manuscript commit -m \"$\\(cat <<''EOF''\nUpdate CLAUDE.md to emphasize using latest iOS simulator\n\n- Bump iOS SDK requirement to 26.0+\n- Emphasize setting useLatestOS: true to avoid defaulting to older iOS versions\n- Add clearer instructions for session defaults\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(kill:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"
