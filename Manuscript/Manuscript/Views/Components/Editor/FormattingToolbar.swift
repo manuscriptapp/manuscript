@@ -8,6 +8,29 @@ struct FormattingToolbar: View {
     @State private var selectedLineSpacing: LineSpacingOption = .single
     @State private var selectedHighlightColor: HighlightColor = .none
 
+    /// Converts a PostScript font name (e.g., "Palatino-Roman") to a family name (e.g., "Palatino")
+    private var displayFontName: String {
+        let fontName = context.fontName
+        guard !fontName.isEmpty else { return "Palatino" }
+
+        #if os(macOS)
+        // Try to get the family name from the font
+        if let font = NSFont(name: fontName, size: 12) {
+            return font.familyName ?? fontName
+        }
+        #else
+        if let font = UIFont(name: fontName, size: 12) {
+            return font.familyName
+        }
+        #endif
+
+        // Fallback: split on hyphen and take first part
+        if let hyphenIndex = fontName.firstIndex(of: "-") {
+            return String(fontName[..<hyphenIndex])
+        }
+        return fontName
+    }
+
     var body: some View {
         #if os(macOS)
         macOSToolbar
@@ -70,7 +93,7 @@ struct FormattingToolbar: View {
                 }
             } label: {
                 HStack {
-                    Text(context.fontName.isEmpty ? "Palatino" : context.fontName)
+                    Text(displayFontName)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Image(systemName: "chevron.down")
                         .font(.caption)
