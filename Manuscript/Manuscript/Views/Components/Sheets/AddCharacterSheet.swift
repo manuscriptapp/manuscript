@@ -41,6 +41,6 @@ struct AddCharacterSheet: View {
                 }
             }
         }
-        .padding()
+        .presentationBackground(.regularMaterial)
     }
 } 

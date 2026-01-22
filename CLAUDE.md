@@ -23,9 +23,11 @@ This project uses XcodeBuildMCP for building. Set session defaults first:
 session-set-defaults:
   projectPath: /path/to/Manuscript/Manuscript.xcodeproj
   scheme: manuscript
+  simulatorName: iPhone 17 Pro
+  useLatestOS: true
 ```
 
-**Note:** The scheme name is lowercase `manuscript` (not `Manuscript`).
+**Note:** The scheme name is lowercase `manuscript` (not `Manuscript`). The recommended simulator is iPhone 17 Pro with iOS 26.2.
 
 **Common build commands:**
 

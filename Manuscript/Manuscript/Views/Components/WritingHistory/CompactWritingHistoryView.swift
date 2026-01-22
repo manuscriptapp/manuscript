@@ -65,7 +65,11 @@ struct CompactWritingHistoryView: View {
             }
         }
         .padding()
-        .background(Color(PlatformColor.secondarySystemBackground))
+        #if os(macOS)
+        .background(Color(nsColor: .windowBackgroundColor))
+        #else
+        .background(Color(uiColor: .secondarySystemBackground))
+        #endif
         .cornerRadius(12)
     }
 

@@ -73,6 +73,8 @@ struct ManuscriptProjectView: View {
     @State private var isAddCharacterSheetPresented = false
     @State private var isAddLocationSheetPresented = false
     @State private var showOnboarding = false
+    @State private var showSettings = false
+    @State private var showReadingMode = false
 
     var body: some View {
         mainContent
@@ -94,6 +96,34 @@ struct ManuscriptProjectView: View {
                     .onDisappear {
                         UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
                     }
+            }
+            .sheet(isPresented: $showSettings) {
+                NavigationStack {
+                    SettingsView()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done") {
+                                    showSettings = false
+                                }
+                            }
+                        }
+                }
+            }
+            .sheet(isPresented: $showReadingMode) {
+                NavigationStack {
+                    ProjectReadingView(viewModel: viewModel)
+                        .navigationTitle(viewModel.document.title.isEmpty ? "Untitled" : viewModel.document.title)
+                        #if os(iOS)
+                        .navigationBarTitleDisplayMode(.inline)
+                        #endif
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done") {
+                                    showReadingMode = false
+                                }
+                            }
+                        }
+                }
             }
             .onAppear {
                 viewModel.bind(to: $document)
@@ -123,7 +153,9 @@ struct ManuscriptProjectView: View {
                 isAddDocumentSheetPresented: $isAddDocumentSheetPresented,
                 isAddFolderSheetPresented: $isAddFolderSheetPresented,
                 isAddCharacterSheetPresented: $isAddCharacterSheetPresented,
-                isAddLocationSheetPresented: $isAddLocationSheetPresented
+                isAddLocationSheetPresented: $isAddLocationSheetPresented,
+                showSettings: $showSettings,
+                showReadingMode: $showReadingMode
             )
             .navigationDestination(for: DetailSelection.self) { selection in
                 DetailContentView(

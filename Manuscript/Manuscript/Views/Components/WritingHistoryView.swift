@@ -231,7 +231,11 @@ struct WritingHistoryView: View {
             }
         }
         .padding()
-        .background(Color(PlatformColor.systemBackground))
+        #if os(macOS)
+        .background(Color(nsColor: .textBackgroundColor))
+        #else
+        .background(Color(uiColor: .systemBackground))
+        #endif
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
@@ -267,7 +271,11 @@ struct WritingHistoryView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(PlatformColor.secondarySystemBackground).opacity(0.5))
+        #if os(macOS)
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
+        #else
+        .background(Color(uiColor: .secondarySystemBackground).opacity(0.5))
+        #endif
         .cornerRadius(8)
     }
 
@@ -510,7 +518,11 @@ struct WritingHistoryView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(40)
-        .background(Color(PlatformColor.secondarySystemBackground))
+        #if os(macOS)
+        .background(Color(nsColor: .windowBackgroundColor))
+        #else
+        .background(Color(uiColor: .secondarySystemBackground))
+        #endif
         .cornerRadius(12)
     }
 }

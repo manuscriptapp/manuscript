@@ -93,14 +93,26 @@ struct ProjectInfoView: View {
         Form {
             Section("Project Information") {
                 TextField("Title", text: $editedTitle)
-                    .onChange(of: editedTitle) { viewModel.document.title = $1 }
+                    .onChange(of: editedTitle) { _, newValue in
+                        var doc = viewModel.document
+                        doc.title = newValue
+                        viewModel.document = doc
+                    }
 
                 TextField("Author", text: $editedAuthor)
-                    .onChange(of: editedAuthor) { viewModel.document.author = $1 }
+                    .onChange(of: editedAuthor) { _, newValue in
+                        var doc = viewModel.document
+                        doc.author = newValue
+                        viewModel.document = doc
+                    }
 
                 TextField("Description", text: $editedDescription, axis: .vertical)
                     .lineLimit(5...10)
-                    .onChange(of: editedDescription) { viewModel.document.metaDescription = $1 }
+                    .onChange(of: editedDescription) { _, newValue in
+                        var doc = viewModel.document
+                        doc.metaDescription = newValue
+                        viewModel.document = doc
+                    }
             }
         }
     }
@@ -292,7 +304,11 @@ struct ProjectInfoView: View {
             Section("Synopsis") {
                 TextEditor(text: $editedSynopsis)
                     .frame(minHeight: 300)
-                    .onChange(of: editedSynopsis) { viewModel.document.synopsis = $1 }
+                    .onChange(of: editedSynopsis) { _, newValue in
+                        var doc = viewModel.document
+                        doc.synopsis = newValue
+                        viewModel.document = doc
+                    }
             }
 
             Section("Writing tips") {
@@ -355,11 +371,15 @@ struct ProjectInfoView: View {
     }
     
     private func updateGenre() {
-        viewModel.document.genre = Array(selectedGenres).sorted().joined(separator: ", ")
+        var doc = viewModel.document
+        doc.genre = Array(selectedGenres).sorted().joined(separator: ", ")
+        viewModel.document = doc
     }
-    
+
     private func updateStyle() {
-        viewModel.document.style = combinedStyle
+        var doc = viewModel.document
+        doc.style = combinedStyle
+        viewModel.document = doc
     }
 }
 

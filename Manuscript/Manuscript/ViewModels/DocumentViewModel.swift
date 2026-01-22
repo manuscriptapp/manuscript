@@ -199,6 +199,10 @@ class DocumentViewModel: ObservableObject {
         if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
             currentFolder = updated
         }
+
+        // Expand all ancestor folders and the parent folder to show the new folder
+        expandToFolder(newFolder)
+        setFolderExpanded(parentFolder, expanded: true)
     }
 
     private func addFolderRecursively(to folder: ManuscriptFolder, parentId: UUID, newFolder: ManuscriptFolder) -> ManuscriptFolder {
@@ -319,6 +323,10 @@ class DocumentViewModel: ObservableObject {
         if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
             currentFolder = updated
         }
+
+        // Expand all ancestor folders and the target folder to show the new document
+        expandToDocument(newDoc)
+        setFolderExpanded(folder, expanded: true)
     }
 
     func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil) {

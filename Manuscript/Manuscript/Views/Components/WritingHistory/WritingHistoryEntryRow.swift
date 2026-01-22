@@ -27,7 +27,11 @@ struct WritingHistoryEntryRow: View {
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Rectangle()
-                        .fill(Color(PlatformColor.tertiarySystemFill))
+                        #if os(macOS)
+                        .fill(Color(nsColor: .quaternaryLabelColor))
+                        #else
+                        .fill(Color(uiColor: .tertiarySystemFill))
+                        #endif
                         .cornerRadius(4)
 
                     Rectangle()
@@ -56,7 +60,11 @@ struct WritingHistoryEntryRow: View {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
-        .background(Color(PlatformColor.systemBackground))
+        #if os(macOS)
+        .background(Color(nsColor: .textBackgroundColor))
+        #else
+        .background(Color(uiColor: .systemBackground))
+        #endif
         .cornerRadius(8)
     }
 

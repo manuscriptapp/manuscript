@@ -60,6 +60,50 @@ extension ManuscriptDocument {
 // MARK: - iOS Template Picker for DocumentGroupLaunchScene
 
 #if os(iOS)
+/// Name input sheet for new manuscript
+struct LaunchNameInputView: View {
+    @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
+    @Environment(\.dismiss) private var dismiss
+    @State private var manuscriptName = ""
+    @FocusState private var isNameFieldFocused: Bool
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Manuscript Name", text: $manuscriptName)
+                        .focused($isNameFieldFocused)
+                }
+            }
+            .navigationTitle("New Manuscript")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        continuation?.resume(returning: nil)
+                        continuation = nil
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Create") {
+                        var document = ManuscriptDocument()
+                        document.title = manuscriptName.isEmpty ? "Untitled" : manuscriptName
+                        continuation?.resume(returning: document)
+                        continuation = nil
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                isNameFieldFocused = true
+            }
+        }
+        .presentationDetents([.height(200)])
+        .presentationBackground(.regularMaterial)
+    }
+}
+
 /// Template picker sheet for the document launch scene
 struct LaunchTemplatePickerView: View {
     @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
@@ -282,6 +326,8 @@ struct ManuscriptApp: App {
     #if os(iOS)
     @State private var templateContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @State private var isTemplatePickerPresented = false
+    @State private var nameContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
+    @State private var isNameInputPresented = false
     #endif
 
     init() {
@@ -363,7 +409,15 @@ struct ManuscriptApp: App {
         // iOS 18+ Document Launch Scene
         #if os(iOS)
         DocumentGroupLaunchScene("") {
-            NewDocumentButton("New Manuscript")
+            NewDocumentButton("New Manuscript", for: ManuscriptDocument.self) {
+                try await withCheckedThrowingContinuation { continuation in
+                    self.nameContinuation = continuation
+                    self.isNameInputPresented = true
+                }
+            }
+            .sheet(isPresented: $isNameInputPresented) {
+                LaunchNameInputView(continuation: $nameContinuation)
+            }
 
             NewDocumentButton("Choose Template", for: ManuscriptDocument.self) {
                 try await withCheckedThrowingContinuation { continuation in

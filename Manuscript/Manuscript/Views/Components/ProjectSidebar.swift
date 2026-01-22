@@ -7,8 +7,30 @@ struct ProjectSidebar: View {
     @Binding var isAddFolderSheetPresented: Bool
     @Binding var isAddCharacterSheetPresented: Bool
     @Binding var isAddLocationSheetPresented: Bool
+    @Binding var showSettings: Bool
+    @Binding var showReadingMode: Bool
     @State private var isCharactersExpanded: Bool = false
     @State private var isLocationsExpanded: Bool = false
+
+    init(
+        viewModel: DocumentViewModel,
+        detailSelection: Binding<DetailSelection?>,
+        isAddDocumentSheetPresented: Binding<Bool>,
+        isAddFolderSheetPresented: Binding<Bool>,
+        isAddCharacterSheetPresented: Binding<Bool>,
+        isAddLocationSheetPresented: Binding<Bool>,
+        showSettings: Binding<Bool> = .constant(false),
+        showReadingMode: Binding<Bool> = .constant(false)
+    ) {
+        self.viewModel = viewModel
+        self._detailSelection = detailSelection
+        self._isAddDocumentSheetPresented = isAddDocumentSheetPresented
+        self._isAddFolderSheetPresented = isAddFolderSheetPresented
+        self._isAddCharacterSheetPresented = isAddCharacterSheetPresented
+        self._isAddLocationSheetPresented = isAddLocationSheetPresented
+        self._showSettings = showSettings
+        self._showReadingMode = showReadingMode
+    }
     
     var body: some View {
         // Create a typed binding to help with type inference
@@ -155,8 +177,30 @@ struct ProjectSidebar: View {
                 }
             }
             #else
+            ToolbarItem(placement: .bottomBar) {
+                Spacer()
+            }
+
+            ToolbarItem(placement: .bottomBar) {
+                Button {
+                    showReadingMode = true
+                } label: {
+                    Label("Read", systemImage: "book")
+                }
+            }
+
+            ToolbarItem(placement: .bottomBar) {
+                Spacer()
+            }
+
             ToolbarItem(placement: .primaryAction) {
                 Menu {
+                    Button(action: { showReadingMode = true }) {
+                        Label("Read Mode", systemImage: "book")
+                    }
+
+                    Divider()
+
                     Button(action: { isAddFolderSheetPresented.toggle() }) {
                         Label("Add Folder", systemImage: "folder.badge.plus")
                     }
@@ -174,8 +218,14 @@ struct ProjectSidebar: View {
                     Button(action: { isAddLocationSheetPresented.toggle() }) {
                         Label("Add Location", systemImage: "mappin.and.ellipse")
                     }
+
+                    Divider()
+
+                    Button(action: { showSettings = true }) {
+                        Label("Settings", systemImage: "gear")
+                    }
                 } label: {
-                    Label("Add", systemImage: "plus")
+                    Label("More", systemImage: "ellipsis.circle")
                 }
             }
             #endif

@@ -124,7 +124,7 @@ struct AddLocationSheet: View {
                 }
             }
         }
-        .padding()
+        .presentationBackground(.regularMaterial)
         .onAppear {
             locationManager.requestLocationPermission()
         }

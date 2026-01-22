@@ -60,7 +60,7 @@ struct AddFolderSheet: View {
                 }
             }
         }
-        .padding()
+        .presentationBackground(.regularMaterial)
     }
 }
 

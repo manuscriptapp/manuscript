@@ -84,7 +84,7 @@ struct AddDocumentSheet: View {
                 }
             }
         }
-        .padding()
+        .presentationBackground(.regularMaterial)
     }
 }
 
