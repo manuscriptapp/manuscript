@@ -40,10 +40,10 @@ struct ProjectSidebar: View {
         let listContent = Group {
             #if os(iOS)
             Text(viewModel.documentTitle.isEmpty ? "Untitled" : viewModel.documentTitle)
-                .font(.title)
+                .font(.title2)
                 .bold()
-                .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             #endif
             
             
@@ -138,13 +138,49 @@ struct ProjectSidebar: View {
                     Label {
                         Text("Writing History")
                     } icon: {
-                        Image(systemName: "clock.arrow.circlepath")
+                        Image(systemName: "calendar")
                             .foregroundStyle(.brown)
                     }
-                    .badge(viewModel.document.writingHistory.entries.count)
                 }
             }
-            
+
+            // Progress Section
+            Section("Progress") {
+                SidebarStatRow(
+                    icon: "character.cursor.ibeam",
+                    color: .blue,
+                    title: "Total Words",
+                    value: viewModel.rootFolder.totalWordCount.formatted()
+                )
+
+                SidebarStatRow(
+                    icon: "calendar.badge.clock",
+                    color: .green,
+                    title: "Days Written",
+                    value: "\(viewModel.document.writingHistory.daysWritten)"
+                )
+
+                SidebarStatRow(
+                    icon: "flame.fill",
+                    color: viewModel.document.writingHistory.currentStreak > 0 ? .orange : .secondary,
+                    title: "Current Streak",
+                    value: "\(viewModel.document.writingHistory.currentStreak) days"
+                )
+
+                SidebarStatRow(
+                    icon: "trophy.fill",
+                    color: .yellow,
+                    title: "Longest Streak",
+                    value: "\(viewModel.document.writingHistory.longestStreak) days"
+                )
+
+                SidebarStatRow(
+                    icon: "chart.line.uptrend.xyaxis",
+                    color: .purple,
+                    title: "Avg Words/Day",
+                    value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
+                )
+            }
         }
         
         // Use the pre-defined content in the List
@@ -248,24 +284,39 @@ struct ProjectSidebar: View {
             content
         }
         .listStyle(.sidebar)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            SidebarStatsView(
-                totalWords: viewModel.rootFolder.totalWordCount,
-                writingHistory: viewModel.document.writingHistory
-            )
-        }
         #else
         List(selection: selection) {
             content
         }
         .listStyle(.sidebar)
         .navigationTitle(viewModel.documentTitle.isEmpty ? "Untitled" : viewModel.documentTitle)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            SidebarStatsView(
-                totalWords: viewModel.rootFolder.totalWordCount,
-                writingHistory: viewModel.document.writingHistory
-            )
-        }
         #endif
+    }
+}
+
+// MARK: - Sidebar Stat Row
+
+struct SidebarStatRow: View {
+    let icon: String
+    let color: Color
+    let title: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(color)
+                .frame(width: 24)
+
+            Text(title)
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            Text(value)
+                .fontWeight(.medium)
+        }
+        .font(.subheadline)
     }
 } 
