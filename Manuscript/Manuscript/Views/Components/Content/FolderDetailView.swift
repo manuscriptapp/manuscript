@@ -66,7 +66,9 @@ struct FolderDetailView: View {
             }
             .padding(.vertical)
         }
+        #if os(macOS)
         .navigationTitle(folder.title)
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {

@@ -37,7 +37,9 @@ struct CharactersView: View {
                 }
             }
         }
+        #if os(macOS)
         .navigationTitle("Characters")
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {

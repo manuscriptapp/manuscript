@@ -98,7 +98,9 @@ struct DocumentDetailView: View {
         .onChange(of: detailViewModel.selectedLocations) { _, newValue in
             viewModel.updateDocument(document, locationIds: newValue)
         }
+        #if os(macOS)
         .navigationTitle(detailViewModel.editedTitle)
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {

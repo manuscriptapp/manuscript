@@ -10,6 +10,7 @@ struct ManuscriptProjectView: View {
     @State private var isAddCharacterSheetPresented = false
     @State private var isAddLocationSheetPresented = false
     @State private var showOnboarding = false
+    @State private var navigationTitle = ""
 
     var body: some View {
         NavigationSplitView {
@@ -24,9 +25,6 @@ struct ManuscriptProjectView: View {
             )
             #if os(macOS)
             .frame(minWidth: 190)
-            #endif
-            #if os(iOS)
-            .toolbar(.hidden, for: .navigationBar)
             #endif
         } detail: {
             // Detail view based on selection
@@ -62,9 +60,14 @@ struct ManuscriptProjectView: View {
         .onAppear {
             viewModel.bind(to: $document)
             checkOnboarding()
+            updateNavigationTitle()
         }
         .onChange(of: document) { _, newDocument in
             viewModel.syncWithDocument(newDocument)
+            updateNavigationTitle()
+        }
+        .onChange(of: detailSelection) { _, _ in
+            updateNavigationTitle()
         }
         .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
             TextField("Name", text: $viewModel.newItemName)
@@ -75,11 +78,51 @@ struct ManuscriptProjectView: View {
         } message: {
             Text("Enter new name")
         }
+        #if os(iOS)
+        .navigationTitle(navigationTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            if detailSelection != nil {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        detailSelection = nil
+                    } label: {
+                        Label("Back", systemImage: "chevron.left")
+                    }
+                }
+            }
+        }
+        #endif
     }
 
     private func checkOnboarding() {
         if !UserDefaults.standard.bool(forKey: "hasSeenOnboarding") {
             showOnboarding = true
+        }
+    }
+
+    private func updateNavigationTitle() {
+        switch detailSelection {
+        case .projectInfo:
+            navigationTitle = "Project Info"
+        case .characters:
+            navigationTitle = "Characters"
+        case .locations:
+            navigationTitle = "Locations"
+        case .writingHistory:
+            navigationTitle = "Writing History"
+        case .folder(let folder):
+            navigationTitle = folder.title
+        case .document(let document):
+            let currentTitle = viewModel.findDocument(withId: document.id)?.title ?? document.title
+            navigationTitle = currentTitle.isEmpty ? "Untitled Document" : currentTitle
+        case .character(let character):
+            navigationTitle = character.name
+        case .location(let location):
+            navigationTitle = location.name
+        case .none:
+            navigationTitle = viewModel.document.title.isEmpty ? "Untitled Project" : viewModel.document.title
         }
     }
 }

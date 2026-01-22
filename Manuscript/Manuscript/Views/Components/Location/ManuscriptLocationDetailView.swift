@@ -62,11 +62,13 @@ struct ManuscriptLocationDetailView: View {
                         }
                     }
                 }
-            } header: {
-                Text("Appears in Documents")
-            }
+        } header: {
+            Text("Appears in Documents")
         }
+    }
+        #if os(macOS)
         .navigationTitle(location.name)
+        #endif
     }
 
     private func updateLocation() {

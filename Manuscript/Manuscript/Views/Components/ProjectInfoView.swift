@@ -83,7 +83,9 @@ struct ProjectInfoView: View {
                 }
                 .tag(3)
         }
+        #if os(macOS)
         .navigationTitle("Project Info")
+        #endif
         .onAppear {
             loadData()
         }

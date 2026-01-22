@@ -62,9 +62,8 @@ struct WritingHistoryView: View {
             }
             .padding()
         }
+        #if os(macOS)
         .navigationTitle("Writing History")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
         #endif
     }
 

@@ -31,7 +31,9 @@ struct LocationsView: View {
                 }
             }
         }
+        #if os(macOS)
         .navigationTitle("Locations")
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
