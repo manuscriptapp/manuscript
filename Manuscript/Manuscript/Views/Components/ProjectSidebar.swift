@@ -17,7 +17,7 @@ struct ProjectSidebar: View {
         // Create the content as a separate variable
         let listContent = Group {
             #if os(iOS)
-            Text(viewModel.document.title)
+            Text(viewModel.document.title.isEmpty ? "Untitled" : viewModel.document.title)
                 .font(.title)
                 .bold()
                 .listRowSeparator(.hidden)
