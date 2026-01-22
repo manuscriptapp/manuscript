@@ -2,7 +2,7 @@
 
 Manuscript vs Scrivener vs Ulysses.
 
-**Legend:** ✅ Yes | ⚡ Partial/Import | 🔜 Planned | ❌ No | ➖ N/A
+**Legend:** ✅ Yes | ⚡ Partial (data model only, or infrastructure ready) | 🔜 Planned | ❌ No | ➖ N/A
 
 ---
 
@@ -30,7 +30,7 @@ Manuscript vs Scrivener vs Ulysses.
 | Typewriter scrolling | ✅ | ✅ | 🔜 |
 | Auto-save | ✅ | ✅ | ✅ |
 | Find & replace | ✅ | ✅ | 🔜 |
-| Live word count | ✅ | ✅ | 🔜 |
+| Live word count | ✅ | ✅ | ✅ |
 | Dark mode | ✅ | ✅ | ✅ |
 
 ---
@@ -41,9 +41,11 @@ Manuscript vs Scrivener vs Ulysses.
 |---|:-:|:-:|:-:|
 | Sidebar/binder | ✅ | ✅ | ✅ |
 | Folders & documents | ✅ | ✅ | ✅ |
+| Custom icons | ✅ | ❌ | ✅ |
+| Color labels | ✅ | ✅ | ✅ |
+| State restoration | ✅ | ✅ | ✅ |
 | Drag & drop reorder | ✅ | ✅ | 🔜 |
-| Color labels | ✅ | ✅ | 🔜 |
-| Status labels | ✅ | ❌ | 🔜 |
+| Status labels | ✅ | ❌ | ⚡ Data only |
 | Keywords/tags | ✅ | ✅ | 🔜 |
 | Collections/filters | ✅ | ✅ | 🔜 |
 | Favorites | ✅ | ✅ | 🔜 |
@@ -80,9 +82,9 @@ Manuscript vs Scrivener vs Ulysses.
 
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
-| Manual snapshots | ✅ | ✅ | ✅ |
+| Manual snapshots | ✅ | ✅ | ⚡ Infrastructure |
 | Compare versions | ✅ | ✅ | 🔜 |
-| Rollback | ✅ | ✅ | ✅ |
+| Rollback | ✅ | ✅ | 🔜 |
 | Version history | ✅ | ✅ | 🔜 |
 
 ---
@@ -91,8 +93,8 @@ Manuscript vs Scrivener vs Ulysses.
 
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
-| Compile to single doc | ✅ | ✅ | 🔜 |
-| Export PDF | ✅ | ✅ | 🔜 |
+| Compile to single doc | ✅ | ✅ | ✅ |
+| Export PDF | ✅ | ✅ | ✅ |
 | Export DOCX | ✅ | ✅ | 🔜 |
 | Export EPUB | ✅ | ✅ | 🔜 |
 | Export HTML | ✅ | ✅ | 🔜 |
@@ -107,12 +109,12 @@ Manuscript vs Scrivener vs Ulysses.
 
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
-| Document targets | ✅ | ✅ | 🔜 |
-| Project targets | ✅ | ✅ | 🔜 |
-| Session targets | ✅ | ✅ | 🔜 |
-| Deadline tracking | ✅ | ✅ | 🔜 |
-| Writing history | ✅ | ✅ | ⚡ Import |
-| Statistics | ✅ | ✅ | ⚡ Import |
+| Document targets | ✅ | ✅ | ⚡ Data only |
+| Project targets | ✅ | ✅ | ⚡ Data only |
+| Session targets | ✅ | ✅ | ⚡ Data only |
+| Deadline tracking | ✅ | ✅ | ⚡ Data only |
+| Writing history | ✅ | ✅ | ✅ |
+| Statistics | ✅ | ✅ | ✅ |
 
 ---
 
@@ -181,10 +183,11 @@ Manuscript vs Scrivener vs Ulysses.
 1. **Free** — No purchase, no subscription
 2. **Open source** — MPL-2.0, full source available
 3. **On-device AI** — Apple Foundation Models, private
-4. **BYOK AI** — Use your own API keys
+4. **BYOK AI** — Use your own API keys (OpenAI, Anthropic, local)
 5. **CloudKit sync** — Free, automatic
-6. **SwiftUI** — Modern framework
+6. **SwiftUI** — Modern, native framework
 7. **Standard files** — Markdown, no lock-in
+8. **Scrivener import** — Full migration with history and snapshots
 
 ---
 

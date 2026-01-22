@@ -22,23 +22,25 @@ Think Scrivener or Ulysses, but free and open source.
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Project organization | ✅ | Binder sidebar with folders, documents, drag-and-drop |
+| Project organization | ✅ | Binder sidebar with folders and documents |
 | Markdown editing | ✅ | Tabbed editor with Write, Outline, Notes, and Read views |
-| Document customization | ✅ | Custom icons and colors for folders and documents |
+| Document customization | ✅ | Custom icons (20+) and colors for folders and documents |
 | Characters & Locations | ✅ | World-building with character/location tracking |
 | Writing statistics | ✅ | Word counts, daily history, streaks, session tracking |
 | Templates | ✅ | Hero's Journey and other project templates |
 | Scrivener import | ✅ | Full .scriv import with history and snapshots |
 | Export | ✅ | PDF and Markdown export |
-| AI assistance | ✅ | Text generation with custom API keys |
+| AI assistance | ✅ | Text generation with custom API keys (OpenAI, Anthropic, local) |
+| State restoration | ✅ | Remembers last open document and expanded folders |
+| Drag & drop reorder | 🔜 | Reorder documents and folders in sidebar |
 | Snapshots | 🔜 | Version history (infrastructure ready) |
 | CloudKit sync | 🔜 | iCloud sync across devices |
 | More export formats | 🔜 | DOCX, EPUB, HTML, LaTeX |
 
 ## Requirements
 
-- iOS 17.0+ / macOS 14.0+
-- Xcode 15.0+ (to build from source)
+- iOS 26.0+ / macOS 15.0+
+- Xcode 16.0+ (to build from source)
 
 ## Build
 
@@ -97,23 +99,29 @@ MyNovel.manuscript/
 - [x] Location tracking
 - [x] Document-to-character/location linking
 
-**Phase 4: Import & Export** (In Progress)
+**Phase 4: Import & Export** ✅
 - [x] Scrivener .scriv import (with history and snapshots)
 - [x] PDF export
 - [x] Markdown export
-- [ ] DOCX, EPUB, HTML, LaTeX export
 
 **Phase 5: AI Integration** ✅
 - [x] AI text generation service
-- [x] Custom API key support
+- [x] Custom API key support (OpenAI, Anthropic, local models)
 - [x] Chapter generation and rewriting assistance
 
-**Phase 6: Advanced** (Planned)
+**Phase 6: Polish** (In Progress)
+- [x] State restoration (last document, expanded folders)
+- [ ] Drag & drop reorder in sidebar
+- [ ] Find & replace
+- [ ] Writing targets UI
+
+**Phase 7: Advanced** (Planned)
 - [ ] Split editor (side-by-side documents)
 - [ ] Composition mode (distraction-free)
 - [ ] Cork board view
 - [ ] Outliner view
 - [ ] CloudKit sync
+- [ ] DOCX, EPUB, HTML, LaTeX export
 - [ ] Version comparison for snapshots
 
 ## Contributing
