@@ -6,8 +6,15 @@ import AppKit
 #endif
 
 /// Service for converting between Markdown and NSAttributedString
-/// Supports bold, italic, strikethrough, and basic formatting
+/// Supports bold, italic, strikethrough, highlight, and basic formatting
 enum MarkdownParser {
+
+    /// Standard highlight color (yellow)
+    #if os(iOS)
+    static let highlightColor = UIColor.systemYellow.withAlphaComponent(0.4)
+    #else
+    static let highlightColor = NSColor.systemYellow.withAlphaComponent(0.4)
+    #endif
 
     // MARK: - Markdown to Attributed String
 
@@ -54,7 +61,7 @@ enum MarkdownParser {
         let result = NSMutableAttributedString()
 
         // Regex patterns for markdown formatting
-        // Order matters: process bold+italic first, then bold, then italic, then strikethrough
+        // Order matters: process bold+italic first, then bold, then italic, then strikethrough, then highlight
         let patterns: [(pattern: String, style: MarkdownStyle)] = [
             ("\\*\\*\\*(.+?)\\*\\*\\*", .boldItalic),     // ***bold italic***
             ("___(.+?)___", .boldItalic),                  // ___bold italic___
@@ -63,6 +70,7 @@ enum MarkdownParser {
             ("\\*(.+?)\\*", .italic),                      // *italic*
             ("_(.+?)_", .italic),                          // _italic_
             ("~~(.+?)~~", .strikethrough),                 // ~~strikethrough~~
+            ("==(.+?)==", .highlight),                     // ==highlight==
         ]
 
         let processedText = text
@@ -118,6 +126,9 @@ enum MarkdownParser {
             if style == .strikethrough {
                 attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
             }
+            if style == .highlight {
+                attributes[.backgroundColor] = highlightColor
+            }
             result.append(NSAttributedString(string: content, attributes: attributes))
 
             currentIndex = range.upperBound
@@ -137,6 +148,7 @@ enum MarkdownParser {
         case italic
         case boldItalic
         case strikethrough
+        case highlight
     }
 
     private static func fontForStyle(_ style: MarkdownStyle, baseFont: PlatformFont) -> PlatformFont {
@@ -151,6 +163,8 @@ enum MarkdownParser {
         case .boldItalic:
             return derivedFont(name: fontName, size: fontSize, bold: true, italic: true) ?? baseFont
         case .strikethrough:
+            return baseFont
+        case .highlight:
             return baseFont
         }
     }
@@ -213,6 +227,7 @@ enum MarkdownParser {
             var isBold = false
             var isItalic = false
             var isStrikethrough = false
+            var isHighlight = false
 
             if let font = attributes[.font] as? PlatformFont {
                 #if os(iOS)
@@ -231,6 +246,10 @@ enum MarkdownParser {
                 isStrikethrough = true
             }
 
+            if attributes[.backgroundColor] != nil {
+                isHighlight = true
+            }
+
             // Apply markdown formatting
             var formattedText = text
 
@@ -242,6 +261,9 @@ enum MarkdownParser {
                 var formattedLine = line
 
                 if !formattedLine.isEmpty {
+                    if isHighlight {
+                        formattedLine = "==\(formattedLine)=="
+                    }
                     if isStrikethrough {
                         formattedLine = "~~\(formattedLine)~~"
                     }
@@ -275,6 +297,7 @@ enum MarkdownParser {
         result = result.replacingOccurrences(of: "**", with: "**", options: [], range: nil)
         result = result.replacingOccurrences(of: "~~****~~", with: "")
         result = result.replacingOccurrences(of: "~~~~~~", with: "")
+        result = result.replacingOccurrences(of: "====", with: "")
 
         // Merge adjacent same formatting: **a****b** -> **ab**
         let patterns = [
@@ -282,6 +305,7 @@ enum MarkdownParser {
             ("\\*\\*(.+?)\\*\\*\\*\\*(.+?)\\*\\*", "**$1$2**"),
             ("\\*(.+?)\\*\\*(.+?)\\*", "*$1$2*"),
             ("~~(.+?)~~~~(.+?)~~", "~~$1$2~~"),
+            ("==(.+?)====(.+?)==", "==$1$2=="),
         ]
 
         for (pattern, replacement) in patterns {
