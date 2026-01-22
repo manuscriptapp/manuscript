@@ -17,9 +17,11 @@ struct FormattingToolbar: View {
     // MARK: - macOS Toolbar
 
     #if os(macOS)
+    private let fontSizesMac = [10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72]
+
     private var macOSToolbar: some View {
         HStack(spacing: 12) {
-            // Font family picker - custom implementation showing actual font name
+            // Font family picker
             Menu {
                 ForEach(availableFontsMac, id: \.self) { fontName in
                     Button(fontName) {
@@ -38,38 +40,35 @@ struct FormattingToolbar: View {
                 .background(Color(nsColor: .controlBackgroundColor))
                 .cornerRadius(4)
             }
-            .frame(width: 150)
+            .frame(width: 140)
 
-            // Font size picker - custom implementation showing actual size
-            HStack(spacing: 4) {
-                Button {
-                    if context.fontSize > 8 {
-                        context.fontSize -= 1
+            // Font size dropdown
+            Menu {
+                ForEach(fontSizesMac, id: \.self) { size in
+                    Button {
+                        context.fontSize = CGFloat(size)
+                    } label: {
+                        HStack {
+                            Text("\(size)")
+                            if Int(context.fontSize) == size {
+                                Image(systemName: "checkmark")
+                            }
+                        }
                     }
-                } label: {
-                    Image(systemName: "minus")
-                        .font(.caption)
                 }
-                .buttonStyle(.borderless)
-
-                Text("\(Int(context.fontSize))")
-                    .monospacedDigit()
-                    .frame(width: 30)
-
-                Button {
-                    if context.fontSize < 72 {
-                        context.fontSize += 1
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.caption)
+            } label: {
+                HStack(spacing: 4) {
+                    Text("\(Int(context.fontSize))")
+                        .monospacedDigit()
+                        .frame(width: 24)
+                    Image(systemName: "chevron.down")
+                        .font(.caption2)
                 }
-                .buttonStyle(.borderless)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color(nsColor: .controlBackgroundColor))
+                .cornerRadius(4)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color(nsColor: .controlBackgroundColor))
-            .cornerRadius(4)
 
             Divider()
                 .frame(height: 20)
@@ -80,8 +79,9 @@ struct FormattingToolbar: View {
             Divider()
                 .frame(height: 20)
 
-            // Text alignment
+            // Text alignment (no label)
             RichTextAlignment.Picker(selection: $context.textAlignment)
+                .labelsHidden()
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
