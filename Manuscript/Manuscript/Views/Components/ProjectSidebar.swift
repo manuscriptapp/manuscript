@@ -147,7 +147,12 @@ struct ProjectSidebar: View {
             // Progress Section
             #if os(iOS)
             Section("Progress") {
-                NavigationLink(value: DetailSelection.writingHistory) {
+                ZStack {
+                    NavigationLink(value: DetailSelection.writingHistory) {
+                        EmptyView()
+                    }
+                    .opacity(0)
+
                     VStack(spacing: 10) {
                         SidebarStatRow(
                             icon: "character.cursor.ibeam",
@@ -180,7 +185,7 @@ struct ProjectSidebar: View {
                             value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
                         )
                     }
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 14)
                     .padding(.horizontal, 4)
                 }
                 .listRowBackground(Color.clear)
