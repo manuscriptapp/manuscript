@@ -38,15 +38,6 @@ struct ProjectSidebar: View {
 
         // Create the content as a separate variable
         let listContent = Group {
-            #if os(iOS)
-            Text(viewModel.documentTitle.isEmpty ? "Untitled" : viewModel.documentTitle)
-                .font(.title2)
-                .bold()
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-            #endif
-            
-            
             // Folder structure
             Section("Content") {
                 FolderItemView(
