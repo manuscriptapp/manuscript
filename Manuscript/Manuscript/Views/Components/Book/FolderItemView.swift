@@ -181,6 +181,20 @@ struct FolderItemView: View {
                 .id("\(folderId)-\(folder.iconName)-\(folder.iconColor ?? "")")
                 .badge(folder.totalDocumentCount)
                 .tag(DetailSelection.folder(folder))
+                .draggable(DraggableSidebarItem(id: folder.id, itemType: .folder)) {
+                    Label(folder.title, systemImage: folder.iconName)
+                }
+                .dropDestination(for: DraggableSidebarItem.self) { items, _ in
+                    for item in items {
+                        switch item.itemType {
+                        case .document:
+                            viewModel.moveDocumentToFolder(item.id, targetFolderId: folder.id)
+                        case .folder:
+                            viewModel.moveFolderToParent(item.id, targetParentId: folder.id)
+                        }
+                    }
+                    return !items.isEmpty
+                }
                 #if os(macOS)
                 .contextMenu {
                     Menu("Change Icon") {

@@ -139,6 +139,9 @@ struct DocumentItemView: View {
         NavigationLink(value: DetailSelection.document(document)) {
             documentLabel
         }
+        .draggable(DraggableSidebarItem(id: document.id, itemType: .document)) {
+            Label(document.title.isEmpty ? "Untitled" : document.title, systemImage: document.iconName)
+        }
         .contextMenu {
             Menu("Change Icon") {
                 ForEach(iconOptions, id: \.0) { name, icon in
@@ -197,6 +200,9 @@ struct DocumentItemView: View {
             } else {
                 documentLabel
                     .tag(DetailSelection.document(document))
+                    .draggable(DraggableSidebarItem(id: document.id, itemType: .document)) {
+                        Label(document.title.isEmpty ? "Untitled" : document.title, systemImage: document.iconName)
+                    }
                     .contextMenu {
                         Menu("Change Icon") {
                         ForEach(iconOptions, id: \.0) { name, icon in

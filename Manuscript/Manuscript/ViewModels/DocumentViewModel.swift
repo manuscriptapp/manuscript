@@ -630,6 +630,114 @@ class DocumentViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Cross-Folder Movement
+
+    /// Move a document to a different folder
+    func moveDocumentToFolder(_ docId: UUID, targetFolderId: UUID) {
+        guard let doc = findDocument(withId: docId),
+              let sourceFolder = findParentFolder(of: doc),
+              sourceFolder.id != targetFolderId else { return }
+
+        // Force UI update notification
+        objectWillChange.send()
+
+        var manuscriptDoc = document
+
+        // Remove from source folder
+        manuscriptDoc.rootFolder = updateFolderRecursively(manuscriptDoc.rootFolder, folderId: sourceFolder.id) { f in
+            var updated = f
+            updated.documents.removeAll { $0.id == docId }
+            // Reindex remaining documents
+            for (index, _) in updated.documents.enumerated() {
+                updated.documents[index].order = index
+            }
+            return updated
+        }
+
+        // Add to target folder
+        manuscriptDoc.rootFolder = updateFolderRecursively(manuscriptDoc.rootFolder, folderId: targetFolderId) { f in
+            var updated = f
+            var docToAdd = doc
+            docToAdd.order = updated.documents.count
+            updated.documents.append(docToAdd)
+            return updated
+        }
+
+        document = manuscriptDoc
+        if let updated = findFolder(withId: currentFolder.id, in: manuscriptDoc.rootFolder) {
+            currentFolder = updated
+        }
+    }
+
+    /// Move a folder to a different parent folder
+    func moveFolderToParent(_ folderId: UUID, targetParentId: UUID) {
+        // Prevent moving to self or descendant
+        guard folderId != targetParentId,
+              folderId != document.rootFolder.id,
+              !isDescendant(folderId: targetParentId, ofFolderId: folderId) else { return }
+
+        guard let folderToMove = findFolder(withId: folderId, in: document.rootFolder),
+              let currentParent = findParentOfFolder(folderId),
+              currentParent.id != targetParentId else { return }
+
+        // Force UI update notification
+        objectWillChange.send()
+
+        var manuscriptDoc = document
+
+        // Remove from current parent
+        manuscriptDoc.rootFolder = updateFolderRecursively(manuscriptDoc.rootFolder, folderId: currentParent.id) { f in
+            var updated = f
+            updated.subfolders.removeAll { $0.id == folderId }
+            for (index, _) in updated.subfolders.enumerated() {
+                updated.subfolders[index].order = index
+            }
+            return updated
+        }
+
+        // Add to target parent
+        manuscriptDoc.rootFolder = updateFolderRecursively(manuscriptDoc.rootFolder, folderId: targetParentId) { f in
+            var updated = f
+            var folderCopy = folderToMove
+            folderCopy.order = updated.subfolders.count
+            updated.subfolders.append(folderCopy)
+            return updated
+        }
+
+        document = manuscriptDoc
+        if let updated = findFolder(withId: currentFolder.id, in: manuscriptDoc.rootFolder) {
+            currentFolder = updated
+        }
+    }
+
+    /// Find parent folder of a given folder
+    private func findParentOfFolder(_ folderId: UUID) -> ManuscriptFolder? {
+        return findParentOfFolderRecursively(folderId, in: document.rootFolder)
+    }
+
+    private func findParentOfFolderRecursively(_ folderId: UUID, in folder: ManuscriptFolder) -> ManuscriptFolder? {
+        if folder.subfolders.contains(where: { $0.id == folderId }) {
+            return folder
+        }
+        for subfolder in folder.subfolders {
+            if let found = findParentOfFolderRecursively(folderId, in: subfolder) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    /// Check if a folder is a descendant of another (prevents circular references)
+    private func isDescendant(folderId: UUID, ofFolderId ancestorId: UUID) -> Bool {
+        guard let ancestor = findFolder(withId: ancestorId, in: document.rootFolder) else { return false }
+        return containsFolder(folderId, in: ancestor)
+    }
+
+    private func containsFolder(_ folderId: UUID, in folder: ManuscriptFolder) -> Bool {
+        if folder.subfolders.contains(where: { $0.id == folderId }) { return true }
+        return folder.subfolders.contains { containsFolder(folderId, in: $0) }
+    }
+
     // MARK: - Rename UI Management
 
     func showRenameAlert(for item: Any) {
