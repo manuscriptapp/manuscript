@@ -145,6 +145,24 @@ struct ProjectSidebar: View {
                     .opacity(0)
 
                     VStack(spacing: 10) {
+                        // Writing Targets Progress
+                        if let draftTarget = viewModel.document.targets.draftWordCount {
+                            WritingTargetProgressView(
+                                title: "Draft Progress",
+                                currentWords: viewModel.rootFolder.totalWordCount,
+                                targetWords: draftTarget,
+                                style: .linear
+                            )
+                        }
+                        if let sessionTarget = viewModel.document.targets.sessionWordCount {
+                            WritingTargetProgressView(
+                                title: "Session Progress",
+                                currentWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0,
+                                targetWords: sessionTarget,
+                                style: .linear
+                            )
+                        }
+
                         SidebarStatRow(
                             icon: "character.cursor.ibeam",
                             color: .blue,
@@ -184,6 +202,24 @@ struct ProjectSidebar: View {
             }
             #else
             Section("Progress") {
+                // Writing Targets Progress
+                if let draftTarget = viewModel.document.targets.draftWordCount {
+                    WritingTargetProgressView(
+                        title: "Draft Progress",
+                        currentWords: viewModel.rootFolder.totalWordCount,
+                        targetWords: draftTarget,
+                        style: .linear
+                    )
+                }
+                if let sessionTarget = viewModel.document.targets.sessionWordCount {
+                    WritingTargetProgressView(
+                        title: "Session Progress",
+                        currentWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0,
+                        targetWords: sessionTarget,
+                        style: .linear
+                    )
+                }
+
                 SidebarStatRow(
                     icon: "character.cursor.ibeam",
                     color: .blue,
