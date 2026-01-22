@@ -1,12 +1,76 @@
 import SwiftUI
 import SwiftData
 
+/// View mode for displaying folder contents
+enum FolderViewMode: String, CaseIterable {
+    case grid
+    case corkboard
+
+    var icon: String {
+        switch self {
+        case .grid: return "square.grid.2x2"
+        case .corkboard: return "rectangle.on.rectangle"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .grid: return "Grid"
+        case .corkboard: return "Corkboard"
+        }
+    }
+}
+
 struct FolderDetailView: View {
     let folder: ManuscriptFolder
     @ObservedObject var viewModel: DocumentViewModel
     @Binding var selection: DetailSelection?
+    @AppStorage("folderViewMode") private var viewMode: FolderViewMode = .grid
 
     var body: some View {
+        Group {
+            switch viewMode {
+            case .grid:
+                gridView
+            case .corkboard:
+                CorkboardView(folderId: folder.id, viewModel: viewModel, selection: $selection)
+            }
+        }
+        .navigationTitle(folder.title)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                HStack(spacing: 8) {
+                    viewModeToggle
+                    addDocumentButton
+                }
+            }
+        }
+        .onAppear {
+            viewModel.navigateToFolder(folder)
+        }
+    }
+
+    private var viewModeToggle: some View {
+        Picker("View Mode", selection: $viewMode) {
+            ForEach(FolderViewMode.allCases, id: \.self) { mode in
+                Label(mode.label, systemImage: mode.icon)
+                    .tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(width: 80)
+    }
+
+    private var addDocumentButton: some View {
+        Button {
+            viewModel.addDocument(to: folder, title: "New Document")
+        } label: {
+            Label("Add Document", systemImage: "plus")
+        }
+    }
+
+    private var gridView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 // Subfolders section
@@ -65,19 +129,6 @@ struct FolderDetailView: View {
                 }
             }
             .padding(.vertical)
-        }
-        .navigationTitle(folder.title)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    viewModel.addDocument(to: folder, title: "New Document")
-                } label: {
-                    Label("Add Document", systemImage: "plus")
-                }
-            }
-        }
-        .onAppear {
-            viewModel.navigateToFolder(folder)
         }
     }
 }

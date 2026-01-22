@@ -204,7 +204,7 @@ class DocumentViewModel: ObservableObject {
         return nil
     }
 
-    private func findFolder(withId id: UUID, in folder: ManuscriptFolder) -> ManuscriptFolder? {
+    func findFolder(withId id: UUID, in folder: ManuscriptFolder) -> ManuscriptFolder? {
         if folder.id == id { return folder }
         for subfolder in folder.subfolders {
             if let found = findFolder(withId: id, in: subfolder) {
@@ -596,6 +596,9 @@ class DocumentViewModel: ObservableObject {
 
     /// Move documents within a folder from source indices to a destination index
     func moveDocuments(in folder: ManuscriptFolder, from source: IndexSet, to destination: Int) {
+        // Force UI update notification
+        objectWillChange.send()
+
         var doc = document
         doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
             var updated = f
