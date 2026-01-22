@@ -703,12 +703,12 @@ struct DocumentInspectorView: View {
     private func commentRow(_ comment: ManuscriptDocument.DocumentComment) -> some View {
         let isActive = detailViewModel.tappedComment?.id == comment.id
 
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             // Linked text preview
             if let commentedText = detailViewModel.getCommentedText(for: comment) {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Rectangle()
-                        .fill(Color.orange.opacity(0.8))
+                        .fill(Color.accentColor)
                         .frame(width: 3)
 
                     Text(commentedText.prefix(80) + (commentedText.count > 80 ? "..." : ""))
@@ -717,29 +717,41 @@ struct DocumentInspectorView: View {
                         .italic()
                         .lineLimit(2)
                 }
-                .padding(.vertical, 6)
-                .padding(.horizontal, 8)
-                .background(Color.orange.opacity(0.1))
-                .cornerRadius(6)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 10)
+                #if os(macOS)
+                .background(Color(nsColor: .controlBackgroundColor))
+                #else
+                .background(Color(uiColor: .secondarySystemBackground))
+                #endif
+                .cornerRadius(8)
             }
 
             // Comment content
             HStack(alignment: .top, spacing: 12) {
                 // Comment text bubble
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(comment.text)
                         .font(.body)
-                        .foregroundStyle(isActive ? .white : .primary)
+                        .foregroundStyle(.primary)
 
                     // Timestamp
                     Text(comment.creationDate, format: .dateTime.month(.abbreviated).day().hour().minute())
                         .font(.caption2)
-                        .foregroundStyle(isActive ? Color.white.opacity(0.7) : Color.secondary)
+                        .foregroundStyle(.secondary)
                 }
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(isActive ? Color.accentColor : Color.secondary.opacity(0.15))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                #if os(macOS)
+                .background(isActive ? Color.accentColor.opacity(0.15) : Color(nsColor: .windowBackgroundColor))
+                #else
+                .background(isActive ? Color.accentColor.opacity(0.15) : Color(uiColor: .tertiarySystemBackground))
+                #endif
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(isActive ? Color.accentColor : Color.secondary.opacity(0.2), lineWidth: isActive ? 2 : 1)
+                )
 
                 // Menu button
                 Menu {
@@ -756,17 +768,19 @@ struct DocumentInspectorView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
-                        .font(.body)
+                        .font(.title3)
                         .foregroundStyle(.secondary)
                 }
+                .menuStyle(.borderlessButton)
             }
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 4)
-        .background(isActive ? Color.accentColor.opacity(0.1) : Color.clear)
-        .cornerRadius(8)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 6)
         .listRowSeparator(.hidden)
-        .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
+        .listRowInsets(EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10))
+        #if os(macOS)
+        .listRowBackground(Color.clear)
+        #endif
         .id(comment.id)
     }
 

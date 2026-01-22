@@ -14,10 +14,14 @@ enum MarkdownParser {
     static let highlightColor = UIColor(red: 0.75, green: 1.0, blue: 0.0, alpha: 0.55)
     /// Warm orange/amber background for comment highlights - clearly distinct from neon green
     static let commentHighlightColor = UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 0.4)
+    /// Darker orange for comment underline - visible against both light and dark backgrounds
+    static let commentUnderlineColor = UIColor(red: 0.9, green: 0.5, blue: 0.1, alpha: 1.0)
     #else
     static let highlightColor = NSColor(red: 0.75, green: 1.0, blue: 0.0, alpha: 0.55)
     /// Warm orange/amber background for comment highlights - clearly distinct from neon green
     static let commentHighlightColor = NSColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 0.4)
+    /// Darker orange for comment underline - visible against both light and dark backgrounds
+    static let commentUnderlineColor = NSColor(red: 0.9, green: 0.5, blue: 0.1, alpha: 1.0)
     #endif
 
     /// Helper to compare colors with tolerance
@@ -367,6 +371,12 @@ enum MarkdownParser {
 
             // Apply warm brown/sepia background - distinct from neon green highlight
             result.addAttribute(.backgroundColor, value: commentHighlightColor, range: range)
+            // Apply thick underline to indicate commented text
+            result.addAttribute(.underlineStyle, value: NSUnderlineStyle.thick.rawValue, range: range)
+            result.addAttribute(.underlineColor, value: commentUnderlineColor, range: range)
+            // Remove any strikethrough that might have been applied from markdown parsing
+            result.removeAttribute(.strikethroughStyle, range: range)
+            result.removeAttribute(.strikethroughColor, range: range)
         }
 
         return result
