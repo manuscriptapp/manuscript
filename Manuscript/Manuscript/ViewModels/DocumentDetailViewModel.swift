@@ -49,6 +49,10 @@ class DocumentDetailViewModel: ObservableObject {
         }
     }
     @Published var hasTextSelection: Bool = false
+    @Published var selectedTextRange: NSRange? = nil  // Track the range for comments
+
+    // Comments
+    @Published var comments: [ManuscriptDocument.DocumentComment] = []
 
     // Character and location selection
     @Published var selectedCharacters: [UUID] = []
@@ -69,6 +73,7 @@ class DocumentDetailViewModel: ObservableObject {
         self.editedContent = document.content
         self.selectedCharacters = document.characterIds
         self.selectedLocations = document.locationIds
+        self.comments = document.comments
 
         // Initialize attributed strings by parsing markdown content
         // This converts markdown formatting (bold, italic, etc.) to NSAttributedString
@@ -206,6 +211,71 @@ class DocumentDetailViewModel: ObservableObject {
 
         saveChanges()
         generatedText = ""
+    }
+
+    // MARK: - Comment Management
+
+    /// Add a new comment, optionally linked to the currently selected text range
+    func addComment(text: String, color: String = "#FFFF00") {
+        var range: ManuscriptDocument.DocumentComment.Range? = nil
+
+        // If text is selected, capture the range
+        if let selectedRange = selectedTextRange, !selectedText.isEmpty {
+            range = ManuscriptDocument.DocumentComment.Range(
+                location: selectedRange.location,
+                length: selectedRange.length
+            )
+        }
+
+        let comment = ManuscriptDocument.DocumentComment(
+            id: UUID(),
+            text: text,
+            color: color,
+            range: range,
+            creationDate: Date()
+        )
+
+        comments.append(comment)
+        saveComments()
+    }
+
+    /// Update an existing comment
+    func updateComment(_ comment: ManuscriptDocument.DocumentComment, text: String, color: String? = nil) {
+        guard let index = comments.firstIndex(where: { $0.id == comment.id }) else { return }
+
+        var updatedComment = comments[index]
+        updatedComment.text = text
+        if let color = color {
+            updatedComment.color = color
+        }
+        comments[index] = updatedComment
+        saveComments()
+    }
+
+    /// Delete a comment
+    func deleteComment(_ comment: ManuscriptDocument.DocumentComment) {
+        comments.removeAll { $0.id == comment.id }
+        saveComments()
+    }
+
+    /// Get the text that a comment refers to
+    func getCommentedText(for comment: ManuscriptDocument.DocumentComment) -> String? {
+        guard let range = comment.range else { return nil }
+
+        let content = editedContent
+        guard range.location >= 0,
+              range.location + range.length <= content.count else {
+            return nil
+        }
+
+        let startIndex = content.index(content.startIndex, offsetBy: range.location)
+        let endIndex = content.index(startIndex, offsetBy: range.length)
+        return String(content[startIndex..<endIndex])
+    }
+
+    /// Save comments to the document
+    private func saveComments() {
+        documentViewModel.updateDocument(document, comments: comments)
     }
 }
 

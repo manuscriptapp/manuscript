@@ -111,72 +111,63 @@ struct FormattingToolbar: View {
 
     #if os(iOS)
     private var iOSToolbar: some View {
-        HStack(spacing: 16) {
-            // Font family picker (compact)
+        HStack(spacing: 12) {
+            // Font family picker (compact - icon only with menu)
             Menu {
                 ForEach(availableFonts, id: \.self) { fontName in
-                    Button(fontName) {
+                    Button {
                         context.fontName = fontName
+                    } label: {
+                        HStack {
+                            Text(fontName)
+                            if context.fontName == fontName {
+                                Image(systemName: "checkmark")
+                            }
+                        }
                     }
                 }
             } label: {
-                HStack(spacing: 4) {
-                    Text(context.fontName)
-                        .lineLimit(1)
-                        .frame(maxWidth: 100)
-                    Image(systemName: "chevron.down")
-                        .font(.caption2)
-                }
-                .font(.subheadline)
+                Image(systemName: "textformat")
+                    .font(.body)
             }
 
-            // Font size stepper
-            HStack(spacing: 4) {
-                Button {
-                    if context.fontSize > 8 {
-                        context.fontSize -= 1
+            // Font size dropdown
+            Menu {
+                ForEach([10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72], id: \.self) { size in
+                    Button {
+                        context.fontSize = CGFloat(size)
+                    } label: {
+                        HStack {
+                            Text("\(size)")
+                            if Int(context.fontSize) == size {
+                                Image(systemName: "checkmark")
+                            }
+                        }
                     }
-                } label: {
-                    Image(systemName: "minus")
-                        .font(.caption)
                 }
-                .buttonStyle(.bordered)
-                .buttonBorderShape(.circle)
-
+            } label: {
                 Text("\(Int(context.fontSize))")
                     .font(.subheadline)
                     .monospacedDigit()
-                    .frame(width: 30)
-
-                Button {
-                    if context.fontSize < 72 {
-                        context.fontSize += 1
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.caption)
-                }
-                .buttonStyle(.bordered)
-                .buttonBorderShape(.circle)
+                    .frame(minWidth: 24)
             }
 
             Divider()
-                .frame(height: 24)
+                .frame(height: 20)
 
-            // Style buttons
-            HStack(spacing: 8) {
-                styleButton(style: .bold, icon: "bold")
-                styleButton(style: .italic, icon: "italic")
-                styleButton(style: .underlined, icon: "underline")
-                styleButton(style: .strikethrough, icon: "strikethrough")
+            // Style buttons (compact, no labels)
+            HStack(spacing: 6) {
+                compactStyleButton(style: .bold, icon: "bold")
+                compactStyleButton(style: .italic, icon: "italic")
+                compactStyleButton(style: .underlined, icon: "underline")
+                compactStyleButton(style: .strikethrough, icon: "strikethrough")
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
     }
 
-    private func styleButton(style: RichTextStyle, icon: String) -> some View {
+    private func compactStyleButton(style: RichTextStyle, icon: String) -> some View {
         Button {
             context.toggleStyle(style)
         } label: {
@@ -184,9 +175,7 @@ struct FormattingToolbar: View {
                 .font(.body)
                 .foregroundStyle(context.hasStyle(style) ? Color.accentColor : Color.primary)
         }
-        .buttonStyle(.bordered)
-        .buttonBorderShape(.roundedRectangle(radius: 6))
-        .tint(context.hasStyle(style) ? Color.accentColor : Color.secondary.opacity(0.3))
+        .buttonStyle(.plain)
     }
 
     private var availableFonts: [String] {

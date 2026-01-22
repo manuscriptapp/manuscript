@@ -21,6 +21,9 @@ struct DocumentDetailView: View {
             .inspector(isPresented: $isInspectorPresented) {
                 inspectorView
             }
+            #if os(macOS)
+            .inspectorColumnWidth(min: 280, ideal: 320, max: 450)
+            #endif
             .onChange(of: detailViewModel.editedTitle) { _, newValue in
                 viewModel.updateDocument(document, title: newValue)
             }
@@ -83,7 +86,11 @@ struct DocumentDetailView: View {
                 print("Apply to selection: \(text)")
             }
         )
+        #if os(iOS)
         .presentationDetents([.medium, .large], selection: $inspectorDetent)
+        #else
+        .frame(minWidth: 280, idealWidth: 320, maxWidth: 400)
+        #endif
     }
 
     private var selectedCharactersBinding: Binding<Set<UUID>> {

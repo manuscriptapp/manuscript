@@ -319,14 +319,14 @@ struct DocumentInspectorView: View {
                 }
                 .tag(0)
 
-            // Notes Tab
-            notesTab
+            // Comments Tab
+            commentsTab
                 .tabItem {
-                    Label("Notes", systemImage: "note.text")
+                    Label("Comments", systemImage: "text.bubble")
                 }
                 .tag(1)
 
-            // Details Tab
+            // Details Tab (now includes Notes)
             detailsTab
                 .tabItem {
                     Label("Details", systemImage: "doc.text")
@@ -334,7 +334,11 @@ struct DocumentInspectorView: View {
                 .tag(2)
         }
         .padding(.top)
+        #if os(macOS)
+        .frame(minWidth: 280, maxWidth: 400)
+        #else
         .frame(minWidth: 300, maxWidth: .infinity)
+        #endif
         .background(.background)
         .onAppear {
             // Initialize notes context with current notes
@@ -577,73 +581,234 @@ struct DocumentInspectorView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
-    private var notesTab: some View {
+    @State private var isAddingComment: Bool = false
+    @State private var newCommentText: String = ""
+    @State private var editingComment: ManuscriptDocument.DocumentComment? = nil
+    @State private var editCommentText: String = ""
+
+    private var commentsTab: some View {
         VStack(spacing: 0) {
-            // Compact formatting toolbar
-            HStack(spacing: 8) {
-                RichTextStyle.ToggleGroup(context: notesContext)
-
-                Divider()
-                    .frame(height: 20)
-
-                // Font size controls
-                HStack(spacing: 4) {
-                    Button {
-                        if notesContext.fontSize > 8 {
-                            notesContext.fontSize -= 1
-                        }
-                    } label: {
-                        Image(systemName: "minus")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.borderless)
-
-                    Text("\(Int(notesContext.fontSize))")
+            // Add comment button
+            HStack {
+                if hasTextSelection && !selectedText.isEmpty {
+                    Text("Selected: \"\(selectedText.prefix(30))\(selectedText.count > 30 ? "..." : "")\"")
                         .font(.caption)
-                        .monospacedDigit()
-                        .frame(width: 24)
-
-                    Button {
-                        if notesContext.fontSize < 72 {
-                            notesContext.fontSize += 1
-                        }
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.borderless)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
+                Spacer()
+                Button {
+                    isAddingComment = true
+                    newCommentText = ""
+                } label: {
+                    Label("Add Comment", systemImage: "plus.bubble")
+                        .font(.subheadline)
+                }
+                .buttonStyle(.bordered)
+                .tint(.accent)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            #if os(macOS)
-            .background(Color(nsColor: .controlBackgroundColor))
-            #else
-            .background(Color(uiColor: .secondarySystemBackground))
-            #endif
+            .padding(.horizontal)
+            .padding(.vertical, 8)
 
             Divider()
 
-            // Rich text editor for notes
-            RichTextEditor(
-                text: $detailViewModel.attributedNotes,
-                context: notesContext,
-                viewConfiguration: { textView in
-                    #if os(macOS)
-                    if let nsTextView = textView as? NSTextView {
-                        nsTextView.drawsBackground = false
-                        nsTextView.enclosingScrollView?.drawsBackground = false
-                        nsTextView.enclosingScrollView?.backgroundColor = .clear
-                    }
-                    #endif
+            if detailViewModel.comments.isEmpty && !isAddingComment {
+                // Empty state
+                VStack(spacing: 12) {
+                    Image(systemName: "text.bubble")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+                    Text("No Comments")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                    Text("Select text and tap 'Add Comment' to create a comment linked to that text.")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
                 }
-            )
-            .focusedValue(\.richTextContext, notesContext)
-            .richTextEditorStyle(RichTextEditorStyle(backgroundColor: .clear))
-            .background(.clear)
-            .scrollContentBackground(.hidden)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                // Comments list
+                List {
+                    // New comment input
+                    if isAddingComment {
+                        VStack(alignment: .leading, spacing: 8) {
+                            if hasTextSelection && !selectedText.isEmpty {
+                                HStack {
+                                    Image(systemName: "link")
+                                        .font(.caption)
+                                        .foregroundStyle(.accent)
+                                    Text("Linked to: \"\(selectedText.prefix(50))\(selectedText.count > 50 ? "..." : "")\"")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                                .padding(8)
+                                .background(Color.accent.opacity(0.1))
+                                .cornerRadius(6)
+                            }
+
+                            TextField("Enter comment...", text: $newCommentText, axis: .vertical)
+                                .textFieldStyle(.plain)
+                                .lineLimit(3...6)
+
+                            HStack {
+                                Button("Cancel") {
+                                    isAddingComment = false
+                                    newCommentText = ""
+                                }
+                                .buttonStyle(.bordered)
+
+                                Spacer()
+
+                                Button("Save") {
+                                    if !newCommentText.isEmpty {
+                                        detailViewModel.addComment(text: newCommentText)
+                                        newCommentText = ""
+                                        isAddingComment = false
+                                    }
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .disabled(newCommentText.isEmpty)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+
+                    // Existing comments
+                    ForEach(detailViewModel.comments) { comment in
+                        commentRow(comment)
+                    }
+                }
+                .listStyle(.plain)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(item: $editingComment) { comment in
+            editCommentSheet(comment)
+        }
+    }
+
+    @ViewBuilder
+    private func commentRow(_ comment: ManuscriptDocument.DocumentComment) -> some View {
+        HStack(alignment: .top) {
+            Spacer(minLength: 40)
+
+            VStack(alignment: .trailing, spacing: 6) {
+                // Linked text preview (shown above the bubble)
+                if let commentedText = detailViewModel.getCommentedText(for: comment) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "quote.opening")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Text(commentedText.prefix(50) + (commentedText.count > 50 ? "..." : ""))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .italic()
+                            .lineLimit(2)
+                    }
+                    .padding(.horizontal, 8)
+                }
+
+                // Comment bubble
+                HStack(alignment: .top, spacing: 8) {
+                    // Comment text
+                    Text(comment.text)
+                        .font(.body)
+                        .foregroundStyle(.white)
+                        .padding(12)
+                        .background(Color.orange)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                    // Menu button
+                    Menu {
+                        Button {
+                            editingComment = comment
+                            editCommentText = comment.text
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) {
+                            detailViewModel.deleteComment(comment)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 24, height: 24)
+                    }
+                }
+
+                // Timestamp
+                Text(comment.creationDate, style: .date)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .padding(.trailing, 32)
+            }
+        }
+        .padding(.vertical, 4)
+        .listRowSeparator(.hidden)
+    }
+
+    private func editCommentSheet(_ comment: ManuscriptDocument.DocumentComment) -> some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                if let commentedText = detailViewModel.getCommentedText(for: comment) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Linked Text")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("\"\(commentedText)\"")
+                            .font(.subheadline)
+                            .italic()
+                            .foregroundStyle(.secondary)
+                            .padding(8)
+                            .background(Color.accent.opacity(0.1))
+                            .cornerRadius(6)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Comment")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextEditor(text: $editCommentText)
+                        .frame(minHeight: 100)
+                        #if os(iOS)
+                        .background(Color(uiColor: .secondarySystemBackground))
+                        #else
+                        .background(Color(nsColor: .textBackgroundColor))
+                        #endif
+                        .cornerRadius(8)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Edit Comment")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        editingComment = nil
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if let comment = editingComment {
+                            detailViewModel.updateComment(comment, text: editCommentText)
+                        }
+                        editingComment = nil
+                    }
+                    .disabled(editCommentText.isEmpty)
+                }
+            }
+        }
     }
 
     private var detailsTab: some View {
@@ -673,7 +838,7 @@ struct DocumentInspectorView: View {
                 }
                 .font(.body)
                 .padding(.horizontal)
-                
+
                 // Outline Section
                 VStack(alignment: .leading, spacing: 8) {
                     if !document.outlinePrompt.isEmpty {
@@ -692,14 +857,14 @@ struct DocumentInspectorView: View {
                             }
                         )
                     }
-                    
+
                     Text("Outline")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     #if os(iOS)
                     TextEditor(text: $editedOutline)
                         .plainTextEditor()
-                        .frame(minHeight: 150)
+                        .frame(minHeight: 100)
                         .toolbar {
                             ToolbarItemGroup(placement: .keyboard) {
                                 Spacer()
@@ -711,11 +876,53 @@ struct DocumentInspectorView: View {
                     #else
                     TextEditor(text: $editedOutline)
                         .plainTextEditor()
-                        .frame(minHeight: 150)
+                        .frame(minHeight: 100)
                     #endif
                 }
                 .padding(.horizontal)
-                
+
+                // Notes Section
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Notes")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        // Compact formatting toolbar
+                        HStack(spacing: 4) {
+                            RichTextStyle.ToggleGroup(context: notesContext)
+                        }
+                        .font(.caption)
+                    }
+
+                    // Rich text editor for notes
+                    RichTextEditor(
+                        text: $detailViewModel.attributedNotes,
+                        context: notesContext,
+                        viewConfiguration: { textView in
+                            #if os(macOS)
+                            if let nsTextView = textView as? NSTextView {
+                                nsTextView.drawsBackground = false
+                                nsTextView.enclosingScrollView?.drawsBackground = false
+                                nsTextView.enclosingScrollView?.backgroundColor = .clear
+                            }
+                            #endif
+                        }
+                    )
+                    .focusedValue(\.richTextContext, notesContext)
+                    .richTextEditorStyle(RichTextEditorStyle(backgroundColor: .clear))
+                    .background(.clear)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 120)
+                    #if os(macOS)
+                    .background(Color(nsColor: .textBackgroundColor).opacity(0.5))
+                    #else
+                    .background(Color(uiColor: .secondarySystemBackground))
+                    #endif
+                    .cornerRadius(8)
+                }
+                .padding(.horizontal)
+
                 // Characters and Locations
                 VStack(alignment: .leading, spacing: 12) {
                     CharacterSelectionView(
@@ -723,7 +930,7 @@ struct DocumentInspectorView: View {
                         selectedCharacters: $selectedCharacters,
                         isExpanded: .constant(true)
                     )
-                    
+
                     LocationSelectionView(
                         locations: documentViewModel.document.locations.sorted(by: { $0.name < $1.name }),
                         selectedLocations: $selectedLocations,

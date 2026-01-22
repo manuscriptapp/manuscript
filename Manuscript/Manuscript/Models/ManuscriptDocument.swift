@@ -183,11 +183,29 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                     if let mdWrapper = children[item.file],
                        let mdData = mdWrapper.regularFileContents,
                        let content = String(data: mdData, encoding: .utf8) {
+
+                        // Read notes from separate .notes.md file
+                        let notesFilename = item.file.replacingOccurrences(of: ".md", with: ".notes.md")
+                        var notes = ""
+                        if let notesWrapper = children[notesFilename],
+                           let notesData = notesWrapper.regularFileContents,
+                           let notesContent = String(data: notesData, encoding: .utf8) {
+                            notes = notesContent
+                        }
+
+                        // Read comments from separate .comments.json file
+                        let commentsFilename = item.file.replacingOccurrences(of: ".md", with: ".comments.json")
+                        var comments: [ManuscriptDocument.DocumentComment] = []
+                        if let commentsWrapper = children[commentsFilename],
+                           let commentsData = commentsWrapper.regularFileContents {
+                            comments = (try? decoder.decode([ManuscriptDocument.DocumentComment].self, from: commentsData)) ?? []
+                        }
+
                         let document = ManuscriptDocument.Document(
                             id: UUID(uuidString: item.id) ?? UUID(),
                             title: item.title,
                             outline: item.synopsis ?? "",
-                            notes: "",
+                            notes: notes,
                             content: extractContentFromMarkdown(content),
                             creationDate: item.created ?? Date(),
                             order: folder.documents.count,
@@ -196,7 +214,8 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                             labelId: item.label,
                             statusId: item.status,
                             keywords: item.keywords ?? [],
-                            includeInCompile: item.includeInCompile ?? true
+                            includeInCompile: item.includeInCompile ?? true,
+                            comments: comments
                         )
                         folder.documents.append(document)
                     }
@@ -209,8 +228,8 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 }
             }
         } else {
-            // No folder.json - read all markdown files
-            for (filename, wrapper) in children where filename.hasSuffix(".md") {
+            // No folder.json - read all markdown files (excluding .notes.md files)
+            for (filename, wrapper) in children where filename.hasSuffix(".md") && !filename.hasSuffix(".notes.md") {
                 if let data = wrapper.regularFileContents,
                    let content = String(data: data, encoding: .utf8) {
                     let title = filename.replacingOccurrences(of: ".md", with: "")
@@ -218,8 +237,19 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                         .trimmingCharacters(in: .decimalDigits)
                         .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
                         .trimmingCharacters(in: .whitespaces)
+
+                    // Check for separate notes file
+                    let notesFilename = filename.replacingOccurrences(of: ".md", with: ".notes.md")
+                    var notes = ""
+                    if let notesWrapper = children[notesFilename],
+                       let notesData = notesWrapper.regularFileContents,
+                       let notesContent = String(data: notesData, encoding: .utf8) {
+                        notes = notesContent
+                    }
+
                     let document = ManuscriptDocument.Document(
                         title: title.isEmpty ? "Untitled" : title.capitalized,
+                        notes: notes,
                         content: extractContentFromMarkdown(content)
                     )
                     folder.documents.append(document)
@@ -346,10 +376,26 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             )
             items.append(item)
 
-            // Create markdown file with optional frontmatter
+            // Create markdown file (content only, no notes embedded)
             let mdContent = createMarkdownContent(for: document)
             if let mdData = mdContent.data(using: .utf8) {
                 folderWrapper.addRegularFile(withContents: mdData, preferredFilename: filename)
+            }
+
+            // Create separate notes file if notes exist
+            if !document.notes.isEmpty {
+                let notesFilename = filename.replacingOccurrences(of: ".md", with: ".notes.md")
+                if let notesData = document.notes.data(using: .utf8) {
+                    folderWrapper.addRegularFile(withContents: notesData, preferredFilename: notesFilename)
+                }
+            }
+
+            // Create separate comments file if comments exist
+            if !document.comments.isEmpty {
+                let commentsFilename = filename.replacingOccurrences(of: ".md", with: ".comments.json")
+                if let commentsData = try? encoder.encode(document.comments) {
+                    folderWrapper.addRegularFile(withContents: commentsData, preferredFilename: commentsFilename)
+                }
             }
         }
 
@@ -403,22 +449,17 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     private func createMarkdownContent(for document: ManuscriptDocument.Document) -> String {
         var content = ""
 
-        // Add YAML frontmatter if there's metadata
-        if !document.outline.isEmpty || !document.notes.isEmpty {
+        // Add YAML frontmatter if there's metadata (synopsis only, notes are stored separately)
+        if !document.outline.isEmpty {
             content += "---\n"
             content += "title: \(document.title)\n"
-            if !document.outline.isEmpty {
-                content += "synopsis: \(document.outline.replacingOccurrences(of: "\n", with: " "))\n"
-            }
+            content += "synopsis: \(document.outline.replacingOccurrences(of: "\n", with: " "))\n"
             content += "---\n\n"
         }
 
         content += document.content
 
-        // Add notes as HTML comment at the end if present
-        if !document.notes.isEmpty {
-            content += "\n\n<!-- NOTES:\n\(document.notes)\n-->\n"
-        }
+        // Notes are now stored in separate .notes.md files, not embedded as HTML comments
 
         return content
     }

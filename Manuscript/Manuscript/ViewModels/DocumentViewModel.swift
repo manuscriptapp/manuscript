@@ -337,7 +337,7 @@ class DocumentViewModel: ObservableObject {
         setFolderExpanded(folder, expanded: true)
     }
 
-    func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil) {
+    func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil, comments: [ManuscriptDocument.DocumentComment]? = nil) {
         // Track word count change for writing history
         let oldWordCount = docToUpdate.wordCount
 
@@ -350,6 +350,7 @@ class DocumentViewModel: ObservableObject {
         if let locationIds = locationIds { updatedDoc.locationIds = locationIds }
         if let iconName = iconName { updatedDoc.iconName = iconName }
         if let colorName = colorName { updatedDoc.colorName = colorName }
+        if let comments = comments { updatedDoc.comments = comments }
 
         var doc = document
         doc.rootFolder = updateDocumentInFolder(doc.rootFolder, docId: docToUpdate.id, updatedDoc: updatedDoc)

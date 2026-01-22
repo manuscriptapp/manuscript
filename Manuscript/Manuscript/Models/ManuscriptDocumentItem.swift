@@ -26,6 +26,9 @@ extension ManuscriptDocument {
         var characterIds: [UUID]
         var locationIds: [UUID]
 
+        // Inline comments (Scrivener-compatible)
+        var comments: [DocumentComment]
+
         init(
             id: UUID = UUID(),
             title: String,
@@ -43,7 +46,8 @@ extension ManuscriptDocument {
             keywords: [String] = [],
             includeInCompile: Bool = true,
             characterIds: [UUID] = [],
-            locationIds: [UUID] = []
+            locationIds: [UUID] = [],
+            comments: [DocumentComment] = []
         ) {
             self.id = id
             self.title = title
@@ -62,6 +66,7 @@ extension ManuscriptDocument {
             self.includeInCompile = includeInCompile
             self.characterIds = characterIds
             self.locationIds = locationIds
+            self.comments = comments
         }
 
         /// Word count for this document's content
@@ -69,6 +74,34 @@ extension ManuscriptDocument {
             let words = content.components(separatedBy: .whitespacesAndNewlines)
                 .filter { !$0.isEmpty }
             return words.count
+        }
+    }
+
+    /// Inline comment (Scrivener-compatible)
+    struct DocumentComment: Identifiable, Codable, Equatable {
+        var id: UUID
+        var text: String
+        var color: String  // Hex color (e.g., "#FFFF00")
+        var range: Range?  // Optional text range this comment refers to
+        var creationDate: Date
+
+        struct Range: Codable, Equatable {
+            var location: Int
+            var length: Int
+        }
+
+        init(
+            id: UUID = UUID(),
+            text: String,
+            color: String = "#FFFF00",
+            range: Range? = nil,
+            creationDate: Date = Date()
+        ) {
+            self.id = id
+            self.text = text
+            self.color = color
+            self.range = range
+            self.creationDate = creationDate
         }
     }
 }

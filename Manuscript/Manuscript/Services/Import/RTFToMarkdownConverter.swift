@@ -38,6 +38,16 @@ final class RTFToMarkdownConverter {
         return try String(contentsOf: url, encoding: .utf8)
     }
 
+    /// Convert an RTF string (not a file) to markdown
+    /// - Parameter rtfString: RTF formatted string
+    /// - Returns: Markdown string
+    func convertRTFString(_ rtfString: String) throws -> String {
+        guard let data = rtfString.data(using: .utf8) else {
+            throw ImportError.rtfConversionFailed("Could not convert string to data")
+        }
+        return try convert(rtfData: data)
+    }
+
     // MARK: - Private Methods
 
     private func createAttributedString(from data: Data) throws -> NSAttributedString {

@@ -76,6 +76,10 @@ struct WriteTab: View {
             // Sync changes back to viewModel immediately
             viewModel.attributedContent = newValue
         }
+        .onChange(of: richTextContext.selectedRange) { _, newRange in
+            // Track text selection for comments
+            updateTextSelection(range: newRange)
+        }
         #if os(iOS)
         .sheet(isPresented: $isFormattingPalettePresented) {
             FormattingPalette(context: richTextContext)
@@ -98,6 +102,22 @@ struct WriteTab: View {
         // Ensure the latest content from the editor is saved
         viewModel.attributedContent = richTextContext.attributedString
         viewModel.saveChanges()
+    }
+
+    private func updateTextSelection(range: NSRange) {
+        // Update the viewModel with selected text and range
+        let attributedString = richTextContext.attributedString
+        let fullString = attributedString.string
+
+        if range.length > 0, range.location >= 0, range.location + range.length <= fullString.count {
+            let startIndex = fullString.index(fullString.startIndex, offsetBy: range.location)
+            let endIndex = fullString.index(startIndex, offsetBy: range.length)
+            viewModel.selectedText = String(fullString[startIndex..<endIndex])
+            viewModel.selectedTextRange = range
+        } else {
+            viewModel.selectedText = ""
+            viewModel.selectedTextRange = nil
+        }
     }
 }
 

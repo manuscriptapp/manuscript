@@ -563,6 +563,7 @@ final class ScrivenerImporter {
         let contentURL: URL
         let notesURL: URL
         let synopsisURL: URL
+        let commentsURL: URL
 
         if version == .v3, let uuid = item.uuid {
             let itemFolder = projectURL
@@ -571,11 +572,13 @@ final class ScrivenerImporter {
             contentURL = itemFolder.appendingPathComponent("content.rtf")
             notesURL = itemFolder.appendingPathComponent("notes.rtf")
             synopsisURL = itemFolder.appendingPathComponent("synopsis.txt")
+            commentsURL = itemFolder.appendingPathComponent("content.comments")
         } else {
             let docsFolder = projectURL.appendingPathComponent(contentPath)
             contentURL = docsFolder.appendingPathComponent("\(item.id).rtf")
             notesURL = docsFolder.appendingPathComponent("\(item.id)_notes.rtf")
             synopsisURL = docsFolder.appendingPathComponent("\(item.id)_synopsis.txt")
+            commentsURL = docsFolder.appendingPathComponent("\(item.id).comments")
         }
 
         // Load content
@@ -609,6 +612,20 @@ final class ScrivenerImporter {
                 synopsis = try rtfConverter.convertPlainText(from: synopsisURL)
             } catch {
                 // Use XML synopsis
+            }
+        }
+
+        // Load comments from Scrivener's content.comments XML file
+        var comments: [ManuscriptDocument.DocumentComment] = []
+        if fileManager.fileExists(atPath: commentsURL.path) {
+            do {
+                comments = try parseScrivenerComments(from: commentsURL)
+            } catch {
+                warnings.append(ImportWarning(
+                    message: "Could not parse comments: \(error.localizedDescription)",
+                    itemTitle: item.title,
+                    severity: .info
+                ))
             }
         }
 
@@ -649,8 +666,16 @@ final class ScrivenerImporter {
             keywords: [],
             includeInCompile: item.includeInCompile,
             characterIds: [],
-            locationIds: []
+            locationIds: [],
+            comments: comments
         )
+    }
+
+    /// Parse Scrivener's content.comments XML file
+    private func parseScrivenerComments(from url: URL) throws -> [ManuscriptDocument.DocumentComment] {
+        let data = try Data(contentsOf: url)
+        let parser = ScrivenerCommentsParser()
+        return try parser.parse(data: data, rtfConverter: rtfConverter)
     }
 
     private func colorToHex(_ color: SwiftUI.Color) -> String {
