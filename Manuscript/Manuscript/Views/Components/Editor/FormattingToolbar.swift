@@ -131,7 +131,7 @@ struct FormattingToolbar: View {
                 ForEach(LineSpacingOption.allCases, id: \.self) { option in
                     Button {
                         selectedLineSpacing = option
-                        context.lineSpacing = option.multiplier * 4
+                        applyLineSpacing(option.multiplier)
                     } label: {
                         HStack {
                             Text(option.rawValue)
@@ -152,7 +152,7 @@ struct FormattingToolbar: View {
                 ForEach(HighlightColor.allCases, id: \.self) { option in
                     Button {
                         selectedHighlightColor = option
-                        // Note: RichTextKit doesn't support background color directly
+                        applyHighlightColor(option.color)
                     } label: {
                         HStack {
                             if let color = option.color {
@@ -194,6 +194,51 @@ struct FormattingToolbar: View {
             }
         }
         return result
+    }
+
+    private func applyLineSpacing(_ multiplier: CGFloat) {
+        let attrString = context.attributedString
+        let mutable = NSMutableAttributedString(attributedString: attrString)
+        let range = context.selectedRange.length > 0
+            ? context.selectedRange
+            : NSRange(location: 0, length: mutable.length)
+
+        guard range.location != NSNotFound, range.length > 0 || mutable.length > 0 else { return }
+
+        let effectiveRange = range.length > 0 ? range : NSRange(location: 0, length: mutable.length)
+
+        mutable.enumerateAttribute(.paragraphStyle, in: effectiveRange, options: []) { value, subRange, _ in
+            let existingStyle = (value as? NSParagraphStyle) ?? NSParagraphStyle.default
+            let newStyle = existingStyle.mutableCopy() as! NSMutableParagraphStyle
+            newStyle.lineSpacing = multiplier * 6
+            mutable.addAttribute(.paragraphStyle, value: newStyle, range: subRange)
+        }
+
+        // If no paragraph style was found, apply to entire range
+        if mutable.attribute(.paragraphStyle, at: effectiveRange.location, effectiveRange: nil) == nil {
+            let newStyle = NSMutableParagraphStyle()
+            newStyle.lineSpacing = multiplier * 6
+            mutable.addAttribute(.paragraphStyle, value: newStyle, range: effectiveRange)
+        }
+
+        context.setAttributedString(to: mutable)
+    }
+
+    private func applyHighlightColor(_ color: Color?) {
+        let attrString = context.attributedString
+        let mutable = NSMutableAttributedString(attributedString: attrString)
+        let range = context.selectedRange
+
+        guard range.location != NSNotFound, range.length > 0 else { return }
+
+        if let color = color {
+            let nsColor = NSColor(color)
+            mutable.addAttribute(.backgroundColor, value: nsColor, range: range)
+        } else {
+            mutable.removeAttribute(.backgroundColor, range: range)
+        }
+
+        context.setAttributedString(to: mutable)
     }
     #endif
 
