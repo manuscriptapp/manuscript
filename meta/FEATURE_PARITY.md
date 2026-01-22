@@ -32,7 +32,7 @@ Manuscript vs Scrivener vs Ulysses.
 | Split editor | ✅ | ✅ | 🔜 |
 | Typewriter scrolling | ✅ | ✅ | 🔜 |
 | Auto-save | ✅ | ✅ | ✅ |
-| Find & replace | ✅ | ✅ | 🔜 |
+| Find & replace | ✅ | ✅ | ✅ |
 | Live word count | ✅ | ✅ | ✅ |
 | Dark mode | ✅ | ✅ | ✅ |
 
@@ -197,4 +197,4 @@ Manuscript vs Scrivener vs Ulysses.
 
 ---
 
-*Last updated: January 22, 2026*
+*Last updated: January 23, 2026*
