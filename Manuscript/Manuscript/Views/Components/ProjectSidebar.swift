@@ -145,6 +145,46 @@ struct ProjectSidebar: View {
             }
 
             // Progress Section
+            #if os(iOS)
+            Section("Progress") {
+                VStack(spacing: 10) {
+                    SidebarStatRow(
+                        icon: "character.cursor.ibeam",
+                        color: .blue,
+                        title: "Total Words",
+                        value: viewModel.rootFolder.totalWordCount.formatted()
+                    )
+                    SidebarStatRow(
+                        icon: "calendar.badge.clock",
+                        color: .green,
+                        title: "Days Written",
+                        value: "\(viewModel.document.writingHistory.daysWritten)"
+                    )
+                    SidebarStatRow(
+                        icon: "flame.fill",
+                        color: viewModel.document.writingHistory.currentStreak > 0 ? .orange : .secondary,
+                        title: "Current Streak",
+                        value: "\(viewModel.document.writingHistory.currentStreak) days"
+                    )
+                    SidebarStatRow(
+                        icon: "trophy.fill",
+                        color: .yellow,
+                        title: "Longest Streak",
+                        value: "\(viewModel.document.writingHistory.longestStreak) days"
+                    )
+                    SidebarStatRow(
+                        icon: "chart.line.uptrend.xyaxis",
+                        color: .purple,
+                        title: "Avg Words/Day",
+                        value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
+                    )
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 4)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
+            #else
             Section("Progress") {
                 SidebarStatRow(
                     icon: "character.cursor.ibeam",
@@ -181,6 +221,7 @@ struct ProjectSidebar: View {
                     value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
                 )
             }
+            #endif
         }
         
         // Use the pre-defined content in the List
