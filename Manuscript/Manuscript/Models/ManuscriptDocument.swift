@@ -297,7 +297,9 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             id: UUID(uuidString: folderMetadata?.id ?? "") ?? UUID(),
             title: folderMetadata?.title ?? fileWrapper.filename ?? "Untitled",
             folderType: type,
-            creationDate: folderMetadata?.created ?? Date()
+            creationDate: folderMetadata?.created ?? Date(),
+            iconName: folderMetadata?.iconName ?? "folder",
+            iconColor: folderMetadata?.iconColor
         )
 
         // Read items from folder.json to maintain order
@@ -491,7 +493,9 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 synopsis: nil,
                 includeInCompile: true,
                 created: subfolder.creationDate,
-                modified: Date()
+                modified: Date(),
+                iconName: subfolder.iconName == "folder" ? nil : subfolder.iconName,
+                iconColor: subfolder.iconColor
             )
             items.append(item)
 
@@ -511,6 +515,8 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             created: folder.creationDate,
             modified: Date(),
             expanded: true,
+            iconName: folder.iconName == "folder" ? nil : folder.iconName,
+            iconColor: folder.iconColor,
             items: items
         )
         let folderJsonData = try encoder.encode(folderJson)
@@ -573,6 +579,8 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
     var creationDate: Date
     var order: Int
     var expanded: Bool
+    var iconName: String
+    var iconColor: String?  // Optional hex color for icon tint (e.g., "#FF0000")
 
     var subfolders: [ManuscriptFolder]
     var documents: [ManuscriptDocument.Document]
@@ -582,7 +590,10 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
     }
 
     static func == (lhs: ManuscriptFolder, rhs: ManuscriptFolder) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id &&
+        lhs.title == rhs.title &&
+        lhs.iconName == rhs.iconName &&
+        lhs.iconColor == rhs.iconColor
     }
 
     init(
@@ -592,6 +603,8 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         creationDate: Date = Date(),
         order: Int = 0,
         expanded: Bool = true,
+        iconName: String = "folder",
+        iconColor: String? = nil,
         subfolders: [ManuscriptFolder] = [],
         documents: [ManuscriptDocument.Document] = []
     ) {
@@ -601,6 +614,8 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         self.creationDate = creationDate
         self.order = order
         self.expanded = expanded
+        self.iconName = iconName
+        self.iconColor = iconColor
         self.subfolders = subfolders
         self.documents = documents
     }
@@ -768,6 +783,8 @@ private struct FolderJSON: Codable {
     var created: Date
     var modified: Date
     var expanded: Bool
+    var iconName: String?
+    var iconColor: String?
     var items: [FolderItem]
 }
 

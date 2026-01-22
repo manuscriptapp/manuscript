@@ -2,10 +2,15 @@ import SwiftUI
 import SwiftData
 
 struct DocumentItemView: View {
-    let document: ManuscriptDocument.Document
+    let documentId: UUID
     @ObservedObject var viewModel: DocumentViewModel
     @Binding var detailSelection: DetailSelection?
-    
+
+    /// Look up the current document from the viewModel to ensure we always have fresh data
+    private var document: ManuscriptDocument.Document {
+        viewModel.findDocument(withId: documentId) ?? ManuscriptDocument.Document(title: "Unknown")
+    }
+
     private let iconOptions: [(String, String)] = [
         ("Document", "doc.text"),
         ("Chapter", "book"),
@@ -67,8 +72,45 @@ struct DocumentItemView: View {
             Image(systemName: document.iconName)
                 .foregroundStyle(iconColorForDocument(document))
         }
+        .id("\(documentId)-\(document.iconName)-\(document.colorName)")
         .tag(DetailSelection.document(document))
         #if !os(macOS)
+        .contextMenu {
+            Menu("Change Icon") {
+                ForEach(iconOptions, id: \.0) { name, icon in
+                    Button(action: { updateIcon(icon) }) {
+                        Label(name, systemImage: icon)
+                            .foregroundStyle(colorForDocument(document))
+                    }
+                }
+            }
+
+            Menu("Change Color") {
+                ForEach(colorOptions, id: \.0) { name, color in
+                    Button(action: { updateNoteColor(color) }) {
+                        HStack {
+                            Image(systemName: document.colorName == name ? "checkmark.circle.fill" : "circle.fill")
+                                .foregroundColor(color)
+                            Text(name)
+                        }
+                    }
+                }
+            }
+
+            Divider()
+
+            Button(action: {
+                viewModel.showRenameAlert(for: document)
+            }) {
+                Label("Rename Document", systemImage: "pencil")
+            }
+
+            Button(role: .destructive, action: {
+                viewModel.deleteDocument(document)
+            }) {
+                Label("Delete Document", systemImage: "trash")
+            }
+        }
         .swipeActions(edge: .trailing) {
             Button {
                 viewModel.showRenameAlert(for: document)
@@ -76,7 +118,7 @@ struct DocumentItemView: View {
                 Label("Rename", systemImage: "pencil")
             }
             .tint(.blue)
-            
+
             Button(role: .destructive, action: {
                 viewModel.deleteDocument(document)
             }) {
@@ -97,8 +139,11 @@ struct DocumentItemView: View {
             Menu("Change Color") {
                 ForEach(colorOptions, id: \.0) { name, color in
                     Button(action: { updateNoteColor(color) }) {
-                        Label(name, systemImage: document.colorName == name ? "checkmark.circle.fill" : "circle.fill")
-                            .foregroundStyle(color)
+                        HStack {
+                            Image(systemName: document.colorName == name ? "checkmark.circle.fill" : "circle.fill")
+                                .foregroundColor(color)
+                            Text(name)
+                        }
                     }
                 }
             }

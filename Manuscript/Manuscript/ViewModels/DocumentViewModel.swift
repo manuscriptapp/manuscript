@@ -13,6 +13,9 @@ class DocumentViewModel: ObservableObject {
     // Sidebar expansion state - tracks which folders are expanded
     @Published var expandedFolderIds: Set<UUID> = []
 
+    // Published root folder for sidebar display - this is the source of truth for UI
+    @Published private(set) var rootFolder: ManuscriptFolder = ManuscriptFolder(title: "Draft")
+
     // Rename state
     @Published var isRenameAlertPresented = false
     @Published var renameAlertTitle = ""
@@ -26,7 +29,11 @@ class DocumentViewModel: ObservableObject {
     // Computed property to access document through binding
     var document: ManuscriptDocument {
         get { documentBinding?.wrappedValue ?? ManuscriptDocument() }
-        set { documentBinding?.wrappedValue = newValue }
+        set {
+            documentBinding?.wrappedValue = newValue
+            // Update the published rootFolder for immediate UI updates
+            rootFolder = newValue.rootFolder
+        }
     }
 
     init() {
@@ -36,6 +43,7 @@ class DocumentViewModel: ObservableObject {
     /// Connect this view model to the document binding from DocumentGroup
     func bind(to document: Binding<ManuscriptDocument>) {
         self.documentBinding = document
+        self.rootFolder = document.wrappedValue.rootFolder
         self.currentFolder = document.wrappedValue.rootFolder
         // Auto-expand root folder
         expandedFolderIds.insert(document.wrappedValue.rootFolder.id)
@@ -117,6 +125,8 @@ class DocumentViewModel: ObservableObject {
 
     /// Sync current folder when document changes externally
     func syncWithDocument(_ newDocument: ManuscriptDocument) {
+        // Update the published rootFolder for sidebar display
+        rootFolder = newDocument.rootFolder
         // Update current folder if it still exists, otherwise go to root
         if let updatedFolder = findFolder(withId: currentFolder.id, in: newDocument.rootFolder) {
             currentFolder = updatedFolder
@@ -142,7 +152,7 @@ class DocumentViewModel: ObservableObject {
     // MARK: - Find Helpers
 
     func findDocument(withId id: UUID) -> ManuscriptDocument.Document? {
-        return findDocumentRecursively(withId: id, in: document.rootFolder)
+        return findDocumentRecursively(withId: id, in: rootFolder)
     }
 
     private func findDocumentRecursively(withId id: UUID, in folder: ManuscriptFolder) -> ManuscriptDocument.Document? {
@@ -214,6 +224,40 @@ class DocumentViewModel: ObservableObject {
 
         if currentFolder.id == folder.id {
             currentFolder.title = newTitle
+        }
+    }
+
+    func updateFolderIcon(_ folder: ManuscriptFolder, iconName: String, iconColor: String? = nil) {
+        var doc = document
+        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+            var updated = f
+            updated.iconName = iconName
+            if let color = iconColor {
+                updated.iconColor = color
+            }
+            return updated
+        }
+        document = doc
+
+        if currentFolder.id == folder.id {
+            currentFolder.iconName = iconName
+            if let color = iconColor {
+                currentFolder.iconColor = color
+            }
+        }
+    }
+
+    func updateFolderIconColor(_ folder: ManuscriptFolder, hexColor: String?) {
+        var doc = document
+        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+            var updated = f
+            updated.iconColor = hexColor
+            return updated
+        }
+        document = doc
+
+        if currentFolder.id == folder.id {
+            currentFolder.iconColor = hexColor
         }
     }
 

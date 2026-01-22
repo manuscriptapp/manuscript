@@ -73,8 +73,17 @@ struct ScrivenerIconMapper {
         let symbol: String
         let colorHex: String?
 
-        if let color = colorNameMapping[variant] {
+        // Extract color from variant (handles "red flag" -> "red", "red" -> "red")
+        let colorPart = variant.replacingOccurrences(of: " flag", with: "")
+                               .replacingOccurrences(of: "flag ", with: "")
+                               .trimmingCharacters(in: .whitespaces)
+
+        if let color = colorNameMapping[colorPart] {
             // Has color - use filled variant
+            symbol = symbolInfo.filled
+            colorHex = color
+        } else if let color = colorNameMapping[variant] {
+            // Direct color match
             symbol = symbolInfo.filled
             colorHex = color
         } else if variant == "ticked" || variant == "checked" {
@@ -222,6 +231,12 @@ struct ScrivenerIconMapper {
 
     /// Direct icon name to SF Symbol mapping
     private static let iconNameMapping: [String: String] = [
+        // Scrivener built-in icons (exact names from .scrivx files)
+        "clapper board": "film.fill",
+        "reviewer comments": "text.bubble",
+        "thought bubble": "thought.bubble",
+        "test tube": "testtube.2",
+
         // General icons
         "calendar": "calendar",
         "clock": "clock",
@@ -262,7 +277,6 @@ struct ScrivenerIconMapper {
         "house": "house",
         "home": "house",
         "building": "building.2",
-        "test tube": "testtube.2",
         "beaker": "flask",
         "flask": "flask",
         "atom": "atom",

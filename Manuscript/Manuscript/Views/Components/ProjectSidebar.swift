@@ -13,7 +13,7 @@ struct ProjectSidebar: View {
     var body: some View {
         // Create a typed binding to help with type inference
         let typedSelection: Binding<DetailSelection?> = $detailSelection
-        
+
         // Create the content as a separate variable
         let listContent = Group {
             #if os(iOS)
@@ -28,11 +28,10 @@ struct ProjectSidebar: View {
             // Folder structure
             Section("Content") {
                 FolderItemView(
-                    folder: viewModel.document.rootFolder,
+                    folder: viewModel.rootFolder,
                     viewModel: viewModel,
                     detailSelection: typedSelection
                 )
-                .id(viewModel.document.rootFolder.totalDocumentCount)
             }
             
             // Basic project info

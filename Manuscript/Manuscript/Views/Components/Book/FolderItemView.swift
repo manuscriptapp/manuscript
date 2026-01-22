@@ -6,11 +6,61 @@ struct FolderItemView: View {
     @Binding var detailSelection: DetailSelection?
 
     private struct RecursiveFolderView: View {
-        let folder: ManuscriptFolder
+        let folderId: UUID
         @ObservedObject var viewModel: DocumentViewModel
         @Binding var detailSelection: DetailSelection?
         @State private var isAddFolderSheetPresented = false
         @State private var isAddDocumentSheetPresented = false
+
+        /// Look up the current folder from the published rootFolder to ensure we always have fresh data
+        private var folder: ManuscriptFolder {
+            findFolder(withId: folderId, in: viewModel.rootFolder) ?? ManuscriptFolder(title: "Unknown")
+        }
+
+        private func findFolder(withId id: UUID, in searchFolder: ManuscriptFolder) -> ManuscriptFolder? {
+            if searchFolder.id == id { return searchFolder }
+            for subfolder in searchFolder.subfolders {
+                if let found = findFolder(withId: id, in: subfolder) {
+                    return found
+                }
+            }
+            return nil
+        }
+
+        // Icon options for folders
+        private let iconOptions: [(String, String)] = [
+            ("Folder", "folder"),
+            ("Book", "book.closed"),
+            ("Draft", "doc.text"),
+            ("Notes", "note.text"),
+            ("Ideas", "lightbulb"),
+            ("Characters", "person.2"),
+            ("Locations", "mappin.and.ellipse"),
+            ("Research", "magnifyingglass"),
+            ("Scenes", "theatermasks"),
+            ("Timeline", "clock"),
+            ("Archive", "archivebox"),
+            ("Trash", "trash"),
+            ("Star", "star"),
+            ("Heart", "heart"),
+            ("Flag", "flag"),
+            ("Bookmark", "bookmark")
+        ]
+
+        // Color options
+        private let colorOptions: [(String, Color, String)] = [
+            ("Yellow", .yellow, "#FFD60A"),
+            ("Mint", .mint, "#00C7BE"),
+            ("Pink", .pink, "#FF2D55"),
+            ("Orange", .orange, "#FF9500"),
+            ("Teal", .teal, "#30B0C7"),
+            ("Purple", .purple, "#AF52DE"),
+            ("Green", .green, "#34C759"),
+            ("Blue", .blue, "#007AFF"),
+            ("Red", .red, "#FF3B30"),
+            ("Brown", .brown, "#A2845E"),
+            ("Default", .secondary, "")
+        ]
 
         // Computed binding to the view model's expansion state
         private var isExpanded: Binding<Bool> {
@@ -20,12 +70,31 @@ struct FolderItemView: View {
             )
         }
 
-        init(folder: ManuscriptFolder, viewModel: DocumentViewModel, detailSelection: Binding<DetailSelection?>) {
-            self.folder = folder
+        init(folderId: UUID, viewModel: DocumentViewModel, detailSelection: Binding<DetailSelection?>) {
+            self.folderId = folderId
             self.viewModel = viewModel
             self._detailSelection = detailSelection
         }
-        
+
+        private func updateFolderIcon(_ iconName: String) {
+            viewModel.updateFolderIcon(folder, iconName: iconName)
+        }
+
+        private func updateFolderColor(_ hexColor: String?) {
+            viewModel.updateFolderIconColor(folder, hexColor: hexColor?.isEmpty == true ? nil : hexColor)
+        }
+
+        /// Returns the icon color for the folder
+        private func iconColorForFolder(_ folder: ManuscriptFolder) -> Color {
+            // Use icon-specific color if available
+            if let hexColor = folder.iconColor, let color = Color(hex: hexColor) {
+                return isFolderSelected(folder) ? color.darker(by: 0.3) : color
+            }
+            // Fallback to dominant color or accent for root
+            let baseColor = dominantColor(for: folder)
+            return isFolderSelected(folder) ? baseColor.darker(by: 0.3) : baseColor
+        }
+
         private func colorForDocument(_ document: ManuscriptDocument.Document) -> Color {
             let colorMap: [String: Color] = [
                 "Yellow": .yellow,
@@ -44,7 +113,7 @@ struct FolderItemView: View {
         
         private func dominantColor(for folder: ManuscriptFolder) -> Color {
             // If it's the root folder, use accent color
-            if folder.id == viewModel.document.rootFolder.id {
+            if folder.id == viewModel.rootFolder.id {
                 return .accent
             }
             
@@ -83,7 +152,7 @@ struct FolderItemView: View {
                 // Documents in this folder
                 ForEach(folder.documents) { document in
                     DocumentItemView(
-                        document: document,
+                        documentId: document.id,
                         viewModel: viewModel,
                         detailSelection: $detailSelection
                     )
@@ -92,7 +161,7 @@ struct FolderItemView: View {
                 // Subfolders
                 ForEach(folder.subfolders) { subfolder in
                     RecursiveFolderView(
-                        folder: subfolder,
+                        folderId: subfolder.id,
                         viewModel: viewModel,
                         detailSelection: $detailSelection
                     )
@@ -101,23 +170,43 @@ struct FolderItemView: View {
                 Label {
                     Text(folder.title)
                 } icon: {
-                    let color = dominantColor(for: folder)
-                    Image(systemName: "folder")
-                        .foregroundStyle(isFolderSelected(folder) ? 
-                            (color == .accent ? color.darker(by: 0.4) : 
-                             color == .brown ? color.darker(by: 0.4) : color) : color)
+                    Image(systemName: folder.iconName)
+                        .foregroundStyle(iconColorForFolder(folder))
                 }
+                .id("\(folderId)-\(folder.iconName)-\(folder.iconColor ?? "")")
                 .badge(folder.totalDocumentCount)
                 .tag(DetailSelection.folder(folder))
                 #if os(macOS)
                 .contextMenu {
+                    Menu("Change Icon") {
+                        ForEach(iconOptions, id: \.0) { name, icon in
+                            Button(action: { updateFolderIcon(icon) }) {
+                                Label(name, systemImage: icon)
+                            }
+                        }
+                    }
+
+                    Menu("Change Color") {
+                        ForEach(colorOptions, id: \.0) { name, color, hex in
+                            Button(action: { updateFolderColor(hex.isEmpty ? nil : hex) }) {
+                                HStack {
+                                    Image(systemName: folder.iconColor == hex || (folder.iconColor == nil && hex.isEmpty) ? "checkmark.circle.fill" : "circle.fill")
+                                        .foregroundColor(color)
+                                    Text(name)
+                                }
+                            }
+                        }
+                    }
+
+                    Divider()
+
                     Button(action: {
                         viewModel.showRenameAlert(for: folder)
                     }) {
                         Label("Rename Folder", systemImage: "pencil")
                     }
-                    
-                    if folder.id != viewModel.document.rootFolder.id {
+
+                    if folder.id != viewModel.rootFolder.id {
                         Button(role: .destructive, action: {
                             viewModel.deleteFolder(folder)
                         }) {
@@ -132,28 +221,50 @@ struct FolderItemView: View {
                     }) {
                         Label("View Details", systemImage: "info.circle")
                     }
-                    
+
+                    Menu("Change Icon") {
+                        ForEach(iconOptions, id: \.0) { name, icon in
+                            Button(action: { updateFolderIcon(icon) }) {
+                                Label(name, systemImage: icon)
+                            }
+                        }
+                    }
+
+                    Menu("Change Color") {
+                        ForEach(colorOptions, id: \.0) { name, color, hex in
+                            Button(action: { updateFolderColor(hex.isEmpty ? nil : hex) }) {
+                                HStack {
+                                    Image(systemName: folder.iconColor == hex || (folder.iconColor == nil && hex.isEmpty) ? "checkmark.circle.fill" : "circle.fill")
+                                        .foregroundColor(color)
+                                    Text(name)
+                                }
+                            }
+                        }
+                    }
+
+                    Divider()
+
                     Button(action: {
                         isAddFolderSheetPresented = true
                     }) {
                         Label("Add Folder", systemImage: "folder.badge.plus")
                     }
-                    
+
                     Button(action: {
                         isAddDocumentSheetPresented = true
                     }) {
                         Label("Add Document", systemImage: "doc.badge.plus")
                     }
-                    
+
                     Divider()
-                    
+
                     Button(action: {
                         viewModel.showRenameAlert(for: folder)
                     }) {
                         Label("Rename Folder", systemImage: "pencil")
                     }
-                    
-                    if folder.id != viewModel.document.rootFolder.id {
+
+                    if folder.id != viewModel.rootFolder.id {
                         Button(role: .destructive, action: {
                             viewModel.deleteFolder(folder)
                         }) {
@@ -168,8 +279,8 @@ struct FolderItemView: View {
                         Label("Rename Folder", systemImage: "pencil")
                     }
                     .tint(.blue)
-                    
-                    if folder.id != viewModel.document.rootFolder.id {
+
+                    if folder.id != viewModel.rootFolder.id {
                         Button(role: .destructive, action: {
                             viewModel.deleteFolder(folder)
                         }) {
@@ -196,7 +307,7 @@ struct FolderItemView: View {
     
     var body: some View {
         RecursiveFolderView(
-            folder: folder,
+            folderId: folder.id,
             viewModel: viewModel,
             detailSelection: $detailSelection
         )
