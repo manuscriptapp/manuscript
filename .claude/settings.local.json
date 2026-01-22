@@ -67,7 +67,9 @@
       "WebFetch(domain:www.infoq.com)",
       "WebFetch(domain:fatbobman.com)",
       "mcp__XcodeBuildMCP__stop_app_sim",
-      "mcp__XcodeBuildMCP__clean"
+      "mcp__XcodeBuildMCP__clean",
+      "mcp__XcodeBuildMCP__launch_app_logs_sim",
+      "mcp__ide__getDiagnostics"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"
