@@ -295,7 +295,6 @@ struct FormattingToolbar: View {
                 compactStyleButton(style: .bold, icon: "bold")
                 compactStyleButton(style: .italic, icon: "italic")
                 compactStyleButton(style: .underlined, icon: "underline")
-                compactStyleButton(style: .strikethrough, icon: "strikethrough")
             }
         }
         .padding(.horizontal, 8)
@@ -413,7 +412,6 @@ private struct StyleTabContent: View {
                 styleToggleRow(style: .bold, label: "Bold", icon: "bold")
                 styleToggleRow(style: .italic, label: "Italic", icon: "italic")
                 styleToggleRow(style: .underlined, label: "Underline", icon: "underline")
-                styleToggleRow(style: .strikethrough, label: "Strikethrough", icon: "strikethrough")
             }
 
             Section {

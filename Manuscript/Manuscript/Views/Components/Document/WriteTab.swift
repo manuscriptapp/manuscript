@@ -52,29 +52,41 @@ struct WriteTab: View {
                 .scrollContentBackground(.hidden)
                 .padding(.horizontal, horizontalPadding)
                 .padding(.vertical, 16)
-            }
+                #if os(iOS)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Button {
+                            richTextContext.toggleStyle(.bold)
+                        } label: {
+                            Image(systemName: "bold")
+                                .foregroundStyle(richTextContext.hasStyle(.bold) ? Color.accentColor : Color.primary)
+                        }
 
-            #if os(iOS)
-            // iOS: Compact toolbar at the bottom with option to expand
-            VStack(spacing: 0) {
-                Divider()
-                HStack {
-                    FormattingToolbar(context: richTextContext)
+                        Button {
+                            richTextContext.toggleStyle(.italic)
+                        } label: {
+                            Image(systemName: "italic")
+                                .foregroundStyle(richTextContext.hasStyle(.italic) ? Color.accentColor : Color.primary)
+                        }
 
-                    Spacer()
+                        Button {
+                            richTextContext.toggleStyle(.underlined)
+                        } label: {
+                            Image(systemName: "underline")
+                                .foregroundStyle(richTextContext.hasStyle(.underlined) ? Color.accentColor : Color.primary)
+                        }
 
-                    Button {
-                        isFormattingPalettePresented = true
-                    } label: {
-                        Image(systemName: "textformat")
-                            .font(.title3)
+                        Spacer()
+
+                        Button {
+                            isFormattingPalettePresented = true
+                        } label: {
+                            Image(systemName: "textformat")
+                        }
                     }
-                    .padding(.trailing, 12)
                 }
-                .padding(.vertical, 4)
-                .background(.ultraThinMaterial)
+                #endif
             }
-            #endif
         }
         .onAppear {
             if !hasInitialized {
