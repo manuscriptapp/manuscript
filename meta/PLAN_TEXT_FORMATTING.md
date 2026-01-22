@@ -3,10 +3,26 @@
 **Date:** January 2026
 **Status:** Planning
 **Author:** Claude Code
+**Last Updated:** January 2026
 
 ## Executive Summary
 
-This document evaluates options for adding rich text formatting to Manuscript's editor. With iOS 26/macOS 26 (released June 2025) introducing native `AttributedString` support in SwiftUI's `TextEditor`, the timing is optimal for implementation. This plan recommends **native SwiftUI with iOS 26+ APIs** as the primary approach, with a clear migration path.
+This document evaluates options for adding rich text formatting to Manuscript's editor, with the goal of matching Scrivener's professional writing environment. With iOS 26/macOS 26 (released June 2025) introducing native `AttributedString` support in SwiftUI's `TextEditor`, the timing is optimal for implementation. This plan recommends **native SwiftUI with iOS 26+ APIs** as the primary approach, with a clear migration path.
+
+### Target Feature Set (Scrivener Parity)
+
+Manuscript's editor should match Scrivener's core formatting capabilities:
+
+| Feature Category | Scrivener Features | Priority |
+|-----------------|-------------------|----------|
+| **Text Formatting** | Bold, italic, underline, strikethrough | P0 |
+| **Font Selection** | Font family picker, font size, font variants | P0 |
+| **Colors** | Text color, highlight/background color | P1 |
+| **Paragraph** | Alignment (left, center, right, justified) | P1 |
+| **Indentation** | First line indent, left/right margins | P1 |
+| **Spacing** | Line spacing (1.0, 1.2, 1.5, 2.0), paragraph spacing | P1 |
+| **Styles** | Paragraph presets (heading, block quote, etc.) | P2 |
+| **Advanced** | Tab stops, ruler display | P3 |
 
 ---
 
@@ -73,25 +89,34 @@ struct RichTextEditor: View {
 }
 ```
 
-#### Supported Formatting
+#### Supported Formatting (Scrivener Feature Parity)
 
-| Feature | Status |
-|---------|--------|
-| Bold | ✅ Native |
-| Italic | ✅ Native |
-| Underline | ✅ Native |
-| Strikethrough | ✅ Native |
-| Custom fonts | ✅ Native |
-| Font sizes | ✅ Native |
-| Text colors | ✅ Native |
-| Background colors | ✅ Native |
-| Kerning/tracking | ✅ Native |
-| Baseline offset | ✅ Native |
-| Paragraph alignment | ✅ Native |
-| Line height | ✅ Native |
-| Genmoji | ✅ Native |
-| Keyboard shortcuts | ✅ Built-in (⌘B, ⌘I, etc.) |
-| Menu controls | ✅ Built-in |
+| Feature | iOS 26 Status | Scrivener Match |
+|---------|---------------|-----------------|
+| **Text Formatting** | | |
+| Bold | ✅ Native | ✅ |
+| Italic | ✅ Native | ✅ |
+| Underline | ✅ Native | ✅ |
+| Strikethrough | ✅ Native | ✅ |
+| **Font Selection** | | |
+| Font family picker | ✅ Native | ✅ |
+| Font size | ✅ Native | ✅ |
+| Font variants (bold italic) | ✅ Native | ✅ |
+| **Colors** | | |
+| Text color | ✅ Native | ✅ |
+| Highlight/background | ✅ Native | ✅ |
+| **Paragraph Formatting** | | |
+| Alignment (L/C/R/J) | ✅ Native | ✅ |
+| First line indent | ✅ Native (`paragraphStyle`) | ✅ |
+| Left/right margins | ✅ Native (`paragraphStyle`) | ✅ |
+| Line spacing | ✅ Native (`paragraphStyle`) | ✅ |
+| Paragraph spacing | ✅ Native (`paragraphStyle`) | ✅ |
+| Tab stops | ✅ Native (`paragraphStyle`) | ✅ |
+| **Platform Features** | | |
+| Keyboard shortcuts | ✅ Built-in (⌘B, ⌘I, etc.) | ✅ |
+| Menu controls | ✅ Built-in | ✅ |
+| Writing Tools (iOS 26) | ✅ Native | N/A |
+| Genmoji | ✅ Native | N/A |
 
 #### Pros
 - **Native Apple solution** – best performance and integration
@@ -319,10 +344,12 @@ struct AdaptiveEditor: View {
 
 | Phase | Timeline | Action |
 |-------|----------|--------|
-| Phase 1 | Q1 2026 | Implement basic formatting (bold, italic, underline) |
-| Phase 2 | Q2 2026 | Add font/size/color customization |
-| Phase 3 | Q2 2026 | Toolbar and keyboard shortcuts |
-| Phase 4 | Q3 2026 | Markdown ↔ AttributedString conversion |
+| Phase 1 | Q1 2026 | Basic formatting + font family selection |
+| Phase 2 | Q1 2026 | Paragraph formatting (margins, indents, spacing) |
+| Phase 3 | Q2 2026 | Colors + professional toolbar |
+| Phase 4 | Q2 2026 | Default formatting settings |
+| Phase 5 | Q2 2026 | Persistence & markdown conversion |
+| Phase 6 | Q3 2026 | Styles system (optional) |
 
 ### OS Support Strategy
 
@@ -338,11 +365,367 @@ struct AdaptiveEditor: View {
 
 ---
 
+## Scrivener Feature Implementation Guide
+
+This section details how to implement each Scrivener-matching feature using iOS 26/macOS 26 native APIs.
+
+### Font Family Selection
+
+Scrivener allows users to select from all installed system fonts. iOS 26's `AttributedString` supports this natively.
+
+```swift
+// Font family picker implementation
+struct FontFamilyPicker: View {
+    @Binding var selectedFont: String
+
+    // Get all available font families on the system
+    private var availableFonts: [String] {
+        #if os(iOS)
+        UIFont.familyNames.sorted()
+        #else
+        NSFontManager.shared.availableFontFamilies.sorted()
+        #endif
+    }
+
+    var body: some View {
+        Picker("Font", selection: $selectedFont) {
+            ForEach(availableFonts, id: \.self) { family in
+                Text(family).font(.custom(family, size: 14))
+            }
+        }
+    }
+}
+
+// Apply font to AttributedString
+func applyFont(_ fontName: String, size: CGFloat, to text: inout AttributedString, in range: Range<AttributedString.Index>) {
+    #if os(iOS)
+    if let font = UIFont(name: fontName, size: size) {
+        text[range].font = font
+    }
+    #else
+    if let font = NSFont(name: fontName, size: size) {
+        text[range].font = font
+    }
+    #endif
+}
+```
+
+**Cross-Platform Note:** Font names are consistent across iOS and macOS for system fonts. Custom fonts must be bundled with the app and declared in Info.plist.
+
+### Paragraph Formatting (Margins, Indents, Spacing)
+
+Scrivener provides extensive paragraph controls. iOS 26 supports all of these via `NSParagraphStyle` attributes.
+
+```swift
+// Paragraph formatting model matching Scrivener's options
+struct ParagraphFormat {
+    var alignment: NSTextAlignment = .left
+    var firstLineIndent: CGFloat = 36  // 0.5 inch (72 points/inch * 0.5)
+    var headIndent: CGFloat = 0        // Left margin
+    var tailIndent: CGFloat = 0        // Right margin (negative = from right edge)
+    var lineSpacing: CGFloat = 0       // Additional line spacing
+    var lineHeightMultiple: CGFloat = 1.2  // Scrivener default is 1.2x
+    var paragraphSpacingBefore: CGFloat = 0
+    var paragraphSpacingAfter: CGFloat = 12  // Space after paragraph
+    var tabStops: [NSTextTab] = []
+
+    func toParagraphStyle() -> NSParagraphStyle {
+        let style = NSMutableParagraphStyle()
+        style.alignment = alignment
+        style.firstLineHeadIndent = firstLineIndent
+        style.headIndent = headIndent
+        style.tailIndent = tailIndent
+        style.lineSpacing = lineSpacing
+        style.lineHeightMultiple = lineHeightMultiple
+        style.paragraphSpacingBefore = paragraphSpacingBefore
+        style.paragraphSpacing = paragraphSpacingAfter
+        style.tabStops = tabStops
+        return style
+    }
+}
+
+// Apply paragraph formatting to AttributedString
+func applyParagraphFormat(_ format: ParagraphFormat, to text: inout AttributedString, in range: Range<AttributedString.Index>) {
+    text[range].paragraphStyle = format.toParagraphStyle()
+}
+```
+
+### Line Spacing Options
+
+Scrivener offers preset line spacing values. Here's how to implement them:
+
+```swift
+enum LineSpacingPreset: String, CaseIterable {
+    case single = "1.0"
+    case scrivenerDefault = "1.2"
+    case oneAndHalf = "1.5"
+    case double = "2.0"
+
+    var multiplier: CGFloat {
+        switch self {
+        case .single: return 1.0
+        case .scrivenerDefault: return 1.2
+        case .oneAndHalf: return 1.5
+        case .double: return 2.0
+        }
+    }
+}
+
+struct LineSpacingPicker: View {
+    @Binding var lineHeightMultiple: CGFloat
+
+    var body: some View {
+        Picker("Line Spacing", selection: $lineHeightMultiple) {
+            ForEach(LineSpacingPreset.allCases, id: \.self) { preset in
+                Text(preset.rawValue).tag(preset.multiplier)
+            }
+        }
+    }
+}
+```
+
+### First Line Indent
+
+Scrivener's default first line indent is 0.5 inches (industry standard). Users can customize this.
+
+```swift
+struct IndentControl: View {
+    @Binding var firstLineIndent: CGFloat
+
+    // Common presets in points (72 points = 1 inch)
+    private let presets: [(String, CGFloat)] = [
+        ("None", 0),
+        ("0.25\"", 18),
+        ("0.5\" (Standard)", 36),
+        ("0.75\"", 54),
+        ("1\"", 72)
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("First Line Indent")
+                .font(.headline)
+
+            Picker("", selection: $firstLineIndent) {
+                ForEach(presets, id: \.1) { preset in
+                    Text(preset.0).tag(preset.1)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            // Custom value slider
+            HStack {
+                Text("Custom:")
+                Slider(value: $firstLineIndent, in: 0...144, step: 9)
+                Text(String(format: "%.2f\"", firstLineIndent / 72))
+                    .monospacedDigit()
+            }
+        }
+    }
+}
+```
+
+### Document Margins
+
+Scrivener uses editor margins to create comfortable reading/writing width. This is different from paragraph indents.
+
+```swift
+// Editor margin settings (page layout, not paragraph formatting)
+struct EditorMargins: Codable, Equatable {
+    var left: CGFloat = 40
+    var right: CGFloat = 40
+    var top: CGFloat = 20
+    var bottom: CGFloat = 20
+
+    // Preset widths for reading comfort
+    static let narrow = EditorMargins(left: 20, right: 20, top: 20, bottom: 20)
+    static let standard = EditorMargins(left: 40, right: 40, top: 20, bottom: 20)
+    static let wide = EditorMargins(left: 80, right: 80, top: 30, bottom: 30)
+    static let manuscript = EditorMargins(left: 100, right: 100, top: 40, bottom: 40)
+}
+
+// Apply to editor view
+struct EditorView: View {
+    @Binding var text: AttributedString
+    @State private var selection: AttributedTextSelection?
+    var margins: EditorMargins = .standard
+
+    var body: some View {
+        TextEditor(text: $text, selection: $selection)
+            .padding(.leading, margins.left)
+            .padding(.trailing, margins.right)
+            .padding(.top, margins.top)
+            .padding(.bottom, margins.bottom)
+    }
+}
+```
+
+### Formatting Palette (Scrivener iOS Style)
+
+Scrivener iOS uses a three-tab formatting palette: Style, Indents, Spacing. Here's the SwiftUI implementation:
+
+```swift
+struct FormattingPalette: View {
+    @Binding var text: AttributedString
+    @Binding var selection: AttributedTextSelection?
+    @State private var selectedTab = 0
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Tab selector
+            Picker("", selection: $selectedTab) {
+                Text("Style").tag(0)
+                Text("Indents").tag(1)
+                Text("Spacing").tag(2)
+            }
+            .pickerStyle(.segmented)
+            .padding()
+
+            Divider()
+
+            // Tab content
+            Group {
+                switch selectedTab {
+                case 0:
+                    StyleTab(text: $text, selection: $selection)
+                case 1:
+                    IndentsTab(text: $text, selection: $selection)
+                case 2:
+                    SpacingTab(text: $text, selection: $selection)
+                default:
+                    EmptyView()
+                }
+            }
+            .padding()
+        }
+        .background(.regularMaterial)
+    }
+}
+
+struct StyleTab: View {
+    @Binding var text: AttributedString
+    @Binding var selection: AttributedTextSelection?
+    @State private var selectedFont = "Palatino"
+    @State private var fontSize: CGFloat = 13
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Font picker
+            FontFamilyPicker(selectedFont: $selectedFont)
+
+            // Size picker
+            HStack {
+                Text("Size:")
+                Stepper("\(Int(fontSize)) pt", value: $fontSize, in: 8...72)
+            }
+
+            // Basic formatting buttons
+            HStack(spacing: 12) {
+                FormatButton(label: "B", action: toggleBold)
+                    .fontWeight(.bold)
+                FormatButton(label: "I", action: toggleItalic)
+                    .italic()
+                FormatButton(label: "U", action: toggleUnderline)
+                    .underline()
+                FormatButton(label: "S", action: toggleStrikethrough)
+                    .strikethrough()
+            }
+
+            // Color pickers
+            HStack {
+                ColorPicker("Text", selection: $textColor)
+                ColorPicker("Highlight", selection: $highlightColor)
+            }
+
+            // Alignment
+            HStack(spacing: 12) {
+                AlignmentButton(alignment: .left)
+                AlignmentButton(alignment: .center)
+                AlignmentButton(alignment: .right)
+                AlignmentButton(alignment: .justified)
+            }
+        }
+    }
+}
+```
+
+### Default Formatting Settings
+
+Like Scrivener, users should be able to set default formatting for new documents:
+
+```swift
+// Store default formatting in UserDefaults/AppStorage
+struct DefaultFormatSettings: Codable {
+    var fontFamily: String = "Palatino"
+    var fontSize: CGFloat = 13
+    var lineHeightMultiple: CGFloat = 1.2
+    var firstLineIndent: CGFloat = 36  // 0.5 inch
+    var paragraphSpacing: CGFloat = 0
+    var editorMargins: EditorMargins = .standard
+
+    // Convert to AttributedString attributes
+    func defaultAttributes() -> AttributeContainer {
+        var container = AttributeContainer()
+        #if os(iOS)
+        container.font = UIFont(name: fontFamily, size: fontSize)
+        #else
+        container.font = NSFont(name: fontFamily, size: fontSize)
+        #endif
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineHeightMultiple = lineHeightMultiple
+        paragraphStyle.firstLineHeadIndent = firstLineIndent
+        paragraphStyle.paragraphSpacing = paragraphSpacing
+        container.paragraphStyle = paragraphStyle
+
+        return container
+    }
+}
+
+// Settings view for default formatting
+struct DefaultFormattingSettingsView: View {
+    @AppStorage("defaultFormatSettings") private var settingsData: Data?
+    @State private var settings = DefaultFormatSettings()
+
+    var body: some View {
+        Form {
+            Section("Font") {
+                FontFamilyPicker(selectedFont: $settings.fontFamily)
+                Stepper("Size: \(Int(settings.fontSize)) pt", value: $settings.fontSize, in: 8...72)
+            }
+
+            Section("Paragraph") {
+                Picker("Line Spacing", selection: $settings.lineHeightMultiple) {
+                    Text("1.0").tag(1.0 as CGFloat)
+                    Text("1.2 (Scrivener Default)").tag(1.2 as CGFloat)
+                    Text("1.5").tag(1.5 as CGFloat)
+                    Text("2.0").tag(2.0 as CGFloat)
+                }
+
+                IndentControl(firstLineIndent: $settings.firstLineIndent)
+            }
+
+            Section("Editor Margins") {
+                Picker("Width", selection: $settings.editorMargins) {
+                    Text("Narrow").tag(EditorMargins.narrow)
+                    Text("Standard").tag(EditorMargins.standard)
+                    Text("Wide").tag(EditorMargins.wide)
+                    Text("Manuscript").tag(EditorMargins.manuscript)
+                }
+            }
+        }
+        .onChange(of: settings) { saveSettings() }
+    }
+}
+```
+
+---
+
 ## Implementation Plan
 
 ### Phase 1: Foundation (Basic Formatting)
 
-**Goal:** Bold, italic, underline, strikethrough
+**Goal:** Bold, italic, underline, strikethrough + Font selection
 
 #### Tasks
 
@@ -360,15 +743,24 @@ struct AdaptiveEditor: View {
    }
    ```
 
-3. **Create formatting toolbar**
+3. **Create formatting toolbar with font selection**
    ```swift
    // Views/Components/FormattingToolbar.swift
    struct FormattingToolbar: View {
        @Binding var text: AttributedString
        @Binding var selection: AttributedTextSelection?
+       @State private var selectedFont = "Palatino"
+       @State private var fontSize: CGFloat = 13
 
        var body: some View {
            HStack {
+               // Font family picker (Scrivener-style)
+               FontFamilyPicker(selectedFont: $selectedFont)
+               Stepper("\(Int(fontSize))", value: $fontSize, in: 8...72)
+
+               Divider()
+
+               // Basic formatting
                Button("B") { toggleBold() }.fontWeight(.bold)
                Button("I") { toggleItalic() }.italic()
                Button("U") { toggleUnderline() }.underline()
@@ -388,47 +780,95 @@ struct AdaptiveEditor: View {
    - Add formatting state tracking
    - Update save/load logic
 
-### Phase 2: Extended Formatting
+### Phase 2: Paragraph Formatting (Scrivener Parity)
 
-**Goal:** Fonts, sizes, colors
+**Goal:** Margins, indents, line spacing, paragraph spacing
 
 #### Tasks
 
-1. **Font picker component**
+1. **Create ParagraphFormat model**
    ```swift
-   struct FontPicker: View {
-       @Binding var selection: Font?
-       let fonts: [Font] = [.body, .title, .headline, .caption]
+   struct ParagraphFormat: Codable {
+       var alignment: NSTextAlignment = .left
+       var firstLineIndent: CGFloat = 36  // 0.5" default
+       var headIndent: CGFloat = 0
+       var tailIndent: CGFloat = 0
+       var lineHeightMultiple: CGFloat = 1.2  // Scrivener default
+       var paragraphSpacing: CGFloat = 0
    }
    ```
 
-2. **Color picker integration**
-   - Foreground color
-   - Background/highlight color
+2. **Implement editor margins**
+   - Add `EditorMargins` model for page-level padding
+   - Apply padding to TextEditor container
+   - Store in document settings
 
-3. **Size adjustment**
-   - Predefined sizes (Small, Normal, Large, Huge)
-   - Custom point size input
+3. **Create Scrivener-style formatting palette**
+   - Three tabs: Style, Indents, Spacing (matching Scrivener iOS)
+   - Implement `IndentsTab` with first line indent, left/right margins
+   - Implement `SpacingTab` with line spacing presets and paragraph spacing
 
-### Phase 3: Toolbar & Shortcuts
+4. **First line indent control**
+   - Presets: None, 0.25", 0.5" (default), 0.75", 1"
+   - Custom value slider
 
-**Goal:** Professional editing experience
+5. **Line spacing presets**
+   - 1.0 (single)
+   - 1.2 (Scrivener default)
+   - 1.5
+   - 2.0 (double)
+   - Custom value
+
+### Phase 3: Colors & Toolbar
+
+**Goal:** Text/highlight colors + professional toolbar experience
 
 #### Tasks
 
-1. **Context-aware toolbar**
-   - Show current formatting state
-   - Platform-specific placement (iOS bottom, macOS top)
+1. **Color picker integration**
+   - Text color picker
+   - Highlight/background color picker
+   - Recent colors palette
 
-2. **Keyboard shortcut registration**
-   - Most work automatically with iOS 26
-   - Add custom shortcuts for app-specific features
+2. **Context-aware toolbar**
+   - Show current formatting state (selected font, size, colors)
+   - Platform-specific placement:
+     - iOS: Paintbrush button → sheet with FormattingPalette (Scrivener-style)
+     - macOS: Toolbar + Format menu
 
-3. **Format menu (macOS)**
+3. **Keyboard shortcut registration**
+   - Most work automatically with iOS 26 (⌘B, ⌘I, ⌘U)
+   - Add custom shortcuts:
+     - ⌘T: Show fonts
+     - ⌘⇧C: Copy formatting
+     - ⌘⇧V: Paste formatting
+
+4. **Format menu (macOS)**
    - Standard Format menu items
-   - Integration with system menu bar
+   - Submenu for paragraph alignment
+   - Submenu for line spacing
 
-### Phase 4: Persistence & Conversion
+### Phase 4: Default Formatting & Settings
+
+**Goal:** User-configurable default formatting (Scrivener feature)
+
+#### Tasks
+
+1. **Default formatting settings**
+   - Store in UserDefaults/AppStorage
+   - Options: font family, size, line spacing, first indent
+   - "Use Current Formatting as Default" button
+
+2. **Settings UI**
+   - Add "Default Text Formatting" section to Settings
+   - Preview of default formatting
+   - Reset to defaults option
+
+3. **Apply defaults to new documents**
+   - New documents use saved default formatting
+   - Existing documents retain their formatting
+
+### Phase 5: Persistence & Conversion
 
 **Goal:** Save rich text, export to markdown
 
@@ -443,6 +883,7 @@ struct AdaptiveEditor: View {
 
        func toMarkdown() -> String {
            // Convert attributes to markdown syntax
+           // Note: Some attributes (margins, colors) may be lost
        }
    }
    ```
@@ -451,11 +892,32 @@ struct AdaptiveEditor: View {
    - Option A: Continue markdown storage (with attribute loss)
    - Option B: Store as RTF/RTFD (full fidelity)
    - Option C: Store as JSON-encoded AttributedString
-   - **Recommended:** Option A with optional B for "rich" documents
+   - **Recommended:** Option C (JSON) for internal storage, export to markdown/RTF
 
 3. **Import/export updates**
    - Update RTFToMarkdownConverter
    - Add AttributedString export options
+   - Import RTF with full paragraph formatting
+
+### Phase 6: Styles System (Future)
+
+**Goal:** Paragraph presets like Scrivener (Heading, Block Quote, etc.)
+
+#### Tasks
+
+1. **Define built-in styles**
+   - Body text (default)
+   - Heading 1, 2, 3
+   - Block quote
+   - Code block
+
+2. **Style picker UI**
+   - Dropdown in formatting palette
+   - Quick apply via keyboard shortcuts
+
+3. **Custom style creation**
+   - User-defined styles
+   - Save current formatting as style
 
 ---
 
@@ -468,9 +930,16 @@ struct AdaptiveEditor: View {
 | `NotesTab.swift` | Update to AttributedString |
 | `DocumentDetailViewModel.swift` | Change content types, add formatting methods |
 | `ManuscriptDocument.swift` | Add AttributedString conversion |
-| **New:** `FormattingToolbar.swift` | Formatting UI component |
-| **New:** `RichTextExtensions.swift` | AttributedString helpers |
-| **New:** `MarkdownConverter.swift` | Two-way conversion |
+| **New:** `Models/ParagraphFormat.swift` | Paragraph formatting model (margins, indents, spacing) |
+| **New:** `Models/EditorMargins.swift` | Editor page margins |
+| **New:** `Models/DefaultFormatSettings.swift` | User default formatting preferences |
+| **New:** `Views/Components/FormattingPalette.swift` | Three-tab formatting UI (Scrivener-style) |
+| **New:** `Views/Components/FontFamilyPicker.swift` | System font picker |
+| **New:** `Views/Components/IndentControl.swift` | First line indent UI |
+| **New:** `Views/Components/LineSpacingPicker.swift` | Line spacing presets |
+| **New:** `Views/Settings/DefaultFormattingSettingsView.swift` | Default formatting settings UI |
+| **New:** `Extensions/RichTextExtensions.swift` | AttributedString helpers |
+| **New:** `Services/MarkdownConverter.swift` | Two-way conversion |
 
 ---
 
@@ -511,3 +980,52 @@ struct AdaptiveEditor: View {
 | 2026-01-11 | Recommend native iOS 26 approach | Best UX, minimal code, future-proof |
 | 2026-01-11 | Recommend raising min OS to iOS 26 | Manuscript is early-stage; simplifies codebase |
 | 2026-01-11 | Keep markdown as storage format | Git-friendly, portable, aligns with project philosophy |
+| 2026-01-22 | Match Scrivener formatting features | Font families, margins, indents, spacing for professional writing |
+| 2026-01-22 | Use NSParagraphStyle for paragraph formatting | Native iOS 26 support for all paragraph attributes |
+| 2026-01-22 | Implement Scrivener-style 3-tab formatting palette | Familiar UX for Scrivener users migrating to Manuscript |
+| 2026-01-22 | Default formatting: Palatino 13pt, 1.2 line spacing, 0.5" indent | Match Scrivener defaults for seamless transition |
+| 2026-01-22 | Store rich text as JSON-encoded AttributedString | Full fidelity storage, export to markdown/RTF for portability |
+
+## Cross-Platform Implementation Notes
+
+### Font Family Handling
+
+iOS and macOS share most system fonts, but font availability can differ:
+
+```swift
+// Safe cross-platform font resolution
+func resolveFont(family: String, size: CGFloat) -> Any {
+    #if os(iOS)
+    return UIFont(name: family, size: size) ?? UIFont.systemFont(ofSize: size)
+    #else
+    return NSFont(name: family, size: size) ?? NSFont.systemFont(ofSize: size)
+    #endif
+}
+```
+
+### Paragraph Style Compatibility
+
+`NSParagraphStyle` is available on both platforms with identical API. The implementation above works without modification on iOS and macOS.
+
+### Editor Margins
+
+Editor margins are applied via SwiftUI padding, which works identically on both platforms. No platform-specific code needed.
+
+### Formatting Palette UI
+
+The formatting palette uses different presentation styles per platform:
+- **iOS:** Sheet presented from paintbrush button (matches Scrivener iOS)
+- **macOS:** Popover or inspector panel
+
+```swift
+#if os(iOS)
+.sheet(isPresented: $showFormatting) {
+    FormattingPalette(text: $text, selection: $selection)
+}
+#else
+.popover(isPresented: $showFormatting) {
+    FormattingPalette(text: $text, selection: $selection)
+        .frame(width: 300, height: 400)
+}
+#endif
+```
