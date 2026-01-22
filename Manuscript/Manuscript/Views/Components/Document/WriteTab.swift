@@ -174,12 +174,26 @@ struct WriteTab: View {
     private func applyParagraphIndent(to attributedString: NSAttributedString) -> NSAttributedString {
         let mutable = NSMutableAttributedString(attributedString: attributedString)
         let fullRange = NSRange(location: 0, length: mutable.length)
+        guard fullRange.length > 0 else { return mutable }
 
-        mutable.enumerateAttribute(.paragraphStyle, in: fullRange, options: []) { value, range, _ in
-            let existingStyle = (value as? NSParagraphStyle) ?? NSParagraphStyle.default
-            let newStyle = existingStyle.mutableCopy() as! NSMutableParagraphStyle
+        // Process each paragraph separately to apply indent correctly
+        let string = mutable.string as NSString
+        var paragraphStart = 0
+
+        while paragraphStart < string.length {
+            // Find the paragraph range
+            let paragraphRange = string.paragraphRange(for: NSRange(location: paragraphStart, length: 0))
+
+            // Get existing paragraph style or create new one
+            let existingStyle = mutable.attribute(.paragraphStyle, at: paragraphRange.location, effectiveRange: nil) as? NSParagraphStyle
+            let newStyle = (existingStyle?.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
             newStyle.firstLineHeadIndent = CGFloat(paragraphIndentSize)
-            mutable.addAttribute(.paragraphStyle, value: newStyle, range: range)
+
+            // Apply the style to this paragraph
+            mutable.addAttribute(.paragraphStyle, value: newStyle, range: paragraphRange)
+
+            // Move to next paragraph
+            paragraphStart = paragraphRange.location + paragraphRange.length
         }
 
         return mutable
