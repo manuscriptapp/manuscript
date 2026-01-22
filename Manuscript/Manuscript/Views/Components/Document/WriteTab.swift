@@ -103,6 +103,11 @@ struct WriteTab: View {
             #if os(macOS)
             setupKeyMonitor()
             #endif
+
+            // Auto-focus the text editor after a short delay to ensure it's ready
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                focusTextEditor()
+            }
         }
         .onDisappear {
             // Save content when leaving the view
@@ -232,6 +237,18 @@ struct WriteTab: View {
         }
     }
     #endif
+
+    private func focusTextEditor() {
+        #if os(macOS)
+        if let textView = textViewRef {
+            textView.window?.makeFirstResponder(textView)
+        }
+        #else
+        if let textView = textViewRef {
+            textView.becomeFirstResponder()
+        }
+        #endif
+    }
 
     private func saveContent() {
         // Ensure the latest content from the editor is saved

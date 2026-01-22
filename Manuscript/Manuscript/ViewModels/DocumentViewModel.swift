@@ -237,6 +237,9 @@ class DocumentViewModel: ObservableObject {
         // Expand all ancestor folders and the parent folder to show the new folder
         expandToFolder(newFolder)
         setFolderExpanded(parentFolder, expanded: true)
+
+        // Auto-select the new folder
+        detailSelection = .folder(newFolder)
     }
 
     private func addFolderRecursively(to folder: ManuscriptFolder, parentId: UUID, newFolder: ManuscriptFolder) -> ManuscriptFolder {
@@ -343,7 +346,7 @@ class DocumentViewModel: ObservableObject {
             notes: notes,
             content: content,
             order: nextOrder,
-            colorName: "Yellow"
+            colorName: "Brown"
         )
 
         var doc = document
@@ -361,6 +364,9 @@ class DocumentViewModel: ObservableObject {
         // Expand all ancestor folders and the target folder to show the new document
         expandToDocument(newDoc)
         setFolderExpanded(folder, expanded: true)
+
+        // Auto-select the new document
+        detailSelection = .document(newDoc)
     }
 
     func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil, comments: [ManuscriptDocument.DocumentComment]? = nil) {

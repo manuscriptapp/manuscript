@@ -149,6 +149,14 @@ struct ManuscriptProjectView: View {
                     viewModel.saveExpandedFolderIds()
                 }
             }
+            .onChange(of: viewModel.detailSelection) { _, newSelection in
+                // Sync viewModel's selection to the view's selection (for auto-select on create)
+                if let newSelection = newSelection {
+                    detailSelection = newSelection
+                    // Clear the viewModel's selection after syncing to avoid repeated triggers
+                    viewModel.detailSelection = nil
+                }
+            }
             .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
                 TextField("Name", text: $viewModel.newItemName)
                 Button("Cancel", role: .cancel) { }

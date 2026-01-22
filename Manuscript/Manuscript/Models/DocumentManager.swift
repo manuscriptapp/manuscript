@@ -173,7 +173,7 @@ class DocumentManager: ObservableObject {
             notes: notes,
             content: content,
             order: nextOrder,
-            colorName: "Yellow"  // Default color
+            colorName: "Brown"  // Default color
         )
         
         var updatedFolder = folder
