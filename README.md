@@ -37,10 +37,20 @@ Think Scrivener or Ulysses, but free and open source.
 | AI assistance | ✅ | Text generation with custom API keys (OpenAI, Anthropic) |
 | State restoration | ✅ | Remembers last open document and expanded folders |
 | Paragraph formatting | ✅ | First-line indentation, line spacing |
-| Find & replace | 🔜 | Search and replace within documents |
-| Snapshots | 🔜 | Version history (infrastructure ready) |
+| Find & replace | ✅ | Search, highlight matches, navigate, replace single/all |
 | iCloud Drive sync | ✅ | Sync across devices via iCloud Drive |
+| Snapshots | 🔜 | Version history (infrastructure ready) |
+| Corkboard view | 🔜 | Index card view for visual organization |
+| Outliner view | 🔜 | Hierarchical outline with metadata columns |
+| Split editor | 🔜 | View two documents side-by-side |
+| Composition mode | 🔜 | Distraction-free full-screen writing |
+| Writing targets | 🔜 | Word count goals per document/project/session |
+| Compile presets | 🔜 | Save and reuse export configurations |
 | More export formats | 🔜 | DOCX, EPUB, HTML, LaTeX |
+| Trash folder | 🔜 | Recoverable deleted items |
+| Document links | 🔜 | Internal links between documents |
+| Keywords/tags | 🔜 | Tagging system for organization |
+| Collections | 🔜 | Saved searches and filtered views |
 
 ## Requirements
 
