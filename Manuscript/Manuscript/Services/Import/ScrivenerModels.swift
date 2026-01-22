@@ -147,11 +147,30 @@ struct ScrivenerTargets {
     let draftWordCount: Int?
     let sessionWordCount: Int?
     let deadline: Date?
+    let deadlineIgnored: Bool
+    let draftCountIncludedOnly: Bool
+    let sessionResetType: String?
+    let sessionResetTime: String?
+    let sessionAllowNegatives: Bool
 
-    init(draftWordCount: Int? = nil, sessionWordCount: Int? = nil, deadline: Date? = nil) {
+    init(
+        draftWordCount: Int? = nil,
+        sessionWordCount: Int? = nil,
+        deadline: Date? = nil,
+        deadlineIgnored: Bool = false,
+        draftCountIncludedOnly: Bool = true,
+        sessionResetType: String? = nil,
+        sessionResetTime: String? = nil,
+        sessionAllowNegatives: Bool = false
+    ) {
         self.draftWordCount = draftWordCount
         self.sessionWordCount = sessionWordCount
         self.deadline = deadline
+        self.deadlineIgnored = deadlineIgnored
+        self.draftCountIncludedOnly = draftCountIncludedOnly
+        self.sessionResetType = sessionResetType
+        self.sessionResetTime = sessionResetTime
+        self.sessionAllowNegatives = sessionAllowNegatives
     }
 }
 

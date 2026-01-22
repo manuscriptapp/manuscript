@@ -71,17 +71,43 @@ struct ManuscriptStatus: Identifiable, Codable, Equatable, Hashable {
     ]
 }
 
+// MARK: - Session Reset Type
+
+enum SessionResetType: String, Codable, CaseIterable {
+    case time = "Time"          // Reset at specific time
+    case midnight = "Midnight"  // Reset at midnight
+}
+
 // MARK: - Project Targets
 
 struct ManuscriptTargets: Codable, Equatable {
     var draftWordCount: Int?
     var draftDeadline: Date?
+    var draftDeadlineIgnored: Bool
+    var draftCountIncludedOnly: Bool
     var sessionWordCount: Int?
+    var sessionResetType: SessionResetType
+    var sessionResetTime: String?  // e.g., "00:00"
+    var sessionAllowNegatives: Bool
 
-    init(draftWordCount: Int? = nil, draftDeadline: Date? = nil, sessionWordCount: Int? = nil) {
+    init(
+        draftWordCount: Int? = nil,
+        draftDeadline: Date? = nil,
+        draftDeadlineIgnored: Bool = false,
+        draftCountIncludedOnly: Bool = true,
+        sessionWordCount: Int? = nil,
+        sessionResetType: SessionResetType = .midnight,
+        sessionResetTime: String? = nil,
+        sessionAllowNegatives: Bool = false
+    ) {
         self.draftWordCount = draftWordCount
         self.draftDeadline = draftDeadline
+        self.draftDeadlineIgnored = draftDeadlineIgnored
+        self.draftCountIncludedOnly = draftCountIncludedOnly
         self.sessionWordCount = sessionWordCount
+        self.sessionResetType = sessionResetType
+        self.sessionResetTime = sessionResetTime
+        self.sessionAllowNegatives = sessionAllowNegatives
     }
 }
 

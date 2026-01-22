@@ -43,6 +43,18 @@ struct ProjectOverview: View {
             .padding()
             .frame(maxWidth: 300)
 
+            // Writing Targets Summary
+            if viewModel.document.targets.draftWordCount != nil ||
+               viewModel.document.targets.sessionWordCount != nil {
+                CompactWritingTargetsView(
+                    targets: viewModel.document.targets,
+                    currentDraftWords: viewModel.document.rootFolder.totalWordCount,
+                    currentSessionWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0
+                )
+                .frame(maxWidth: 400)
+                .padding(.horizontal)
+            }
+
             // Writing History Summary
             if !viewModel.document.writingHistory.isEmpty {
                 CompactWritingHistoryView(writingHistory: viewModel.document.writingHistory)

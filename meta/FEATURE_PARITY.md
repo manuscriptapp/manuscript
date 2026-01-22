@@ -116,9 +116,9 @@ Manuscript vs Scrivener vs Ulysses.
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
 | Document targets | ✅ | ✅ | ⚡ Data only |
-| Project targets | ✅ | ✅ | ⚡ Data only |
-| Session targets | ✅ | ✅ | ⚡ Data only |
-| Deadline tracking | ✅ | ✅ | ⚡ Data only |
+| Project targets | ✅ | ✅ | ✅ |
+| Session targets | ✅ | ✅ | ✅ |
+| Deadline tracking | ✅ | ✅ | ✅ |
 | Writing history | ✅ | ✅ | ✅ |
 | Statistics | ✅ | ✅ | ✅ |
 

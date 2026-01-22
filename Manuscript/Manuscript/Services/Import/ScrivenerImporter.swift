@@ -179,10 +179,23 @@ final class ScrivenerImporter {
 
         // 7. Map targets
         if let targets = scrivProject.targets {
+            // Map Scrivener reset type to our enum
+            let resetType: SessionResetType
+            if let scrivResetType = targets.sessionResetType?.lowercased() {
+                resetType = scrivResetType == "time" ? .time : .midnight
+            } else {
+                resetType = .midnight
+            }
+
             manuscript.targets = ManuscriptTargets(
                 draftWordCount: targets.draftWordCount,
                 draftDeadline: targets.deadline,
-                sessionWordCount: targets.sessionWordCount
+                draftDeadlineIgnored: targets.deadlineIgnored,
+                draftCountIncludedOnly: targets.draftCountIncludedOnly,
+                sessionWordCount: targets.sessionWordCount,
+                sessionResetType: resetType,
+                sessionResetTime: targets.sessionResetTime,
+                sessionAllowNegatives: targets.sessionAllowNegatives
             )
         }
 

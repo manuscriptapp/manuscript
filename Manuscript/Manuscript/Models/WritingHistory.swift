@@ -80,6 +80,12 @@ struct WritingHistory: Codable, Equatable {
         entries.max { $0.wordsWritten < $1.wordsWritten }
     }
 
+    /// Today's writing entry (if exists)
+    var todayEntry: WritingHistoryEntry? {
+        let calendar = Calendar.current
+        return entries.first { calendar.isDateInToday($0.date) }
+    }
+
     /// Current writing streak (consecutive days)
     var currentStreak: Int {
         guard !entries.isEmpty else { return 0 }

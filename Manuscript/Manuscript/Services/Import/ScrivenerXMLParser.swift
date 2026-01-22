@@ -13,6 +13,16 @@ final class ScrivenerXMLParser: NSObject {
     private var draftTarget: Int?
     private var sessionTarget: Int?
 
+    // Draft target attributes
+    private var draftDeadline: Date?
+    private var draftDeadlineIgnored: Bool = false
+    private var draftCountIncludedOnly: Bool = true
+
+    // Session target attributes
+    private var sessionResetType: String?
+    private var sessionResetTime: String?
+    private var sessionAllowNegatives: Bool = false
+
     // Parsing state
     private var currentElement = ""
     private var currentText = ""
@@ -83,7 +93,12 @@ final class ScrivenerXMLParser: NSObject {
             targets: ScrivenerTargets(
                 draftWordCount: draftTarget,
                 sessionWordCount: sessionTarget,
-                deadline: nil
+                deadline: draftDeadline,
+                deadlineIgnored: draftDeadlineIgnored,
+                draftCountIncludedOnly: draftCountIncludedOnly,
+                sessionResetType: sessionResetType,
+                sessionResetTime: sessionResetTime,
+                sessionAllowNegatives: sessionAllowNegatives
             ),
             customMetadata: []
         )
@@ -98,6 +113,12 @@ final class ScrivenerXMLParser: NSObject {
         statuses = []
         draftTarget = nil
         sessionTarget = nil
+        draftDeadline = nil
+        draftDeadlineIgnored = false
+        draftCountIncludedOnly = true
+        sessionResetType = nil
+        sessionResetTime = nil
+        sessionAllowNegatives = false
         currentElement = ""
         currentText = ""
         itemStack = []
@@ -188,6 +209,33 @@ extension ScrivenerXMLParser: XMLParserDelegate {
 
         case "ProjectTargets":
             inProjectTargets = true
+
+        case "DraftTarget":
+            if inProjectTargets {
+                // Parse DraftTarget attributes
+                // Deadline="2025-04-12 17:00:59 +0200"
+                if let deadlineStr = attributeDict["Deadline"] {
+                    draftDeadline = parseDate(deadlineStr)
+                }
+                // IgnoreDeadline="Yes"
+                let ignoreDeadline = attributeDict["IgnoreDeadline"]?.lowercased()
+                draftDeadlineIgnored = (ignoreDeadline == "yes" || ignoreDeadline == "true")
+                // CountIncludedOnly="Yes"
+                let countIncluded = attributeDict["CountIncludedOnly"]?.lowercased()
+                draftCountIncludedOnly = (countIncluded == "yes" || countIncluded == "true" || countIncluded == nil)
+            }
+
+        case "SessionTarget":
+            if inProjectTargets {
+                // Parse SessionTarget attributes
+                // ResetType="Time"
+                sessionResetType = attributeDict["ResetType"]
+                // ResetTime="00:00"
+                sessionResetTime = attributeDict["ResetTime"]
+                // AllowNegatives="Yes"
+                let allowNegatives = attributeDict["AllowNegatives"]?.lowercased()
+                sessionAllowNegatives = (allowNegatives == "yes" || allowNegatives == "true")
+            }
 
         case "BinderItem":
             // Start a new binder item
