@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 struct AddFolderSheet: View {
     @ObservedObject var viewModel: DocumentViewModel
@@ -12,8 +11,26 @@ struct AddFolderSheet: View {
         self._selectedFolder = State(initialValue: initialFolder ?? viewModel.document.rootFolder)
     }
 
+    var body: some View {
+        SheetForm(
+            title: "Add Folder",
+            cancelAction: { dismiss() },
+            confirmAction: {
+                viewModel.addFolder(to: selectedFolder, title: title)
+                dismiss()
+            },
+            isConfirmDisabled: title.isEmpty
+        ) {
+            SheetTextField("Title", text: $title, placeholder: "Folder Title")
+
+            SheetPicker(label: "Parent Folder", selection: $selectedFolder) {
+                folderPickerContent(viewModel.document.rootFolder)
+            }
+        }
+    }
+
     @ViewBuilder
-    func folderPickerContent(_ folder: ManuscriptFolder, level: Int = 0) -> AnyView {
+    private func folderPickerContent(_ folder: ManuscriptFolder, level: Int = 0) -> AnyView {
         AnyView(
             Group {
                 HStack {
@@ -23,44 +40,11 @@ struct AddFolderSheet: View {
                 }
                 .padding(.leading, CGFloat(level * 20))
                 .tag(folder)
-                
+
                 ForEach(folder.subfolders) { subfolder in
                     folderPickerContent(subfolder, level: level + 1)
                 }
             }
         )
     }
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                TextField("Folder Title", text: $title)
-                
-                Section("Location") {
-                    Picker("Parent Folder", selection: $selectedFolder) {
-                        folderPickerContent(viewModel.document.rootFolder)
-                    }
-                    .pickerStyle(.menu)
-                }
-            }
-            .navigationTitle("Add Folder")
-            
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
-                        viewModel.addFolder(to: selectedFolder, title: title)
-                        dismiss()
-                    }
-                    .disabled(title.isEmpty)
-                }
-            }
-        }
-        .presentationBackground(.regularMaterial)
-    }
 }
-
