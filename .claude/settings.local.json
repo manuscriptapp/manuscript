@@ -108,7 +108,9 @@
       "WebFetch(domain:onmyway133.com)",
       "Bash(git revert:*)",
       "WebFetch(domain:swiftwithmajid.com)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(tree:*)",
+      "WebFetch(domain:exploreswiftui.com)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"
