@@ -1,11 +1,16 @@
 import SwiftUI
 import RichTextKit
+#if os(iOS)
+import UIKit
+#endif
 
 struct NotesTab: View {
     @ObservedObject var viewModel: DocumentDetailViewModel
     @StateObject private var richTextContext = RichTextContext()
-    @State private var isFormattingPalettePresented = false
     @State private var hasInitialized = false
+    #if os(iOS)
+    @State private var textViewRef: UITextView? = nil
+    #endif
 
     var body: some View {
         VStack(spacing: 0) {
@@ -37,6 +42,13 @@ struct NotesTab: View {
                         nsTextView.enclosingScrollView?.drawsBackground = false
                         nsTextView.enclosingScrollView?.backgroundColor = .clear
                     }
+                    #else
+                    if let uiTextView = textView as? UITextView {
+                        DispatchQueue.main.async {
+                            textViewRef = uiTextView
+                            setupKeyboardToolbar(for: uiTextView)
+                        }
+                    }
                     #endif
                 }
             )
@@ -45,41 +57,6 @@ struct NotesTab: View {
             .background(.clear)
             .scrollContentBackground(.hidden)
             .padding()
-
-            #if os(iOS)
-            // iOS: Minimal toolbar at the bottom
-            VStack(spacing: 0) {
-                Divider()
-                HStack(spacing: 16) {
-                    // Quick style buttons
-                    Button {
-                        richTextContext.toggleStyle(.bold)
-                    } label: {
-                        Image(systemName: "bold")
-                            .foregroundStyle(richTextContext.hasStyle(.bold) ? Color.accentColor : Color.primary)
-                    }
-
-                    Button {
-                        richTextContext.toggleStyle(.italic)
-                    } label: {
-                        Image(systemName: "italic")
-                            .foregroundStyle(richTextContext.hasStyle(.italic) ? Color.accentColor : Color.primary)
-                    }
-
-                    Spacer()
-
-                    Button {
-                        isFormattingPalettePresented = true
-                    } label: {
-                        Image(systemName: "textformat")
-                            .font(.title3)
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(.ultraThinMaterial)
-            }
-            #endif
         }
         .onAppear {
             if !hasInitialized {
@@ -94,11 +71,6 @@ struct NotesTab: View {
         .onChange(of: richTextContext.attributedString) { _, newValue in
             viewModel.attributedNotes = newValue
         }
-        #if os(iOS)
-        .sheet(isPresented: $isFormattingPalettePresented) {
-            FormattingPalette(context: richTextContext)
-        }
-        #endif
     }
 
     private func setupContext() {
@@ -115,6 +87,18 @@ struct NotesTab: View {
         viewModel.attributedNotes = richTextContext.attributedString
         viewModel.saveChanges()
     }
+
+    // MARK: - iOS Keyboard Toolbar
+
+    #if os(iOS)
+    private func setupKeyboardToolbar(for textView: UITextView) {
+        let toolbar = KeyboardToolbarView(context: richTextContext)
+        let hostingController = UIHostingController(rootView: toolbar)
+        hostingController.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44)
+        hostingController.view.backgroundColor = .secondarySystemBackground
+        textView.inputAccessoryView = hostingController.view
+    }
+    #endif
 }
 
 #if DEBUG

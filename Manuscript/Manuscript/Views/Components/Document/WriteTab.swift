@@ -9,7 +9,6 @@ import AppKit
 struct WriteTab: View {
     @ObservedObject var viewModel: DocumentDetailViewModel
     @StateObject private var richTextContext = RichTextContext()
-    @State private var isFormattingPalettePresented = false
     @State private var hasInitialized = false
 
     #if os(macOS)
@@ -67,6 +66,7 @@ struct WriteTab: View {
                         if let uiTextView = textView as? UITextView {
                             DispatchQueue.main.async {
                                 textViewRef = uiTextView
+                                setupKeyboardToolbar(for: uiTextView)
                             }
                         }
                         #endif
@@ -85,24 +85,6 @@ struct WriteTab: View {
                 #endif
             }
 
-            #if os(iOS)
-            VStack(spacing: 0) {
-                Divider()
-                HStack {
-                    FormattingToolbar(context: richTextContext)
-                    Spacer()
-                    Button {
-                        isFormattingPalettePresented = true
-                    } label: {
-                        Image(systemName: "textformat")
-                            .font(.title3)
-                    }
-                    .padding(.trailing, 12)
-                }
-                .padding(.vertical, 4)
-                .background(.ultraThinMaterial)
-            }
-            #endif
         }
         .onAppear {
             if !hasInitialized {
@@ -147,11 +129,6 @@ struct WriteTab: View {
         .onChange(of: viewModel.tappedComment) { _, tappedComment in
             scrollToComment(tappedComment)
         }
-        #if os(iOS)
-        .sheet(isPresented: $isFormattingPalettePresented) {
-            FormattingPalette(context: richTextContext)
-        }
-        #endif
     }
 
     // MARK: - Setup
@@ -415,6 +392,18 @@ struct WriteTab: View {
             #endif
         }
     }
+
+    // MARK: - iOS Keyboard Toolbar
+
+    #if os(iOS)
+    private func setupKeyboardToolbar(for textView: UITextView) {
+        let toolbar = KeyboardToolbarView(context: richTextContext)
+        let hostingController = UIHostingController(rootView: toolbar)
+        hostingController.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44)
+        hostingController.view.backgroundColor = .secondarySystemBackground
+        textView.inputAccessoryView = hostingController.view
+    }
+    #endif
 }
 
 #if DEBUG
