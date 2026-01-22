@@ -12,24 +12,28 @@ A native SwiftUI writing app with:
 
 - **Free forever** — No purchase, no subscription
 - **Open source** — MPL-2.0 licensed, full source code available
-- **iCloud sync** — CloudKit sync across all Apple devices, no account required
-- **On-device AI** — Apple Foundation Models integration, plus bring-your-own API keys
 - **Standard files** — Markdown-based format, portable and future-proof
+- **AI assistance** — Bring-your-own API keys for text generation
+- **Scrivener import** — Migrate your existing projects with full history
 
 Think Scrivener or Ulysses, but free and open source.
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| Project organization | Binder sidebar with chapters, scenes, notes, research |
-| Markdown editing | Standard Markdown files |
-| Snapshots | Automatic version history |
-| Split editor | View two documents side by side |
-| Composition mode | Distraction-free fullscreen |
-| Export | PDF, DOCX, EPUB, HTML, LaTeX, Fountain |
-| CloudKit sync | Free sync across iOS and macOS |
-| AI assistance | Apple Foundation Models + custom API keys |
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Project organization | ✅ | Binder sidebar with folders, documents, drag-and-drop |
+| Markdown editing | ✅ | Tabbed editor with Write, Outline, Notes, and Read views |
+| Document customization | ✅ | Custom icons and colors for folders and documents |
+| Characters & Locations | ✅ | World-building with character/location tracking |
+| Writing statistics | ✅ | Word counts, daily history, streaks, session tracking |
+| Templates | ✅ | Hero's Journey and other project templates |
+| Scrivener import | ✅ | Full .scriv import with history and snapshots |
+| Export | ✅ | PDF and Markdown export |
+| AI assistance | ✅ | Text generation with custom API keys |
+| Snapshots | 🔜 | Version history (infrastructure ready) |
+| CloudKit sync | 🔜 | iCloud sync across devices |
+| More export formats | 🔜 | DOCX, EPUB, HTML, LaTeX |
 
 ## Requirements
 
@@ -71,38 +75,46 @@ MyNovel.manuscript/
 | Open source | Yes | No | No |
 | Native app | SwiftUI | AppKit | AppKit |
 | File format | Markdown | Proprietary | Markdown |
-| Free cloud sync | CloudKit | No | No |
-| On-device AI | Yes | No | Paid |
+| Scrivener import | Yes | — | No |
+| AI assistance | BYOK | No | Paid |
 
 ## Roadmap
 
-**Phase 1: Foundation**
-- [ ] Core Markdown editor
-- [ ] Project binder
-- [ ] macOS app
+**Phase 1: Foundation** ✅
+- [x] Core Markdown editor
+- [x] Project binder with sidebar
+- [x] macOS app
+- [x] iOS app
 
-**Phase 2: Core**
-- [ ] iOS app
-- [ ] Split editor
-- [ ] Snapshots
-- [ ] Composition mode
+**Phase 2: Writing Experience** ✅
+- [x] Tabbed editing (Write, Outline, Notes, Read)
+- [x] Document and folder customization (icons, colors)
+- [x] Writing statistics and history tracking
+- [x] Project templates (Hero's Journey)
 
-**Phase 3: Organization**
-- [ ] Cork board
-- [ ] Outliner
-- [ ] Labels and status
-- [ ] Search
+**Phase 3: World-Building** ✅
+- [x] Character management
+- [x] Location tracking
+- [x] Document-to-character/location linking
 
-**Phase 4: Sync & Export**
+**Phase 4: Import & Export** (In Progress)
+- [x] Scrivener .scriv import (with history and snapshots)
+- [x] PDF export
+- [x] Markdown export
+- [ ] DOCX, EPUB, HTML, LaTeX export
+
+**Phase 5: AI Integration** ✅
+- [x] AI text generation service
+- [x] Custom API key support
+- [x] Chapter generation and rewriting assistance
+
+**Phase 6: Advanced** (Planned)
+- [ ] Split editor (side-by-side documents)
+- [ ] Composition mode (distraction-free)
+- [ ] Cork board view
+- [ ] Outliner view
 - [ ] CloudKit sync
-- [ ] Compile/export
-- [ ] Import from Scrivener
-
-**Phase 5: Advanced**
-- [ ] Research folder
-- [ ] Writing statistics
-- [ ] Apple Foundation Models
-- [ ] Custom AI APIs
+- [ ] Version comparison for snapshots
 
 ## Contributing
 
