@@ -282,8 +282,6 @@ struct ManuscriptApp: App {
     #if os(iOS)
     @State private var templateContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @State private var isTemplatePickerPresented = false
-    @State private var isSettingsPresented = false
-    @State private var isHowItWorksPresented = false
     #endif
 
     init() {
@@ -398,52 +396,6 @@ struct ManuscriptApp: App {
                     y: geometry.titleViewFrame.minY + 10
                 )
 
-            // Bottom buttons row - Settings and How It Works
-            HStack(spacing: 24) {
-                Button {
-                    isSettingsPresented = true
-                } label: {
-                    Label("Settings", systemImage: "gear")
-                        .font(.subheadline)
-                        .foregroundStyle(Color(red: 0.45, green: 0.35, blue: 0.25))
-                }
-
-                Button {
-                    isHowItWorksPresented = true
-                } label: {
-                    Label("How It Works", systemImage: "questionmark.circle")
-                        .font(.subheadline)
-                        .foregroundStyle(Color(red: 0.45, green: 0.35, blue: 0.25))
-                }
-            }
-            .position(
-                x: geometry.titleViewFrame.midX,
-                y: geometry.titleViewFrame.maxY + 100
-            )
-        }
-        .sheet(isPresented: $isSettingsPresented) {
-            NavigationStack {
-                SettingsView()
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") {
-                                isSettingsPresented = false
-                            }
-                        }
-                    }
-            }
-        }
-        .sheet(isPresented: $isHowItWorksPresented) {
-            NavigationStack {
-                HowItWorksView()
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") {
-                                isHowItWorksPresented = false
-                            }
-                        }
-                    }
-            }
         }
         #endif
 
