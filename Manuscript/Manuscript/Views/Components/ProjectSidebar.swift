@@ -318,6 +318,11 @@ struct ProjectSidebar: View {
         } message: {
             Text("Enter new name")
         }
+        .alert("Snapshot Created", isPresented: $viewModel.showSnapshotConfirmation) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("A snapshot of \"\(viewModel.lastSnapshotDocumentTitle)\" has been saved. View it in the Snapshots tab of the document inspector.")
+        }
     }
 
     /// Creates a new untitled document in the currently selected folder, or root folder if none selected

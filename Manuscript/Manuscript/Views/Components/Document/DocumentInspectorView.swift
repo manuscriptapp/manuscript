@@ -325,12 +325,19 @@ struct DocumentInspectorView: View {
                 }
                 .tag(1)
 
+            // Snapshots Tab
+            SnapshotsTabView(document: document, documentViewModel: documentViewModel)
+                .tabItem {
+                    Label("Snapshots", systemImage: "clock.arrow.circlepath")
+                }
+                .tag(2)
+
             // Details Tab (now includes Notes)
             detailsTab
                 .tabItem {
                     Label("Details", systemImage: "doc.text")
                 }
-                .tag(2)
+                .tag(3)
         }
         .padding(.top)
         #if os(macOS)

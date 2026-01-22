@@ -44,6 +44,9 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // Project UI state (selected document, expanded folders, etc.)
     var projectState: ProjectState
 
+    // Document snapshots
+    var documentSnapshots: [DocumentSnapshot] = []
+
     // Required for FileDocument
     // Include .package and .folder as fallbacks for when custom UTType isn't registered (e.g., running from Xcode)
     // .folder is needed because macOS may identify .manuscript directories as folders rather than packages
@@ -161,6 +164,11 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         if let trashWrapper = children["trash"] {
             self.trashFolder = try Self.readFolder(from: trashWrapper, type: .trash)
         }
+
+        // Read snapshots
+        if let snapshotsWrapper = children["snapshots"], snapshotsWrapper.isDirectory {
+            self.documentSnapshots = Self.readSnapshots(from: snapshotsWrapper)
+        }
     }
 
     private static func readFolder(from fileWrapper: FileWrapper, type: ManuscriptFolderType) throws -> ManuscriptFolder {
@@ -272,6 +280,33 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         return folder
     }
 
+    private static func readSnapshots(from fileWrapper: FileWrapper) -> [DocumentSnapshot] {
+        guard let children = fileWrapper.fileWrappers else { return [] }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        var allSnapshots: [DocumentSnapshot] = []
+
+        // Iterate through document ID folders
+        for (_, docFolderWrapper) in children {
+            guard docFolderWrapper.isDirectory,
+                  let docSnapshots = docFolderWrapper.fileWrappers else { continue }
+
+            // Read each snapshot JSON file
+            for (filename, snapshotWrapper) in docSnapshots {
+                guard filename.hasSuffix(".json"),
+                      let data = snapshotWrapper.regularFileContents else { continue }
+
+                if let snapshot = try? decoder.decode(DocumentSnapshot.self, from: data) {
+                    allSnapshots.append(snapshot)
+                }
+            }
+        }
+
+        return allSnapshots
+    }
+
     private static func extractContentFromMarkdown(_ markdown: String) -> String {
         // Remove YAML frontmatter if present
         if markdown.hasPrefix("---") {
@@ -353,7 +388,8 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         assetsWrapper.preferredFilename = "assets"
         rootWrapper.addFileWrapper(assetsWrapper)
 
-        let snapshotsWrapper = FileWrapper(directoryWithFileWrappers: [:])
+        // Create snapshots directory with actual snapshot data
+        let snapshotsWrapper = try createSnapshotsWrapper()
         snapshotsWrapper.preferredFilename = "snapshots"
         rootWrapper.addFileWrapper(snapshotsWrapper)
 
@@ -466,6 +502,34 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         folderWrapper.addRegularFile(withContents: folderJsonData, preferredFilename: "folder.json")
 
         return folderWrapper
+    }
+
+    private func createSnapshotsWrapper() throws -> FileWrapper {
+        let snapshotsWrapper = FileWrapper(directoryWithFileWrappers: [:])
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+
+        // Group snapshots by documentId
+        let groupedSnapshots = Dictionary(grouping: documentSnapshots) { $0.documentId }
+
+        for (documentId, snapshots) in groupedSnapshots {
+            let docFolderWrapper = FileWrapper(directoryWithFileWrappers: [:])
+            docFolderWrapper.preferredFilename = documentId.uuidString
+
+            for snapshot in snapshots {
+                let snapshotData = try encoder.encode(snapshot)
+                docFolderWrapper.addRegularFile(
+                    withContents: snapshotData,
+                    preferredFilename: "\(snapshot.id.uuidString).json"
+                )
+            }
+
+            snapshotsWrapper.addFileWrapper(docFolderWrapper)
+        }
+
+        return snapshotsWrapper
     }
 
     private func createMarkdownContent(for document: ManuscriptDocument.Document) -> String {

@@ -167,6 +167,14 @@ struct DocumentItemView: View {
             Divider()
 
             Button(action: {
+                viewModel.takeSnapshotOfDocument(document)
+            }) {
+                Label("Take Snapshot", systemImage: "camera.circle")
+            }
+
+            Divider()
+
+            Button(action: {
                 viewModel.showRenameAlert(for: document)
             }) {
                 Label("Rename Document", systemImage: "pencil")
@@ -223,6 +231,14 @@ struct DocumentItemView: View {
                                 }
                             }
                         }
+                    }
+
+                    Divider()
+
+                    Button(action: {
+                        viewModel.takeSnapshotOfDocument(document)
+                    }) {
+                        Label("Take Snapshot", systemImage: "camera.circle")
                     }
 
                     Divider()

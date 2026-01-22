@@ -27,6 +27,11 @@ class DocumentViewModel: ObservableObject {
     // Inline editing state for sidebar items
     @Published var documentIdBeingRenamed: UUID?
 
+    // Snapshot feedback
+    @Published var showSnapshotConfirmation: Bool = false
+    @Published var lastSnapshotDocumentTitle: String = ""
+    @Published var snapshotUpdateTrigger: Int = 0
+
     private var itemToRename: Any?
 
     // Reference to the document binding - set by the view
@@ -779,5 +784,63 @@ class DocumentViewModel: ObservableObject {
             break
         }
         itemToRename = nil
+    }
+
+    // MARK: - Snapshot Management
+
+    /// Take a snapshot of a document
+    func takeSnapshotOfDocument(_ doc: ManuscriptDocument.Document, title: String? = nil, type: DocumentSnapshot.SnapshotType = .manual) {
+        let snapshot = DocumentSnapshot(
+            documentId: doc.id,
+            title: title,
+            snapshotType: type,
+            content: doc.content,
+            notes: doc.notes,
+            outline: doc.outline
+        )
+        addSnapshot(snapshot)
+
+        // Show confirmation feedback
+        lastSnapshotDocumentTitle = doc.title.isEmpty ? "Untitled Document" : doc.title
+        showSnapshotConfirmation = true
+    }
+
+    /// Add a snapshot to the document
+    func addSnapshot(_ snapshot: DocumentSnapshot) {
+        var doc = document
+        doc.documentSnapshots.append(snapshot)
+        document = doc
+
+        // Force UI update by incrementing trigger
+        snapshotUpdateTrigger += 1
+    }
+
+    /// Remove a snapshot from the document
+    func removeSnapshot(_ snapshot: DocumentSnapshot) {
+        var doc = document
+        doc.documentSnapshots.removeAll { $0.id == snapshot.id }
+        document = doc
+
+        // Force UI update by incrementing trigger
+        snapshotUpdateTrigger += 1
+    }
+
+    /// Get all snapshots for a specific document, sorted by date (newest first)
+    func snapshotsForDocument(_ documentId: UUID) -> [DocumentSnapshot] {
+        document.documentSnapshots
+            .filter { $0.documentId == documentId }
+            .sorted { $0.timestamp > $1.timestamp }
+    }
+
+    /// Restore a document from a snapshot
+    func restoreFromSnapshot(_ snapshot: DocumentSnapshot) {
+        guard let doc = findDocument(withId: snapshot.documentId) else { return }
+
+        updateDocument(
+            doc,
+            outline: snapshot.outline,
+            notes: snapshot.notes,
+            content: snapshot.content
+        )
     }
 }
