@@ -30,12 +30,16 @@ struct ProjectState: Codable, Equatable {
     /// Text selection length (0 for just a cursor position)
     var textSelectionLength: Int?
 
+    /// Split editor state (whether split is enabled, orientation, secondary document)
+    var splitEditorState: SplitEditorState = SplitEditorState()
+
     init() {
         self.selectionType = nil
         self.selectedItemId = nil
         self.expandedFolderIds = []
         self.textSelectionOffset = nil
         self.textSelectionLength = nil
+        self.splitEditorState = SplitEditorState()
     }
 
     init(
@@ -43,19 +47,22 @@ struct ProjectState: Codable, Equatable {
         selectedItemId: UUID?,
         expandedFolderIds: [UUID],
         textSelectionOffset: Int? = nil,
-        textSelectionLength: Int? = nil
+        textSelectionLength: Int? = nil,
+        splitEditorState: SplitEditorState = SplitEditorState()
     ) {
         self.selectionType = selectionType
         self.selectedItemId = selectedItemId
         self.expandedFolderIds = expandedFolderIds
         self.textSelectionOffset = textSelectionOffset
         self.textSelectionLength = textSelectionLength
+        self.splitEditorState = splitEditorState
     }
 
     /// Creates a ProjectState from a DetailSelection
-    static func from(selection: DetailSelection?, expandedFolderIds: Set<UUID>) -> ProjectState {
+    static func from(selection: DetailSelection?, expandedFolderIds: Set<UUID>, splitEditorState: SplitEditorState = SplitEditorState()) -> ProjectState {
         var state = ProjectState()
         state.expandedFolderIds = Array(expandedFolderIds)
+        state.splitEditorState = splitEditorState
 
         guard let selection = selection else {
             return state

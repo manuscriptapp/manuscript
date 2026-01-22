@@ -5,6 +5,7 @@ struct DetailContentView: View {
     @ObservedObject var viewModel: DocumentViewModel
     @Binding var selection: DetailSelection?
     let fileURL: URL?
+    @Binding var splitEditorState: SplitEditorState
 
     var body: some View {
         if let currentSelection = selection {
@@ -29,11 +30,21 @@ struct DetailContentView: View {
             // Look up fresh document from view model to get latest content
             // Use .id() to force SwiftUI to create a new view when document changes
             if let freshDocument = viewModel.findDocument(withId: document.id) {
-                DocumentDetailView(document: freshDocument, viewModel: viewModel, fileURL: fileURL)
-                    .id(freshDocument.id)
+                SplitEditorContainerView(
+                    primaryDocument: freshDocument,
+                    viewModel: viewModel,
+                    fileURL: fileURL,
+                    splitEditorState: $splitEditorState
+                )
+                .id(freshDocument.id)
             } else {
-                DocumentDetailView(document: document, viewModel: viewModel, fileURL: fileURL)
-                    .id(document.id)
+                SplitEditorContainerView(
+                    primaryDocument: document,
+                    viewModel: viewModel,
+                    fileURL: fileURL,
+                    splitEditorState: $splitEditorState
+                )
+                .id(document.id)
             }
         case .character(let character):
             CharacterDetailView(character: character, viewModel: viewModel)
@@ -46,10 +57,12 @@ struct DetailContentView: View {
 #if DEBUG
 #Preview {
     @Previewable @State var selection: DetailSelection? = .projectInfo
+    @Previewable @State var splitState = SplitEditorState()
     DetailContentView(
         viewModel: DocumentViewModel(),
         selection: $selection,
-        fileURL: nil
+        fileURL: nil,
+        splitEditorState: $splitState
     )
 }
 #endif

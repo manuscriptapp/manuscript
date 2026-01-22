@@ -77,6 +77,7 @@ struct ManuscriptProjectView: View {
     @State private var showSettings = false
     @State private var showReadingMode = false
     @State private var hasRestoredState = false
+    @State private var splitEditorState = SplitEditorState()
 
     var body: some View {
         mainContent
@@ -150,6 +151,12 @@ struct ManuscriptProjectView: View {
                     viewModel.saveExpandedFolderIds()
                 }
             }
+            .onChange(of: splitEditorState) { _, newState in
+                // Save split editor state when it changes (debounced)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    viewModel.saveSplitEditorState(newState)
+                }
+            }
             .onChange(of: viewModel.detailSelection) { _, newSelection in
                 // Sync viewModel's selection to the view's selection (for auto-select on create)
                 if let newSelection = newSelection {
@@ -187,7 +194,8 @@ struct ManuscriptProjectView: View {
                 DetailContentView(
                     viewModel: viewModel,
                     selection: .constant(selection),
-                    fileURL: fileURL
+                    fileURL: fileURL,
+                    splitEditorState: $splitEditorState
                 )
             }
         }
@@ -208,7 +216,8 @@ struct ManuscriptProjectView: View {
                 DetailContentView(
                     viewModel: viewModel,
                     selection: $detailSelection,
-                    fileURL: fileURL
+                    fileURL: fileURL,
+                    splitEditorState: $splitEditorState
                 )
             } else {
                 ProjectOverview(viewModel: viewModel)
@@ -242,6 +251,9 @@ struct ManuscriptProjectView: View {
                 }
                 detailSelection = savedSelection
             }
+
+            // Restore split editor state
+            splitEditorState = viewModel.getSavedSplitEditorState()
         }
     }
 }

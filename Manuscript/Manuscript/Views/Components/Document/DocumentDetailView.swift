@@ -14,11 +14,13 @@ struct DocumentDetailView: View {
     let document: ManuscriptDocument.Document
     @ObservedObject var viewModel: DocumentViewModel
     let fileURL: URL?
+    @Binding var splitEditorState: SplitEditorState
 
-    init(document: ManuscriptDocument.Document, viewModel: DocumentViewModel, fileURL: URL? = nil) {
+    init(document: ManuscriptDocument.Document, viewModel: DocumentViewModel, fileURL: URL? = nil, splitEditorState: Binding<SplitEditorState>? = nil) {
         self.document = document
         self.viewModel = viewModel
         self.fileURL = fileURL
+        self._splitEditorState = splitEditorState ?? .constant(SplitEditorState())
         self._detailViewModel = StateObject(wrappedValue: DocumentDetailViewModel(document: document, documentViewModel: viewModel))
     }
 
@@ -204,6 +206,11 @@ struct DocumentDetailView: View {
 
     private var moreMenu: some View {
         Menu {
+            // Split View section
+            splitViewMenuSection
+
+            Divider()
+
             Button {
                 // TODO: Implement share functionality
             } label: {
@@ -258,6 +265,95 @@ struct DocumentDetailView: View {
         }
     }
 
+    @ViewBuilder
+    private var splitViewMenuSection: some View {
+        if splitEditorState.isEnabled {
+            // Close split view option
+            Button {
+                splitEditorState.isEnabled = false
+                splitEditorState.secondaryDocumentId = nil
+            } label: {
+                Label("Close Split View", systemImage: "rectangle")
+            }
+
+            #if os(macOS)
+            // Orientation picker (macOS only)
+            Menu {
+                ForEach(SplitEditorState.SplitOrientation.allCases, id: \.self) { orientation in
+                    Button {
+                        splitEditorState.orientation = orientation
+                    } label: {
+                        HStack {
+                            Label(orientation.displayName, systemImage: orientation.systemImage)
+                            if splitEditorState.orientation == orientation {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Label("Split Orientation", systemImage: splitEditorState.orientation.systemImage)
+            }
+            #endif
+
+            // Change secondary document
+            Menu {
+                ForEach(availableDocumentsForSplit, id: \.id) { doc in
+                    Button {
+                        splitEditorState.secondaryDocumentId = doc.id
+                    } label: {
+                        HStack {
+                            Text(doc.title.isEmpty ? "Untitled" : doc.title)
+                            if splitEditorState.secondaryDocumentId == doc.id {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Label("Change Split Document", systemImage: "doc.on.doc")
+            }
+        } else {
+            // Open in split view
+            Menu {
+                ForEach(availableDocumentsForSplit, id: \.id) { doc in
+                    Button {
+                        openInSplitView(doc)
+                    } label: {
+                        Text(doc.title.isEmpty ? "Untitled" : doc.title)
+                    }
+                }
+
+                if availableDocumentsForSplit.isEmpty {
+                    Text("No other documents available")
+                        .foregroundStyle(.secondary)
+                }
+            } label: {
+                #if os(iOS)
+                Label("Open in Split View", systemImage: "rectangle.split.1x2")
+                #else
+                Label("Open in Split View", systemImage: "rectangle.split.2x1")
+                #endif
+            }
+            .disabled(availableDocumentsForSplit.isEmpty)
+        }
+    }
+
+    /// Documents available for split view (excludes current document)
+    private var availableDocumentsForSplit: [ManuscriptDocument.Document] {
+        viewModel.getAllDocuments().filter { $0.id != document.id }
+    }
+
+    /// Opens the specified document in split view
+    private func openInSplitView(_ targetDocument: ManuscriptDocument.Document) {
+        splitEditorState.secondaryDocumentId = targetDocument.id
+        splitEditorState.isEnabled = true
+        #if os(iOS)
+        // iOS always uses vertical split
+        splitEditorState.orientation = .vertical
+        #endif
+    }
+
     private var readModeView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -282,13 +378,15 @@ struct DocumentDetailView: View {
 
 #if DEBUG
 struct DocumentDetailViewPreview: PreviewProvider {
+    @State static var splitState = SplitEditorState()
+
     static var previews: some View {
         var document = ManuscriptDocument()
         document.title = "Sample Project"
         document.author = "Sample Author"
         let docItem = ManuscriptDocument.Document(id: UUID(), title: "Sample Document", notes: "Sample notes", content: "Sample content")
 
-        return DocumentDetailView(document: docItem, viewModel: DocumentViewModel())
+        return DocumentDetailView(document: docItem, viewModel: DocumentViewModel(), splitEditorState: $splitState)
     }
 }
 #endif

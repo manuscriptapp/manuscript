@@ -89,6 +89,31 @@ class DocumentViewModel: ObservableObject {
         document = doc
     }
 
+    /// Saves the split editor state to the document
+    func saveSplitEditorState(_ state: SplitEditorState) {
+        var doc = document
+        doc.projectState.splitEditorState = state
+        document = doc
+    }
+
+    /// Returns the saved split editor state from project state
+    func getSavedSplitEditorState() -> SplitEditorState {
+        return document.projectState.splitEditorState
+    }
+
+    /// Returns all documents in the project for the split view document picker
+    func getAllDocuments() -> [ManuscriptDocument.Document] {
+        return collectDocumentsRecursively(from: rootFolder)
+    }
+
+    private func collectDocumentsRecursively(from folder: ManuscriptFolder) -> [ManuscriptDocument.Document] {
+        var documents = folder.documents
+        for subfolder in folder.subfolders {
+            documents.append(contentsOf: collectDocumentsRecursively(from: subfolder))
+        }
+        return documents
+    }
+
     // MARK: - Folder Expansion
 
     func isFolderExpanded(_ folder: ManuscriptFolder) -> Bool {
