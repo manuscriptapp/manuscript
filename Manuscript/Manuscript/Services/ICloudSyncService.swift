@@ -88,10 +88,19 @@ final class ICloudSyncService: ObservableObject {
         // Check status immediately
         checkStatus()
 
-        // Set up periodic refresh to catch status changes
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        // Start polling (interval adjusts based on status)
+        scheduleNextCheck()
+    }
+
+    /// Schedule the next status check with adaptive interval
+    private func scheduleNextCheck() {
+        // Poll faster during active sync, slower when idle
+        let interval: TimeInterval = (status == .uploading || status == .downloading) ? 0.5 : 3.0
+
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.checkStatus()
+                self?.scheduleNextCheck()
             }
         }
     }
@@ -175,13 +184,10 @@ final class ICloudSyncService: ObservableObject {
             // Check the download status
             if let downloadingStatus = resourceValues.ubiquitousItemDownloadingStatus {
                 if downloadingStatus == .current || downloadingStatus == .downloaded {
-                    // File is up to date with iCloud
                     status = .synced
                 } else if downloadingStatus == .notDownloaded {
-                    // File is in iCloud but not downloaded locally
                     status = .notDownloaded
                 } else {
-                    // Unknown status, assume synced
                     status = .synced
                 }
                 return
