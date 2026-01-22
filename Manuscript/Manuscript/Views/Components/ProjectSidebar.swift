@@ -116,7 +116,7 @@ struct ProjectSidebar: View {
                     Label {
                         Text("Writing History")
                     } icon: {
-                        Image(systemName: "chart.bar.fill")
+                        Image(systemName: "clock.arrow.circlepath")
                             .foregroundStyle(.brown)
                     }
                     .badge(viewModel.document.writingHistory.entries.count)
