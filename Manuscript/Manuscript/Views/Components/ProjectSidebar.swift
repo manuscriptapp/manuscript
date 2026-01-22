@@ -155,7 +155,7 @@ struct ProjectSidebar: View {
                 }
             }
             #else
-            ToolbarItem(placement: .bottomBar) {
+            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button(action: { isAddFolderSheetPresented.toggle() }) {
                         Label("Add Folder", systemImage: "folder.badge.plus")
