@@ -6,6 +6,9 @@ struct DocumentDetailView: View {
     @State private var inspectorDetent: PresentationDetent = .medium
     @State private var isReadMode = false
     @State private var showSettings = false
+    #if os(macOS)
+    @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
+    #endif
 
     let document: ManuscriptDocument.Document
     @ObservedObject var viewModel: DocumentViewModel
@@ -183,6 +186,14 @@ struct DocumentDetailView: View {
             } label: {
                 Label("Document Info", systemImage: "info.circle")
             }
+
+            #if os(macOS)
+            Divider()
+
+            Toggle(isOn: $showFormattingToolbar) {
+                Label("Formatting Toolbar", systemImage: "textformat")
+            }
+            #endif
 
             #if os(iOS)
             Button {

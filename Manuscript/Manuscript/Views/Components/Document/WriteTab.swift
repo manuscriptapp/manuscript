@@ -30,6 +30,9 @@ struct WriteTab: View {
     @AppStorage("defaultLineSpacing") private var defaultLineSpacing: String = "single"
     @AppStorage("enableParagraphIndent") private var enableParagraphIndent: Bool = true
     @AppStorage("paragraphIndentSize") private var paragraphIndentSize: Double = 24
+    #if os(macOS)
+    @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
+    #endif
 
     // Maximum width for comfortable prose reading (similar to A4 page)
     private let maxProseWidth: CGFloat = 700
@@ -37,8 +40,10 @@ struct WriteTab: View {
     var body: some View {
         VStack(spacing: 0) {
             #if os(macOS)
-            FormattingToolbar(context: richTextContext)
-            Divider()
+            if showFormattingToolbar {
+                FormattingToolbar(context: richTextContext)
+                Divider()
+            }
             #endif
 
             GeometryReader { geometry in
@@ -72,7 +77,12 @@ struct WriteTab: View {
                 .background(.clear)
                 .scrollContentBackground(.hidden)
                 .padding(.horizontal, horizontalPadding)
+                #if os(macOS)
+                .padding(.top, 32)
+                .padding(.bottom, 16)
+                #else
                 .padding(.vertical, 16)
+                #endif
             }
 
             #if os(iOS)
