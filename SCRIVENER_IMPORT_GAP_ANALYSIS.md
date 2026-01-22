@@ -1,13 +1,13 @@
 # Scrivener Import Gap Analysis
 
-**Date**: 2026-01-16
+**Date**: 2026-01-22 (Updated)
 **Comparing**: SCRIVENER_IMPORT_PLAN.md vs Current Implementation
 
 ## Executive Summary
 
-The Scrivener import feature has been **substantially implemented** with most core functionality working. The implementation covers XML parsing, RTF-to-Markdown conversion, binder structure mapping, and a complete UI. However, some advanced features from the original plan remain unimplemented.
+The Scrivener import feature has been **substantially implemented** with most core functionality working. The implementation covers XML parsing, RTF-to-Markdown conversion, binder structure mapping, and a complete UI. Recent updates have added **writing history import** and **icon import with color support**.
 
-**Implementation Status**: ~85% complete
+**Implementation Status**: ~92% complete
 
 ---
 
@@ -122,6 +122,33 @@ The Scrivener import feature has been **substantially implemented** with most co
 - ✅ Error handling UI
 
 **Implementation**: ScrivenerImportView.swift:1-453
+
+### 11. Writing History Import (NEW)
+- ✅ Parse `Files/writing.history` XML file
+- ✅ Extract daily word counts (`dwc` attribute)
+- ✅ Extract draft totals (`dtwc` attribute)
+- ✅ Parse date format (`YYYY-MM-DD`)
+- ✅ Map to `WritingHistory` and `WritingHistoryEntry` models
+- ✅ Display in `WritingHistoryView` with statistics and charts
+- ✅ Calculate streaks (current and longest)
+- ✅ Time-range filtering (7/30/90 days, all time)
+- ✅ Period navigation for historical data
+
+**Implementation**:
+- WritingHistory.swift:289-395 (ScrivenerWritingHistoryParser)
+- ScrivenerImporter.swift:313-344 (importWritingHistory)
+- WritingHistoryView.swift:1-740 (visualization)
+
+### 12. Icon Import with Color Support (NEW)
+- ✅ Parse `<IconFileName>` from MetaData in .scrivx
+- ✅ Map Scrivener icons to SF Symbols
+- ✅ Extract color from "Category (Color)" format (e.g., "Flag (Red)")
+- ✅ Support for 100+ icon mappings
+- ✅ 27+ color variants supported
+- ✅ Type-based fallback icons
+- ✅ Persist icon color as hex string in document
+
+**Implementation**: ScrivenerIconMapper.swift:1-379
 
 ### 11. Error Handling
 - ✅ Comprehensive error types:
@@ -341,17 +368,25 @@ case .pdf, .image, .webPage:
 
 | Component | Lines | Status | Completeness |
 |-----------|-------|--------|--------------|
-| ScrivenerImporter | 543 | ✅ Done | 90% |
+| ScrivenerImporter | 706 | ✅ Done | 95% |
 | ScrivenerXMLParser | 342 | ✅ Done | 95% |
 | ScrivenerModels | 215 | ✅ Done | 100% |
 | RTFToMarkdownConverter | 212 | ⚠️ Partial | 70% |
 | ImportError | 104 | ✅ Done | 100% |
 | ScrivenerImportView | 453 | ⚠️ Partial | 85% |
-| **Total** | **1,869** | | **~85%** |
+| ScrivenerIconMapper | 379 | ✅ Done | 100% |
+| WritingHistory + Parser | 395 | ✅ Done | 100% |
+| WritingHistoryView | 740 | ✅ Done | 100% |
+| **Total** | **~3,546** | | **~92%** |
 
 ---
 
 ## 🎯 Prioritized Roadmap
+
+### ✅ Recently Completed
+- ~~**Writing history import**~~ - Parse and display Scrivener writing.history
+- ~~**Icon import with colors**~~ - Map Scrivener icons to SF Symbols with color support
+- ~~**Folder/document icon customization**~~ - Users can customize icons and colors
 
 ### P0 - Critical (Blocks Release)
 1. **iOS file picker** - App is cross-platform, needs iOS support
@@ -364,12 +399,11 @@ case .pdf, .image, .webPage:
 ### P2 - Medium Priority (Nice to Have)
 5. **Snapshots import** - Version history
 6. **Custom metadata parsing** - Power user feature
-7. **Better label color mapping** - More sophisticated color detection
 
 ### P3 - Low Priority (Future)
-8. **Compile settings** - Complex feature
-9. **Project bookmarks** - Minor feature
-10. **Target deadlines** - Minor feature
+7. **Compile settings** - Complex feature
+8. **Project bookmarks** - Minor feature
+9. **Target deadlines** - Minor feature
 
 ---
 
@@ -417,7 +451,13 @@ To reach 100% implementation:
 5. **Create test suite with sample projects** (8-16 hours)
 6. **Parse custom metadata fields** (4-8 hours)
 
-**Total estimated effort to complete**: ~40-68 hours
+**Total estimated effort to complete**: ~36-60 hours
+
+### Recent Progress (January 2026)
+- ✅ Writing history import and visualization
+- ✅ Icon mapping with 100+ icons and 27+ colors
+- ✅ Folder/document icon and color customization UI
+- ✅ Improved binder item handling (folders with content)
 
 ---
 
@@ -433,12 +473,15 @@ Both implementation and plan are well-documented:
 
 ## Conclusion
 
-The Scrivener import implementation is **production-ready for basic use cases**. It successfully handles:
+The Scrivener import implementation is **production-ready for most use cases**. It successfully handles:
 - ✅ Text document import
 - ✅ Folder structure preservation
 - ✅ Metadata mapping (labels, statuses, targets)
 - ✅ Both Scrivener v2 and v3 formats
 - ✅ Error handling and user feedback
+- ✅ **Writing history import with visualization** (NEW)
+- ✅ **Icon import with color support** (NEW)
+- ✅ **Folder/document customization** (NEW)
 
 **Main gaps**:
 1. iOS support (critical)
@@ -447,4 +490,4 @@ The Scrivener import implementation is **production-ready for basic use cases**.
 4. Snapshots
 5. Test coverage
 
-For a v1.0 release, adding iOS picker support and basic testing would make this feature complete enough for most users.
+For a v1.0 release, adding iOS picker support and basic testing would make this feature complete enough for most users. The recent additions of writing history and icon import significantly enhance the migration experience for Scrivener users.

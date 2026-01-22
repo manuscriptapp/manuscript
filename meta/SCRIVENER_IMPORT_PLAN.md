@@ -45,10 +45,38 @@ MyNovel.scriv/
 │   │   └── snapshot.xml
 │   └── ...
 └── QuickLook/
-    └── Preview.html            # Quick Look preview
+│   └── Preview.html            # Quick Look preview
+└── Files/
+    └── writing.history         # Writing statistics XML
 ```
 
-### 1.2 Project.scrivx Structure (XML)
+### 1.2 Writing History Format
+
+The `Files/writing.history` file tracks daily writing statistics:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<WritingHistory>
+    <!-- dwc = draft word count (words written that day) -->
+    <!-- dtwc = draft total word count (running total) -->
+    <Day dwc="1234" dtwc="45678" dcc="6543" dtcc="234567">2025-01-15</Day>
+    <Day dwc="890" dtwc="46568" dcc="4321" dtcc="238888">2025-01-16</Day>
+</WritingHistory>
+```
+
+**Key attributes:**
+| Attribute | Description |
+|-----------|-------------|
+| `dwc` | Words written on that specific day (session count) |
+| `dtwc` | Running total of draft words |
+| `dcc` | Characters written that day |
+| `dtcc` | Running total of draft characters |
+| `owc` | Other (non-draft) word count |
+| `occ` | Other character count |
+
+**Date format:** `YYYY-MM-DD` in element content
+
+### 1.3 Project.scrivx Structure (XML)
 
 The `project.scrivx` file is the heart of a Scrivener project:
 
@@ -72,6 +100,7 @@ The `project.scrivx` file is the heart of a Scrivener project:
             <StatusID>2</StatusID>
             <IncludeInCompile>Yes</IncludeInCompile>
             <Target Type="Words">2000</Target>
+            <IconFileName>Flag (Red)</IconFileName>
           </MetaData>
           <Synopsis>The story begins here.</Synopsis>
           <TextSettings>
@@ -173,8 +202,28 @@ The `project.scrivx` file is the heart of a Scrivener project:
 | `<ProjectTargets>` → `SessionTarget` | `targets.session.wordCount` |
 | `<LabelSettings>` | `labels[]` |
 | `<StatusSettings>` | `statuses[]` |
+| `Files/writing.history` | `writingHistory` ✅ |
 
-### 2.2 Binder to Contents Mapping
+### 2.2 Writing History Mapping (NEW - IMPLEMENTED)
+
+| Scrivener (`writing.history`) | Manuscript (`WritingHistory`) |
+|-------------------------------|-------------------------------|
+| `<Day>` date content | `WritingHistoryEntry.date` |
+| `dwc` attribute | `WritingHistoryEntry.wordsWritten` |
+| `dtwc` attribute | `WritingHistoryEntry.draftWordCount` |
+
+### 2.3 Icon Mapping (NEW - IMPLEMENTED)
+
+| Scrivener (`<IconFileName>`) | Manuscript |
+|------------------------------|------------|
+| `Flag (Red)` | `iconName: "flag.fill"`, `iconColor: "#FF0000"` |
+| `Book (Blue)` | `iconName: "book.closed.fill"`, `iconColor: "#0000FF"` |
+| `Calendar` | `iconName: "calendar"` |
+| Type-based fallback | `doc.text`, `folder`, etc. |
+
+See `SCRIVENER_ICON_IMPORT_PLAN.md` for complete icon mapping table.
+
+### 2.4 Binder to Contents Mapping
 
 ```
 Scrivener Binder                    Manuscript Contents
@@ -194,7 +243,7 @@ TrashFolder/                   →    trash/
 └── Deleted Scene (Text)       →    └── 01-deleted-scene.md
 ```
 
-### 2.3 Document Metadata Mapping
+### 2.5 Document Metadata Mapping
 
 | Scrivener (`BinderItem`) | Manuscript (`folder.json` item) |
 |--------------------------|--------------------------------|
@@ -208,7 +257,7 @@ TrashFolder/                   →    trash/
 | `IncludeInCompile` | `includeInCompile` |
 | `Target.Words` | `target.wordCount` (future feature) |
 
-### 2.4 Content Conversion
+### 2.6 Content Conversion
 
 **RTF to Markdown conversion:**
 
