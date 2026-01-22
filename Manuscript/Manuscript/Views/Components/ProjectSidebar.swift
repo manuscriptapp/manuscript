@@ -11,6 +11,7 @@ struct ProjectSidebar: View {
     @Binding var showReadingMode: Bool
     @State private var isCharactersExpanded: Bool = false
     @State private var isLocationsExpanded: Bool = false
+    @State private var isStatsExpanded: Bool = false
 
     init(
         viewModel: DocumentViewModel,
@@ -135,17 +136,11 @@ struct ProjectSidebar: View {
                 }
             }
 
-            // Progress Section
+            // Progress Section (Writing Targets)
             #if os(iOS)
-            Section("Progress") {
-                ZStack {
-                    NavigationLink(value: DetailSelection.writingHistory) {
-                        EmptyView()
-                    }
-                    .opacity(0)
-
+            if viewModel.document.targets.draftWordCount != nil || viewModel.document.targets.sessionWordCount != nil {
+                Section("Progress") {
                     VStack(spacing: 10) {
-                        // Writing Targets Progress
                         if let draftTarget = viewModel.document.targets.draftWordCount {
                             WritingTargetProgressView(
                                 title: "Draft Progress",
@@ -162,7 +157,18 @@ struct ProjectSidebar: View {
                                 style: .linear
                             )
                         }
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                }
+            }
 
+            // Stats Section (collapsed by default)
+            Section("Stats") {
+                DisclosureGroup(isExpanded: $isStatsExpanded) {
+                    VStack(spacing: 10) {
                         SidebarStatRow(
                             icon: "character.cursor.ibeam",
                             color: .blue,
@@ -194,66 +200,84 @@ struct ProjectSidebar: View {
                             value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
                         )
                     }
-                    .padding(.vertical, 14)
-                    .padding(.horizontal, 4)
+                    .padding(.vertical, 8)
+                } label: {
+                    Label {
+                        Text("Writing Statistics")
+                    } icon: {
+                        Image(systemName: "chart.bar.fill")
+                            .foregroundStyle(.purple)
+                    }
                 }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
             }
             #else
-            Section("Progress") {
-                // Writing Targets Progress
-                if let draftTarget = viewModel.document.targets.draftWordCount {
-                    WritingTargetProgressView(
-                        title: "Draft Progress",
-                        currentWords: viewModel.rootFolder.totalWordCount,
-                        targetWords: draftTarget,
-                        style: .linear
-                    )
+            // Progress Section (Writing Targets)
+            if viewModel.document.targets.draftWordCount != nil || viewModel.document.targets.sessionWordCount != nil {
+                Section("Progress") {
+                    if let draftTarget = viewModel.document.targets.draftWordCount {
+                        WritingTargetProgressView(
+                            title: "Draft Progress",
+                            currentWords: viewModel.rootFolder.totalWordCount,
+                            targetWords: draftTarget,
+                            style: .linear
+                        )
+                    }
+                    if let sessionTarget = viewModel.document.targets.sessionWordCount {
+                        WritingTargetProgressView(
+                            title: "Session Progress",
+                            currentWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0,
+                            targetWords: sessionTarget,
+                            style: .linear
+                        )
+                    }
                 }
-                if let sessionTarget = viewModel.document.targets.sessionWordCount {
-                    WritingTargetProgressView(
-                        title: "Session Progress",
-                        currentWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0,
-                        targetWords: sessionTarget,
-                        style: .linear
+            }
+
+            // Stats Section (collapsed by default)
+            Section("Stats") {
+                DisclosureGroup(isExpanded: $isStatsExpanded) {
+                    SidebarStatRow(
+                        icon: "character.cursor.ibeam",
+                        color: .blue,
+                        title: "Total Words",
+                        value: viewModel.rootFolder.totalWordCount.formatted()
                     )
+
+                    SidebarStatRow(
+                        icon: "calendar.badge.clock",
+                        color: .green,
+                        title: "Days Written",
+                        value: "\(viewModel.document.writingHistory.daysWritten)"
+                    )
+
+                    SidebarStatRow(
+                        icon: "flame.fill",
+                        color: viewModel.document.writingHistory.currentStreak > 0 ? .orange : .secondary,
+                        title: "Current Streak",
+                        value: "\(viewModel.document.writingHistory.currentStreak) days"
+                    )
+
+                    SidebarStatRow(
+                        icon: "trophy.fill",
+                        color: .yellow,
+                        title: "Longest Streak",
+                        value: "\(viewModel.document.writingHistory.longestStreak) days"
+                    )
+
+                    SidebarStatRow(
+                        icon: "chart.line.uptrend.xyaxis",
+                        color: .purple,
+                        title: "Avg Words/Day",
+                        value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
+                    )
+                } label: {
+                    Label {
+                        Text("Writing Statistics")
+                    } icon: {
+                        Image(systemName: "chart.bar.fill")
+                            .foregroundStyle(.purple)
+                    }
                 }
-
-                SidebarStatRow(
-                    icon: "character.cursor.ibeam",
-                    color: .blue,
-                    title: "Total Words",
-                    value: viewModel.rootFolder.totalWordCount.formatted()
-                )
-
-                SidebarStatRow(
-                    icon: "calendar.badge.clock",
-                    color: .green,
-                    title: "Days Written",
-                    value: "\(viewModel.document.writingHistory.daysWritten)"
-                )
-
-                SidebarStatRow(
-                    icon: "flame.fill",
-                    color: viewModel.document.writingHistory.currentStreak > 0 ? .orange : .secondary,
-                    title: "Current Streak",
-                    value: "\(viewModel.document.writingHistory.currentStreak) days"
-                )
-
-                SidebarStatRow(
-                    icon: "trophy.fill",
-                    color: .yellow,
-                    title: "Longest Streak",
-                    value: "\(viewModel.document.writingHistory.longestStreak) days"
-                )
-
-                SidebarStatRow(
-                    icon: "chart.line.uptrend.xyaxis",
-                    color: .purple,
-                    title: "Avg Words/Day",
-                    value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
-                )
             }
             #endif
         }
