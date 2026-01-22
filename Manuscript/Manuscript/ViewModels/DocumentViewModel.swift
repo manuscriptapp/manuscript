@@ -338,6 +338,9 @@ class DocumentViewModel: ObservableObject {
     }
 
     func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil) {
+        // Track word count change for writing history
+        let oldWordCount = docToUpdate.wordCount
+
         var updatedDoc = docToUpdate
         if let title = title { updatedDoc.title = title }
         if let outline = outline { updatedDoc.outline = outline }
@@ -350,6 +353,16 @@ class DocumentViewModel: ObservableObject {
 
         var doc = document
         doc.rootFolder = updateDocumentInFolder(doc.rootFolder, docId: docToUpdate.id, updatedDoc: updatedDoc)
+
+        // Track writing history if content changed and words were added
+        if content != nil {
+            let newWordCount = updatedDoc.wordCount
+            let wordDifference = newWordCount - oldWordCount
+            if wordDifference > 0 {
+                doc.writingHistory.recordWords(wordDifference, draftTotal: doc.rootFolder.totalWordCount)
+            }
+        }
+
         document = doc
 
         if selectedDocument?.id == docToUpdate.id {
