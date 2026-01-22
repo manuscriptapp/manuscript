@@ -393,7 +393,19 @@ struct ManuscriptApp: App {
                 }
         }
         #if os(macOS)
-        .defaultSize(width: 1200, height: 800)
+        .defaultWindowPlacement { content, context in
+            // Use NSScreen.main to get the display with keyboard focus (where user is working)
+            if let mainScreen = NSScreen.main {
+                let visibleFrame = mainScreen.visibleFrame
+                return WindowPlacement(
+                    CGPoint(x: visibleFrame.origin.x, y: visibleFrame.origin.y),
+                    size: CGSize(width: visibleFrame.width, height: visibleFrame.height)
+                )
+            }
+            // Fallback to context's default display
+            let displayBounds = context.defaultDisplay.visibleRect
+            return WindowPlacement(size: CGSize(width: displayBounds.width, height: displayBounds.height))
+        }
         .commands {
             CommandGroup(after: .appSettings) {
                 Button("Show Welcome Screen") {
