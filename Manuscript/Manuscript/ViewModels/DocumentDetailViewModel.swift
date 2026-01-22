@@ -54,6 +54,11 @@ class DocumentDetailViewModel: ObservableObject {
     // Comments
     @Published var comments: [ManuscriptDocument.DocumentComment] = []
 
+    // Inspector state (controlled from ViewModel so WriteTab can trigger it)
+    @Published var isInspectorPresented: Bool = false
+    @Published var inspectorSelectedTab: Int = 0  // 0 = Chat, 1 = Comments, 2 = Details
+    @Published var tappedComment: ManuscriptDocument.DocumentComment? = nil
+
     // Character and location selection
     @Published var selectedCharacters: [UUID] = []
     @Published var selectedLocations: [UUID] = []
@@ -80,11 +85,23 @@ class DocumentDetailViewModel: ObservableObject {
         let contentFont = Self.defaultContentFont
         let notesFont = Self.defaultNotesFont
 
-        self.attributedContent = MarkdownParser.attributedString(
+        let baseContent = MarkdownParser.attributedString(
             from: document.content,
             baseFont: contentFont,
             textColor: Self.defaultTextColor
         )
+
+        // Apply comment highlights to the content (brown background with dark border)
+        let commentRanges = document.comments.compactMap { comment -> NSRange? in
+            guard let range = comment.range else { return nil }
+            return NSRange(location: range.location, length: range.length)
+        }
+
+        self.attributedContent = MarkdownParser.applyCommentHighlights(
+            to: baseContent,
+            comments: commentRanges
+        )
+
         self.attributedNotes = MarkdownParser.attributedString(
             from: document.notes,
             baseFont: notesFont,
@@ -271,6 +288,26 @@ class DocumentDetailViewModel: ObservableObject {
         let startIndex = content.index(content.startIndex, offsetBy: range.location)
         let endIndex = content.index(startIndex, offsetBy: range.length)
         return String(content[startIndex..<endIndex])
+    }
+
+    /// Check if a character position is within a comment range and open inspector if so
+    /// - Parameter characterIndex: The character index that was tapped
+    /// - Returns: True if a comment was found and inspector opened
+    @discardableResult
+    func handleTapAtCharacterIndex(_ characterIndex: Int) -> Bool {
+        // Find comment that contains this character index
+        for comment in comments {
+            guard let range = comment.range else { continue }
+            let nsRange = NSRange(location: range.location, length: range.length)
+            if characterIndex >= nsRange.location && characterIndex < nsRange.location + nsRange.length {
+                // Found a comment at this position - open inspector with comments tab
+                tappedComment = comment
+                inspectorSelectedTab = 1  // Comments tab
+                isInspectorPresented = true
+                return true
+            }
+        }
+        return false
     }
 
     /// Save comments to the document

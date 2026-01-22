@@ -17,6 +17,9 @@ struct WriteTab: View {
     @AppStorage("defaultFontSize") private var defaultFontSize: Double = 16
     @AppStorage("defaultLineSpacing") private var defaultLineSpacing: String = "single"
 
+    // Maximum width for comfortable prose reading (similar to A4 page)
+    private let maxProseWidth: CGFloat = 700
+
     var body: some View {
         VStack(spacing: 0) {
             #if os(macOS)
@@ -25,25 +28,31 @@ struct WriteTab: View {
             Divider()
             #endif
 
-            // Rich text editor
-            RichTextEditor(
-                text: $viewModel.attributedContent,
-                context: richTextContext,
-                viewConfiguration: { textView in
-                    #if os(macOS)
-                    if let nsTextView = textView as? NSTextView {
-                        nsTextView.drawsBackground = false
-                        nsTextView.enclosingScrollView?.drawsBackground = false
-                        nsTextView.enclosingScrollView?.backgroundColor = .clear
+            // Rich text editor with centered prose layout
+            GeometryReader { geometry in
+                let availableWidth = geometry.size.width
+                let horizontalPadding = max(24, (availableWidth - maxProseWidth) / 2)
+
+                RichTextEditor(
+                    text: $viewModel.attributedContent,
+                    context: richTextContext,
+                    viewConfiguration: { textView in
+                        #if os(macOS)
+                        if let nsTextView = textView as? NSTextView {
+                            nsTextView.drawsBackground = false
+                            nsTextView.enclosingScrollView?.drawsBackground = false
+                            nsTextView.enclosingScrollView?.backgroundColor = .clear
+                        }
+                        #endif
                     }
-                    #endif
-                }
-            )
-            .focusedValue(\.richTextContext, richTextContext)
-            .richTextEditorStyle(RichTextEditorStyle(backgroundColor: .clear))
-            .background(.clear)
-            .scrollContentBackground(.hidden)
-            .padding()
+                )
+                .focusedValue(\.richTextContext, richTextContext)
+                .richTextEditorStyle(RichTextEditorStyle(backgroundColor: .clear))
+                .background(.clear)
+                .scrollContentBackground(.hidden)
+                .padding(.horizontal, horizontalPadding)
+                .padding(.vertical, 16)
+            }
 
             #if os(iOS)
             // iOS: Compact toolbar at the bottom with option to expand
@@ -131,6 +140,12 @@ struct WriteTab: View {
         } else {
             viewModel.selectedText = ""
             viewModel.selectedTextRange = nil
+
+            // When user taps (no selection), check if they tapped on commented text
+            // This opens the inspector with comments tab if cursor is in a comment range
+            if range.location >= 0 && range.location < fullString.count {
+                viewModel.handleTapAtCharacterIndex(range.location)
+            }
         }
     }
 }

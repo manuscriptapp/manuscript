@@ -3,7 +3,6 @@ import SwiftData
 
 struct DocumentDetailView: View {
     @StateObject private var detailViewModel: DocumentDetailViewModel
-    @State private var isInspectorPresented = false
     @State private var inspectorDetent: PresentationDetent = .medium
     @State private var isReadMode = false
 
@@ -18,7 +17,7 @@ struct DocumentDetailView: View {
 
     var body: some View {
         mainContent
-            .inspector(isPresented: $isInspectorPresented) {
+            .inspector(isPresented: $detailViewModel.isInspectorPresented) {
                 inspectorView
             }
             #if os(macOS)
@@ -72,7 +71,7 @@ struct DocumentDetailView: View {
             isGenerateSheetPresented: $detailViewModel.isGenerateSheetPresented,
             generatedText: $detailViewModel.generatedText,
             generationError: $detailViewModel.generationError,
-            isInspectorPresented: $isInspectorPresented,
+            isInspectorPresented: $detailViewModel.isInspectorPresented,
             inspectorDetent: $inspectorDetent,
             selectedText: $detailViewModel.selectedText,
             hasTextSelection: $detailViewModel.hasTextSelection,
@@ -123,7 +122,7 @@ struct DocumentDetailView: View {
 
         ToolbarItem(placement: .primaryAction) {
             Button {
-                isInspectorPresented.toggle()
+                detailViewModel.isInspectorPresented.toggle()
             } label: {
                 Label("Inspector", systemImage: "sidebar.right")
             }
@@ -161,7 +160,7 @@ struct DocumentDetailView: View {
             Divider()
 
             Button {
-                isInspectorPresented = true
+                detailViewModel.isInspectorPresented = true
             } label: {
                 Label("Document Info", systemImage: "info.circle")
             }

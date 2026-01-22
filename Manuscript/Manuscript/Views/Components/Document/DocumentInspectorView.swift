@@ -28,7 +28,6 @@ struct DocumentInspectorView: View {
     @Binding var selectedText: String
     @Binding var hasTextSelection: Bool
     @State private var chatText: String = ""
-    @State private var selectedTab: Int = 0
     @StateObject private var notesContext = RichTextContext()
     @State private var selectedStyle: GenerationStyle = .formal
     @State private var isChatExpanded: Bool = true
@@ -311,7 +310,7 @@ struct DocumentInspectorView: View {
     }
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: $detailViewModel.inspectorSelectedTab) {
             // Chat Tab
             chatTab
                 .tabItem {
@@ -629,59 +628,69 @@ struct DocumentInspectorView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                // Comments list
-                List {
-                    // New comment input
-                    if isAddingComment {
-                        VStack(alignment: .leading, spacing: 8) {
-                            if hasTextSelection && !selectedText.isEmpty {
-                                HStack {
-                                    Image(systemName: "link")
-                                        .font(.caption)
-                                        .foregroundStyle(.accent)
-                                    Text("Linked to: \"\(selectedText.prefix(50))\(selectedText.count > 50 ? "..." : "")\"")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(2)
-                                }
-                                .padding(8)
-                                .background(Color.accent.opacity(0.1))
-                                .cornerRadius(6)
-                            }
-
-                            TextField("Enter comment...", text: $newCommentText, axis: .vertical)
-                                .textFieldStyle(.plain)
-                                .lineLimit(3...6)
-
-                            HStack {
-                                Button("Cancel") {
-                                    isAddingComment = false
-                                    newCommentText = ""
-                                }
-                                .buttonStyle(.bordered)
-
-                                Spacer()
-
-                                Button("Save") {
-                                    if !newCommentText.isEmpty {
-                                        detailViewModel.addComment(text: newCommentText)
-                                        newCommentText = ""
-                                        isAddingComment = false
+                // Comments list with scroll-to support
+                ScrollViewReader { scrollProxy in
+                    List {
+                        // New comment input
+                        if isAddingComment {
+                            VStack(alignment: .leading, spacing: 8) {
+                                if hasTextSelection && !selectedText.isEmpty {
+                                    HStack {
+                                        Image(systemName: "link")
+                                            .font(.caption)
+                                            .foregroundStyle(.accent)
+                                        Text("Linked to: \"\(selectedText.prefix(50))\(selectedText.count > 50 ? "..." : "")\"")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(2)
                                     }
+                                    .padding(8)
+                                    .background(Color.accent.opacity(0.1))
+                                    .cornerRadius(6)
                                 }
-                                .buttonStyle(.borderedProminent)
-                                .disabled(newCommentText.isEmpty)
+
+                                TextField("Enter comment...", text: $newCommentText, axis: .vertical)
+                                    .textFieldStyle(.plain)
+                                    .lineLimit(3...6)
+
+                                HStack {
+                                    Button("Cancel") {
+                                        isAddingComment = false
+                                        newCommentText = ""
+                                    }
+                                    .buttonStyle(.bordered)
+
+                                    Spacer()
+
+                                    Button("Save") {
+                                        if !newCommentText.isEmpty {
+                                            detailViewModel.addComment(text: newCommentText)
+                                            newCommentText = ""
+                                            isAddingComment = false
+                                        }
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .disabled(newCommentText.isEmpty)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        }
+
+                        // Existing comments
+                        ForEach(detailViewModel.comments) { comment in
+                            commentRow(comment)
+                        }
+                    }
+                    .listStyle(.plain)
+                    .onChange(of: detailViewModel.tappedComment) { _, tappedComment in
+                        // Scroll to the tapped comment with animation
+                        if let comment = tappedComment {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                scrollProxy.scrollTo(comment.id, anchor: .center)
                             }
                         }
-                        .padding(.vertical, 8)
-                    }
-
-                    // Existing comments
-                    ForEach(detailViewModel.comments) { comment in
-                        commentRow(comment)
                     }
                 }
-                .listStyle(.plain)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -692,65 +701,73 @@ struct DocumentInspectorView: View {
 
     @ViewBuilder
     private func commentRow(_ comment: ManuscriptDocument.DocumentComment) -> some View {
-        HStack(alignment: .top) {
-            Spacer(minLength: 40)
+        let isActive = detailViewModel.tappedComment?.id == comment.id
 
-            VStack(alignment: .trailing, spacing: 6) {
-                // Linked text preview (shown above the bubble)
-                if let commentedText = detailViewModel.getCommentedText(for: comment) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "quote.opening")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Text(commentedText.prefix(50) + (commentedText.count > 50 ? "..." : ""))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .italic()
-                            .lineLimit(2)
-                    }
-                    .padding(.horizontal, 8)
+        VStack(alignment: .leading, spacing: 8) {
+            // Linked text preview
+            if let commentedText = detailViewModel.getCommentedText(for: comment) {
+                HStack(spacing: 6) {
+                    Rectangle()
+                        .fill(Color.orange.opacity(0.8))
+                        .frame(width: 3)
+
+                    Text(commentedText.prefix(80) + (commentedText.count > 80 ? "..." : ""))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .italic()
+                        .lineLimit(2)
                 }
+                .padding(.vertical, 6)
+                .padding(.horizontal, 8)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(6)
+            }
 
-                // Comment bubble
-                HStack(alignment: .top, spacing: 8) {
-                    // Comment text
+            // Comment content
+            HStack(alignment: .top, spacing: 12) {
+                // Comment text bubble
+                VStack(alignment: .leading, spacing: 4) {
                     Text(comment.text)
                         .font(.body)
-                        .foregroundStyle(.white)
-                        .padding(12)
-                        .background(Color(red: 0.55, green: 0.35, blue: 0.2))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .foregroundStyle(isActive ? .white : .primary)
 
-                    // Menu button
-                    Menu {
-                        Button {
-                            editingComment = comment
-                            editCommentText = comment.text
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        Button(role: .destructive) {
-                            detailViewModel.deleteComment(comment)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .frame(width: 24, height: 24)
-                    }
+                    // Timestamp
+                    Text(comment.creationDate, format: .dateTime.month(.abbreviated).day().hour().minute())
+                        .font(.caption2)
+                        .foregroundStyle(isActive ? Color.white.opacity(0.7) : Color.secondary)
                 }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(isActive ? Color.accentColor : Color.secondary.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                // Timestamp
-                Text(comment.creationDate, style: .date)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .padding(.trailing, 32)
+                // Menu button
+                Menu {
+                    Button {
+                        editingComment = comment
+                        editCommentText = comment.text
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    Button(role: .destructive) {
+                        detailViewModel.deleteComment(comment)
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 4)
+        .background(isActive ? Color.accentColor.opacity(0.1) : Color.clear)
+        .cornerRadius(8)
         .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
+        .id(comment.id)
     }
 
     private func editCommentSheet(_ comment: ManuscriptDocument.DocumentComment) -> some View {

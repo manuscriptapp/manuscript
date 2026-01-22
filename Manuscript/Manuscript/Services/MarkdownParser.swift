@@ -12,9 +12,36 @@ enum MarkdownParser {
     /// Neon highlight color (bright chartreuse/neon green-yellow)
     #if os(iOS)
     static let highlightColor = UIColor(red: 0.75, green: 1.0, blue: 0.0, alpha: 0.55)
+    /// Warm orange/amber background for comment highlights - clearly distinct from neon green
+    static let commentHighlightColor = UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 0.4)
     #else
     static let highlightColor = NSColor(red: 0.75, green: 1.0, blue: 0.0, alpha: 0.55)
+    /// Warm orange/amber background for comment highlights - clearly distinct from neon green
+    static let commentHighlightColor = NSColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 0.4)
     #endif
+
+    /// Helper to compare colors with tolerance
+    private static func colorsMatch(_ color1: Any, _ color2: PlatformColor) -> Bool {
+        guard let c1 = color1 as? PlatformColor else { return false }
+
+        var r1: CGFloat = 0, g1: CGFloat = 0, b1: CGFloat = 0, a1: CGFloat = 0
+        var r2: CGFloat = 0, g2: CGFloat = 0, b2: CGFloat = 0, a2: CGFloat = 0
+
+        #if os(iOS)
+        c1.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+        color2.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        #else
+        let color1RGB = c1.usingColorSpace(.sRGB) ?? c1
+        let color2RGB = color2.usingColorSpace(.sRGB) ?? color2
+        color1RGB.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+        color2RGB.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        #endif
+
+        let tolerance: CGFloat = 0.1
+        return abs(r1 - r2) < tolerance &&
+               abs(g1 - g2) < tolerance &&
+               abs(b1 - b2) < tolerance
+    }
 
     // MARK: - Markdown to Attributed String
 
@@ -246,8 +273,10 @@ enum MarkdownParser {
                 isStrikethrough = true
             }
 
-            if attributes[.backgroundColor] != nil {
-                isHighlight = true
+            if let bgColor = attributes[.backgroundColor] {
+                // Only mark as highlight if it matches our specific highlight color
+                // This prevents comment background colors from being converted to ==text==
+                isHighlight = colorsMatch(bgColor, highlightColor)
             }
 
             // Apply markdown formatting
@@ -316,5 +345,69 @@ enum MarkdownParser {
         }
 
         return result
+    }
+
+    // MARK: - Comment Highlighting
+
+    /// Applies comment highlighting to an attributed string
+    /// - Parameters:
+    ///   - attributedString: The base attributed string
+    ///   - comments: Array of comment ranges to highlight
+    /// - Returns: A new attributed string with comment highlights applied
+    static func applyCommentHighlights(
+        to attributedString: NSAttributedString,
+        comments: [NSRange]
+    ) -> NSAttributedString {
+        let result = NSMutableAttributedString(attributedString: attributedString)
+
+        for range in comments {
+            // Validate range is within bounds
+            guard range.location >= 0,
+                  range.location + range.length <= result.length else { continue }
+
+            // Apply warm brown/sepia background - distinct from neon green highlight
+            result.addAttribute(.backgroundColor, value: commentHighlightColor, range: range)
+        }
+
+        return result
+    }
+
+    /// Creates a darker version of a color
+    private static func darkenColor(_ color: PlatformColor, by amount: CGFloat) -> PlatformColor {
+        #if os(iOS)
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        color.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        return UIColor(hue: h, saturation: s, brightness: max(0, b - amount), alpha: a)
+        #else
+        guard let hsbColor = color.usingColorSpace(.deviceRGB) else { return color }
+        let h = hsbColor.hueComponent
+        let s = hsbColor.saturationComponent
+        let b = hsbColor.brightnessComponent
+        let a = hsbColor.alphaComponent
+        return NSColor(hue: h, saturation: s, brightness: max(0, b - amount), alpha: a)
+        #endif
+    }
+
+    /// Converts a hex color string to a platform color
+    static func colorFromHex(_ hex: String) -> PlatformColor? {
+        var hexString = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        if hexString.hasPrefix("#") {
+            hexString.removeFirst()
+        }
+
+        guard hexString.count == 6,
+              let hexValue = UInt64(hexString, radix: 16) else {
+            return nil
+        }
+
+        let r = CGFloat((hexValue & 0xFF0000) >> 16) / 255.0
+        let g = CGFloat((hexValue & 0x00FF00) >> 8) / 255.0
+        let b = CGFloat(hexValue & 0x0000FF) / 255.0
+
+        #if os(iOS)
+        return UIColor(red: r, green: g, blue: b, alpha: 0.35)
+        #else
+        return NSColor(red: r, green: g, blue: b, alpha: 0.35)
+        #endif
     }
 }
