@@ -175,7 +175,7 @@ struct ManuscriptProjectView: View {
                 isAddCharacterSheetPresented: $isAddCharacterSheetPresented,
                 isAddLocationSheetPresented: $isAddLocationSheetPresented
             )
-            .frame(minWidth: 190)
+            .navigationSplitViewColumnWidth(min: 190, ideal: 250, max: 400)
         } detail: {
             if detailSelection != nil {
                 DetailContentView(
