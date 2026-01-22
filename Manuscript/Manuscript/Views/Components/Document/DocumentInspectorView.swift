@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import RichTextKit
 #if os(iOS)
 import UIKit
 #else
@@ -11,6 +12,7 @@ import AppKit
 struct DocumentInspectorView: View {
     let document: ManuscriptDocument.Document
     let documentViewModel: DocumentViewModel
+    @ObservedObject var detailViewModel: DocumentDetailViewModel
     @Binding var editedTitle: String
     @Binding var editedOutline: String
     @Binding var isPromptExpanded: Bool
@@ -27,6 +29,7 @@ struct DocumentInspectorView: View {
     @Binding var hasTextSelection: Bool
     @State private var chatText: String = ""
     @State private var selectedTab: Int = 0
+    @StateObject private var notesContext = RichTextContext()
     @State private var selectedStyle: GenerationStyle = .formal
     @State private var isChatExpanded: Bool = true
     @State private var isCustomPromptExpanded: Bool = false
@@ -315,18 +318,31 @@ struct DocumentInspectorView: View {
                     Label("Chat", systemImage: "message")
                 }
                 .tag(0)
-            
+
+            // Notes Tab
+            notesTab
+                .tabItem {
+                    Label("Notes", systemImage: "note.text")
+                }
+                .tag(1)
+
             // Details Tab
             detailsTab
                 .tabItem {
                     Label("Details", systemImage: "doc.text")
                 }
-                .tag(1)
+                .tag(2)
         }
         .padding(.top)
         .frame(minWidth: 300, maxWidth: .infinity)
         .background(.background)
-        
+        .onAppear {
+            // Initialize notes context with current notes
+            notesContext.setAttributedString(to: detailViewModel.attributedNotes)
+        }
+        .onChange(of: notesContext.attributedString) { _, newValue in
+            detailViewModel.attributedNotes = newValue
+        }
     }
     
     private var chatTab: some View {
@@ -561,6 +577,75 @@ struct DocumentInspectorView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
+    private var notesTab: some View {
+        VStack(spacing: 0) {
+            // Compact formatting toolbar
+            HStack(spacing: 8) {
+                RichTextStyle.ToggleGroup(context: notesContext)
+
+                Divider()
+                    .frame(height: 20)
+
+                // Font size controls
+                HStack(spacing: 4) {
+                    Button {
+                        if notesContext.fontSize > 8 {
+                            notesContext.fontSize -= 1
+                        }
+                    } label: {
+                        Image(systemName: "minus")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderless)
+
+                    Text("\(Int(notesContext.fontSize))")
+                        .font(.caption)
+                        .monospacedDigit()
+                        .frame(width: 24)
+
+                    Button {
+                        if notesContext.fontSize < 72 {
+                            notesContext.fontSize += 1
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            #if os(macOS)
+            .background(Color(nsColor: .controlBackgroundColor))
+            #else
+            .background(Color(uiColor: .secondarySystemBackground))
+            #endif
+
+            Divider()
+
+            // Rich text editor for notes
+            RichTextEditor(
+                text: $detailViewModel.attributedNotes,
+                context: notesContext,
+                viewConfiguration: { textView in
+                    #if os(macOS)
+                    if let nsTextView = textView as? NSTextView {
+                        nsTextView.drawsBackground = false
+                        nsTextView.enclosingScrollView?.drawsBackground = false
+                        nsTextView.enclosingScrollView?.backgroundColor = .clear
+                    }
+                    #endif
+                }
+            )
+            .focusedValue(\.richTextContext, notesContext)
+            .richTextEditorStyle(RichTextEditorStyle(backgroundColor: .clear))
+            .background(.clear)
+            .scrollContentBackground(.hidden)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
     private var detailsTab: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -666,10 +751,12 @@ struct DocumentInspectorView: View {
         content: "Sample content"
     )
     let viewModel = DocumentViewModel()
+    let detailVM = DocumentDetailViewModel(document: docItem, documentViewModel: viewModel)
 
     DocumentInspectorView(
         document: docItem,
         documentViewModel: viewModel,
+        detailViewModel: detailVM,
         editedTitle: .constant("Sample Title"),
         editedOutline: .constant("Sample Outline"),
         isPromptExpanded: .constant(false),

@@ -5,6 +5,7 @@ struct DocumentDetailView: View {
     @StateObject private var detailViewModel: DocumentDetailViewModel
     @State private var isInspectorPresented = false
     @State private var inspectorDetent: PresentationDetent = .medium
+    @State private var isReadMode = false
 
     let document: ManuscriptDocument.Document
     @ObservedObject var viewModel: DocumentViewModel
@@ -16,21 +17,53 @@ struct DocumentDetailView: View {
     }
 
     var body: some View {
-        // Create the inspector view separately to reduce complexity
-        let inspectorView = DocumentInspectorView(
+        mainContent
+            .inspector(isPresented: $isInspectorPresented) {
+                inspectorView
+            }
+            .onChange(of: detailViewModel.editedTitle) { _, newValue in
+                viewModel.updateDocument(document, title: newValue)
+            }
+            .onChange(of: detailViewModel.editedOutline) { _, newValue in
+                viewModel.updateDocument(document, outline: newValue)
+            }
+            .onChange(of: detailViewModel.editedNotes) { _, newValue in
+                viewModel.updateDocument(document, notes: newValue)
+            }
+            .onChange(of: detailViewModel.editedContent) { _, newValue in
+                viewModel.updateDocument(document, content: newValue)
+            }
+            .onChange(of: detailViewModel.selectedCharacters) { _, newValue in
+                viewModel.updateDocument(document, characterIds: newValue)
+            }
+            .onChange(of: detailViewModel.selectedLocations) { _, newValue in
+                viewModel.updateDocument(document, locationIds: newValue)
+            }
+            .navigationTitle(detailViewModel.editedTitle)
+            .toolbar {
+                toolbarContent
+            }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        if isReadMode {
+            readModeView
+        } else {
+            WriteTab(viewModel: detailViewModel)
+        }
+    }
+
+    private var inspectorView: some View {
+        DocumentInspectorView(
             document: document,
             documentViewModel: viewModel,
+            detailViewModel: detailViewModel,
             editedTitle: $detailViewModel.editedTitle,
             editedOutline: $detailViewModel.editedOutline,
             isPromptExpanded: $detailViewModel.isPromptExpanded,
-            selectedCharacters: Binding(
-                get: { Set(detailViewModel.selectedCharacters) },
-                set: { detailViewModel.selectedCharacters = Array($0) }
-            ),
-            selectedLocations: Binding(
-                get: { Set(detailViewModel.selectedLocations) },
-                set: { detailViewModel.selectedLocations = Array($0) }
-            ),
+            selectedCharacters: selectedCharactersBinding,
+            selectedLocations: selectedLocationsBinding,
             isGenerating: $detailViewModel.isGenerating,
             generationType: $detailViewModel.generationType,
             isGenerateSheetPresented: $detailViewModel.isGenerateSheetPresented,
@@ -47,119 +80,108 @@ struct DocumentDetailView: View {
                 detailViewModel.applyGeneratedText(detailViewModel.generatedText)
             },
             applyToSelectionAction: { text in
-                // Implement this method if needed
                 print("Apply to selection: \(text)")
             }
         )
         .presentationDetents([.medium, .large], selection: $inspectorDetent)
+    }
 
-        // Extract each tab into a separate variable
-        let writeTabView = writeTab
-            .inspector(isPresented: $isInspectorPresented) {
-                inspectorView
+    private var selectedCharactersBinding: Binding<Set<UUID>> {
+        Binding(
+            get: { Set(detailViewModel.selectedCharacters) },
+            set: { detailViewModel.selectedCharacters = Array($0) }
+        )
+    }
+
+    private var selectedLocationsBinding: Binding<Set<UUID>> {
+        Binding(
+            get: { Set(detailViewModel.selectedLocations) },
+            set: { detailViewModel.selectedLocations = Array($0) }
+        )
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .secondaryAction) {
+            moreMenu
+        }
+
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                isReadMode.toggle()
+            } label: {
+                Label(isReadMode ? "Edit" : "Read", systemImage: isReadMode ? "pencil" : "book")
             }
-            .tabItem {
-                Label("Write", systemImage: "pencil")
-            }
-            .tag(1)
-
-        let readTabView = readTab
-            .tabItem {
-                Label("Read", systemImage: "book")
-            }
-            .tag(2)
-
-        let notesTabView = notesTab
-            .tabItem {
-                Label("Notes", systemImage: "note.text")
-            }
-            .tag(3)
-
-        return TabView(selection: $detailViewModel.selectedTab) {
-            writeTabView
-            readTabView
-            notesTabView
         }
-        .onChange(of: detailViewModel.editedTitle) { _, newValue in
-            viewModel.updateDocument(document, title: newValue)
-        }
-        .onChange(of: detailViewModel.editedOutline) { _, newValue in
-            viewModel.updateDocument(document, outline: newValue)
-        }
-        .onChange(of: detailViewModel.editedNotes) { _, newValue in
-            viewModel.updateDocument(document, notes: newValue)
-        }
-        .onChange(of: detailViewModel.editedContent) { _, newValue in
-            viewModel.updateDocument(document, content: newValue)
-        }
-        .onChange(of: detailViewModel.selectedCharacters) { _, newValue in
-            viewModel.updateDocument(document, characterIds: newValue)
-        }
-        .onChange(of: detailViewModel.selectedLocations) { _, newValue in
-            viewModel.updateDocument(document, locationIds: newValue)
-        }
-        .navigationTitle(detailViewModel.editedTitle)
-        .toolbar {
-            ToolbarItem(placement: .secondaryAction) {
-                Menu {
-                    Button {
-                        // TODO: Implement share functionality
-                    } label: {
-                        Label("Share", systemImage: "square.and.arrow.up")
-                    }
 
-                    Button {
-                        // TODO: Implement export functionality
-                    } label: {
-                        Label("Export", systemImage: "arrow.up.doc")
-                    }
-
-                    Divider()
-
-                    Button {
-                        // TODO: Implement print functionality
-                    } label: {
-                        Label("Print", systemImage: "printer")
-                    }
-
-                    Button {
-                        // TODO: Implement duplicate functionality
-                    } label: {
-                        Label("Duplicate", systemImage: "plus.square.on.square")
-                    }
-
-                    Divider()
-
-                    Button {
-                        isInspectorPresented = true
-                    } label: {
-                        Label("Document Info", systemImage: "info.circle")
-                    }
-                } label: {
-                    Label("More", systemImage: "ellipsis.circle")
-                }
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    isInspectorPresented.toggle()
-                } label: {
-                    Label("Inspector", systemImage: "sidebar.right")
-                }
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                isInspectorPresented.toggle()
+            } label: {
+                Label("Inspector", systemImage: "sidebar.right")
             }
         }
     }
 
-    private var writeTab: some View {
-        WriteTab(viewModel: detailViewModel)
+    private var moreMenu: some View {
+        Menu {
+            Button {
+                // TODO: Implement share functionality
+            } label: {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+
+            Button {
+                // TODO: Implement export functionality
+            } label: {
+                Label("Export", systemImage: "arrow.up.doc")
+            }
+
+            Divider()
+
+            Button {
+                // TODO: Implement print functionality
+            } label: {
+                Label("Print", systemImage: "printer")
+            }
+
+            Button {
+                // TODO: Implement duplicate functionality
+            } label: {
+                Label("Duplicate", systemImage: "plus.square.on.square")
+            }
+
+            Divider()
+
+            Button {
+                isInspectorPresented = true
+            } label: {
+                Label("Document Info", systemImage: "info.circle")
+            }
+        } label: {
+            Label("More", systemImage: "ellipsis.circle")
+        }
     }
 
-    private var readTab: some View {
-        ReadTab(viewModel: detailViewModel)
-    }
+    private var readModeView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text(detailViewModel.editedTitle)
+                    .font(.system(size: 28, weight: .light, design: .serif))
 
-    private var notesTab: some View {
-        NotesTab(viewModel: detailViewModel)
+                Divider()
+                    .padding(.trailing, 60)
+
+                Text(detailViewModel.editedContent)
+                    .font(.system(size: 17, weight: .regular, design: .serif))
+                    .lineSpacing(8)
+                    .kerning(0.3)
+                    .textSelection(.enabled)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 32)
+        }
     }
 }
 
