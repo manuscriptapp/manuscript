@@ -13,11 +13,11 @@ Manuscript is an open-source, native writing application for iOS and macOS, desi
 ### Requirements
 - Xcode 16.0+
 - Swift 5.9+
-- iOS 18.0+ SDK / macOS 15.0+ (Sequoia) SDK
+- iOS 26.0+ SDK / macOS 15.0+ (Sequoia) SDK
 
 ### Building with XcodeBuildMCP
 
-This project uses XcodeBuildMCP for building. Set session defaults first:
+This project uses XcodeBuildMCP for building. **Always set session defaults first** to ensure builds use the latest iOS simulator:
 
 ```
 session-set-defaults:
@@ -27,7 +27,11 @@ session-set-defaults:
   useLatestOS: true
 ```
 
-**Note:** The scheme name is lowercase `manuscript` (not `Manuscript`). The recommended simulator is iPhone 17 Pro with iOS 26.2.
+**Important:**
+- The scheme name is lowercase `manuscript` (not `Manuscript`)
+- Always set `useLatestOS: true` to use iOS 26.2 (the latest runtime)
+- Without `useLatestOS: true`, builds may default to older iOS versions (18.5)
+- Recommended simulator: **iPhone 17 Pro** with iOS 26.2
 
 **Common build commands:**
 
