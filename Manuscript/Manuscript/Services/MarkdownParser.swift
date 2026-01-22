@@ -9,11 +9,11 @@ import AppKit
 /// Supports bold, italic, strikethrough, highlight, and basic formatting
 enum MarkdownParser {
 
-    /// Standard highlight color (yellow)
+    /// Neon highlight color (bright chartreuse/neon green-yellow)
     #if os(iOS)
-    static let highlightColor = UIColor.systemYellow.withAlphaComponent(0.4)
+    static let highlightColor = UIColor(red: 0.75, green: 1.0, blue: 0.0, alpha: 0.55)
     #else
-    static let highlightColor = NSColor.systemYellow.withAlphaComponent(0.4)
+    static let highlightColor = NSColor(red: 0.75, green: 1.0, blue: 0.0, alpha: 0.55)
     #endif
 
     // MARK: - Markdown to Attributed String
