@@ -393,12 +393,7 @@ struct ManuscriptApp: App {
                 }
         }
         #if os(macOS)
-        .windowIdealPlacement { _, context in
-            // Fill the screen (respects menu bar and dock automatically)
-            let displayBounds = context.defaultDisplay.visibleRect
-            return WindowPlacement(size: displayBounds.size)
-        }
-        .defaultSize(width: 1200, height: 800)  // Fallback for older macOS
+        .defaultSize(width: 1200, height: 800)
         .commands {
             CommandGroup(after: .appSettings) {
                 Button("Show Welcome Screen") {
