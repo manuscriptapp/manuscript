@@ -100,6 +100,46 @@ struct DocumentDetailView: View {
         }
         .navigationTitle(detailViewModel.editedTitle)
         .toolbar {
+            ToolbarItem(placement: .secondaryAction) {
+                Menu {
+                    Button {
+                        // TODO: Implement share functionality
+                    } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
+
+                    Button {
+                        // TODO: Implement export functionality
+                    } label: {
+                        Label("Export", systemImage: "arrow.up.doc")
+                    }
+
+                    Divider()
+
+                    Button {
+                        // TODO: Implement print functionality
+                    } label: {
+                        Label("Print", systemImage: "printer")
+                    }
+
+                    Button {
+                        // TODO: Implement duplicate functionality
+                    } label: {
+                        Label("Duplicate", systemImage: "plus.square.on.square")
+                    }
+
+                    Divider()
+
+                    Button {
+                        isInspectorPresented = true
+                    } label: {
+                        Label("Document Info", systemImage: "info.circle")
+                    }
+                } label: {
+                    Label("More", systemImage: "ellipsis.circle")
+                }
+            }
+
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     isInspectorPresented.toggle()
