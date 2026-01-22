@@ -379,7 +379,7 @@ struct ManuscriptApp: App {
 
         // Document-based app structure
         DocumentGroup(newDocument: ManuscriptDocument()) { file in
-            ManuscriptProjectView(document: file.$document)
+            ManuscriptProjectView(document: file.$document, fileURL: file.fileURL)
                 .environmentObject(notificationManager)
                 .environmentObject(recentDocumentsManager)
                 #if os(macOS)

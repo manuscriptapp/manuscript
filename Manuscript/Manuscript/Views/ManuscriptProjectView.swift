@@ -66,6 +66,7 @@ class NavigationBarHiderController: UIViewController {
 
 struct ManuscriptProjectView: View {
     @Binding var document: ManuscriptDocument
+    let fileURL: URL?
     @StateObject private var viewModel = DocumentViewModel()
     @State private var detailSelection: DetailSelection?
     @State private var isAddDocumentSheetPresented = false
@@ -185,7 +186,8 @@ struct ManuscriptProjectView: View {
             .navigationDestination(for: DetailSelection.self) { selection in
                 DetailContentView(
                     viewModel: viewModel,
-                    selection: .constant(selection)
+                    selection: .constant(selection),
+                    fileURL: fileURL
                 )
             }
         }
@@ -205,7 +207,8 @@ struct ManuscriptProjectView: View {
             if detailSelection != nil {
                 DetailContentView(
                     viewModel: viewModel,
-                    selection: $detailSelection
+                    selection: $detailSelection,
+                    fileURL: fileURL
                 )
             } else {
                 ProjectOverview(viewModel: viewModel)
@@ -244,7 +247,7 @@ struct ManuscriptProjectView: View {
 }
 
 #Preview {
-    ManuscriptProjectView(document: .constant(ManuscriptDocument.sampleDocument))
+    ManuscriptProjectView(document: .constant(ManuscriptDocument.sampleDocument), fileURL: nil)
 }
 
 // Helper extension to create a sample document for previews

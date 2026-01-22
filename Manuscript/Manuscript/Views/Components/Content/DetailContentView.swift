@@ -4,6 +4,7 @@ import SwiftData
 struct DetailContentView: View {
     @ObservedObject var viewModel: DocumentViewModel
     @Binding var selection: DetailSelection?
+    let fileURL: URL?
 
     var body: some View {
         if let currentSelection = selection {
@@ -28,10 +29,10 @@ struct DetailContentView: View {
             // Look up fresh document from view model to get latest content
             // Use .id() to force SwiftUI to create a new view when document changes
             if let freshDocument = viewModel.findDocument(withId: document.id) {
-                DocumentDetailView(document: freshDocument, viewModel: viewModel)
+                DocumentDetailView(document: freshDocument, viewModel: viewModel, fileURL: fileURL)
                     .id(freshDocument.id)
             } else {
-                DocumentDetailView(document: document, viewModel: viewModel)
+                DocumentDetailView(document: document, viewModel: viewModel, fileURL: fileURL)
                     .id(document.id)
             }
         case .character(let character):
@@ -47,7 +48,8 @@ struct DetailContentView: View {
     @Previewable @State var selection: DetailSelection? = .projectInfo
     DetailContentView(
         viewModel: DocumentViewModel(),
-        selection: $selection
+        selection: $selection,
+        fileURL: nil
     )
 }
 #endif

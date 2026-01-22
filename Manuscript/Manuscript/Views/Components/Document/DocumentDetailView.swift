@@ -8,14 +8,17 @@ struct DocumentDetailView: View {
     @State private var showSettings = false
     #if os(macOS)
     @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
+    @StateObject private var syncService = ICloudSyncService()
     #endif
 
     let document: ManuscriptDocument.Document
     @ObservedObject var viewModel: DocumentViewModel
+    let fileURL: URL?
 
-    init(document: ManuscriptDocument.Document, viewModel: DocumentViewModel) {
+    init(document: ManuscriptDocument.Document, viewModel: DocumentViewModel, fileURL: URL? = nil) {
         self.document = document
         self.viewModel = viewModel
+        self.fileURL = fileURL
         self._detailViewModel = StateObject(wrappedValue: DocumentDetailViewModel(document: document, documentViewModel: viewModel))
     }
 
@@ -71,6 +74,14 @@ struct DocumentDetailView: View {
                         }
                 }
             }
+            #if os(macOS)
+            .onAppear {
+                syncService.startMonitoring(url: fileURL)
+            }
+            .onDisappear {
+                syncService.stopMonitoring()
+            }
+            #endif
     }
 
     @ViewBuilder
@@ -135,6 +146,17 @@ struct DocumentDetailView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         #if os(macOS)
+        if #available(macOS 26.0, *) {
+            ToolbarItem(placement: .navigation) {
+                ICloudSyncStatusView(syncService: syncService)
+            }
+            .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .navigation) {
+                ICloudSyncStatusView(syncService: syncService)
+            }
+        }
+
         ToolbarItem(placement: .primaryAction) {
             moreMenu
         }
