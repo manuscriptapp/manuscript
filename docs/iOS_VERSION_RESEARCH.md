@@ -6,8 +6,13 @@ This document summarizes research on iOS 18, iOS 26 (and macOS equivalents) to i
 
 ## Current State
 
-- **Current target**: iOS 17.0 / macOS 14.0 (Sonoma)
-- **Recommendation**: Bump to iOS 18 / macOS 15 short-term, plan for iOS 26 when adoption increases
+- **Current target**: iOS 18.0 / macOS 15.0 (Sequoia) *(updated January 2026)*
+- **Previous target**: iOS 17.0 / macOS 14.0 (Sonoma)
+- **Future consideration**: iOS 26 / macOS 26 (Tahoe) when adoption increases
+
+### Implemented iOS 18 Features
+- **DocumentGroupLaunchScene** - Custom document launch experience with branded background and template picker
+- **NewDocumentButton** with async template creation
 
 ---
 

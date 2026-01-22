@@ -11,9 +11,9 @@ Manuscript is an open-source, native writing application for iOS and macOS, desi
 ## Build & Development
 
 ### Requirements
-- Xcode 15.0+
+- Xcode 16.0+
 - Swift 5.9+
-- iOS 17.0+ SDK / macOS 14.0+ (Sonoma) SDK
+- iOS 18.0+ SDK / macOS 15.0+ (Sequoia) SDK
 
 ### Building with XcodeBuildMCP
 
@@ -84,6 +84,10 @@ Manuscript/
 - **Multi-platform** single codebase with `#if os(macOS)` / `#if os(iOS)` conditional compilation
 - Platform-specific UI in `Views/Platform/`; shared logic elsewhere
 - Standard Markdown as the primary file format
+
+### iOS 18+ Features Used
+- **DocumentGroupLaunchScene** - Custom document launch experience on iOS with branded background, template picker, and decorative accessories
+- **NewDocumentButton** - Template-based document creation with async continuation pattern
 
 ## Key Documentation
 
