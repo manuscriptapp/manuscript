@@ -39,7 +39,7 @@ Think Scrivener or Ulysses, but free and open source.
 | Paragraph formatting | ✅ | First-line indentation, line spacing |
 | Find & replace | 🔜 | Search and replace within documents |
 | Snapshots | 🔜 | Version history (infrastructure ready) |
-| CloudKit sync | 🔜 | iCloud sync across devices |
+| iCloud Drive sync | ✅ | Sync across devices via iCloud Drive |
 | More export formats | 🔜 | DOCX, EPUB, HTML, LaTeX |
 
 ## Requirements
@@ -132,7 +132,7 @@ MyNovel.manuscript/
 - [ ] Composition mode (distraction-free)
 - [ ] Cork board view
 - [ ] Outliner view
-- [ ] CloudKit sync
+- [x] iCloud Drive sync
 - [ ] DOCX, EPUB, HTML, LaTeX export
 - [ ] Version comparison for snapshots
 
