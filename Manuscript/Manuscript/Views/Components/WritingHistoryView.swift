@@ -4,15 +4,8 @@ import Charts
 #endif
 #if os(macOS)
 import AppKit
-// PlatformColor typealias is defined in RTFToMarkdownConverter.swift
-extension NSColor {
-    static var systemBackground: NSColor { .windowBackgroundColor }
-    static var secondarySystemBackground: NSColor { .controlBackgroundColor }
-    static var tertiarySystemFill: NSColor { .quaternaryLabelColor }
-}
 #else
 import UIKit
-// PlatformColor typealias is defined in RTFToMarkdownConverter.swift
 #endif
 
 // MARK: - Writing History View
@@ -419,7 +412,7 @@ struct WritingHistoryView: View {
             .cornerRadius(4)
         }
         .chartXAxis {
-            AxisMarks(values: .stride(by: chartAxisStride)) { value in
+            AxisMarks(values: .stride(by: chartAxisStride)) { _ in
                 AxisValueLabel(format: .dateTime.month(.abbreviated).day())
             }
         }
@@ -522,189 +515,10 @@ struct WritingHistoryView: View {
     }
 }
 
-// MARK: - Stat Card
-
-struct StatCard: View {
-    let title: String
-    let value: String
-    var subtitle: String? = nil
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
-                    .font(.title3)
-
-                Spacer()
-            }
-
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-
-            if let subtitle = subtitle {
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .padding()
-        .background(Color(PlatformColor.secondarySystemBackground))
-        .cornerRadius(12)
-    }
-}
-
-// MARK: - Entry Row
-
-struct WritingHistoryEntryRow: View {
-    let entry: WritingHistoryEntry
-
-    var body: some View {
-        HStack(spacing: 16) {
-            // Date column
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.dayOfWeek)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(entry.shortDate)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-            }
-            .frame(width: 60, alignment: .leading)
-
-            // Word count bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Rectangle()
-                        .fill(Color(PlatformColor.tertiarySystemFill))
-                        .cornerRadius(4)
-
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [.blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: barWidth(for: geometry.size.width))
-                        .cornerRadius(4)
-                }
-            }
-            .frame(height: 24)
-
-            // Word count
-            Text("\(entry.wordsWritten.formatted())")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .frame(width: 70, alignment: .trailing)
-
-            Text("words")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(Color(PlatformColor.systemBackground))
-        .cornerRadius(8)
-    }
-
-    private func barWidth(for maxWidth: CGFloat) -> CGFloat {
-        // Assume max of 5000 words for scaling (can be adjusted)
-        let maxWordsForScale = 5000.0
-        let percentage = min(Double(entry.wordsWritten) / maxWordsForScale, 1.0)
-        return maxWidth * CGFloat(percentage)
-    }
-}
-
-// MARK: - Compact Writing History View (for sidebar/overview)
-
-struct CompactWritingHistoryView: View {
-    let writingHistory: WritingHistory
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "clock.arrow.circlepath")
-                    .foregroundColor(.blue)
-                Text("Writing History")
-                    .font(.headline)
-                Spacer()
-                NavigationLink(destination: WritingHistoryView(writingHistory: writingHistory)) {
-                    Text("See All")
-                        .font(.subheadline)
-                        .foregroundColor(.blue)
-                }
-            }
-
-            if writingHistory.isEmpty {
-                Text("No writing history yet")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            } else {
-                HStack(spacing: 20) {
-                    VStack(alignment: .leading) {
-                        Text("\(writingHistory.totalWordsWritten.formatted())")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                        Text("Total Words")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    VStack(alignment: .leading) {
-                        Text("\(writingHistory.currentStreak)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                        Text("Day Streak")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    VStack(alignment: .leading) {
-                        Text("\(writingHistory.wordsLast7Days.formatted())")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                        Text("Last 7 Days")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                // Mini chart of last 7 days
-                miniChart
-                    .frame(height: 40)
-            }
-        }
-        .padding()
-        .background(Color(PlatformColor.secondarySystemBackground))
-        .cornerRadius(12)
-    }
-
-    private var miniChart: some View {
-        let entries = writingHistory.entriesForLastDays(7)
-        let maxWords = max(entries.map(\.wordsWritten).max() ?? 1, 1)
-
-        return HStack(alignment: .bottom, spacing: 4) {
-            ForEach(entries) { entry in
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color.blue)
-                    .frame(
-                        width: 12,
-                        height: max(4, CGFloat(entry.wordsWritten) / CGFloat(maxWords) * 36)
-                    )
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
+// StatCard, WritingHistoryEntryRow, and CompactWritingHistoryView are defined in:
+// - WritingHistory/StatCard.swift
+// - WritingHistory/WritingHistoryEntryRow.swift
+// - WritingHistory/CompactWritingHistoryView.swift
 
 // MARK: - Preview
 

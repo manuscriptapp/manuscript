@@ -1,6 +1,38 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#else
+import AppKit
+#endif
 
 extension Color {
+    // MARK: - System Colors
+
+    static var systemBackground: Color {
+        #if os(iOS)
+        return Color(UIColor.systemBackground)
+        #else
+        return Color(NSColor.windowBackgroundColor)
+        #endif
+    }
+
+    static var systemGroupedBackground: Color {
+        #if os(iOS)
+        return Color(UIColor.systemGroupedBackground)
+        #else
+        return Color(NSColor.windowBackgroundColor)
+        #endif
+    }
+
+    static var systemGray5: Color {
+        #if os(iOS)
+        return Color(UIColor.systemGray5)
+        #else
+        return Color(NSColor.controlBackgroundColor)
+        #endif
+    }
+
+    // MARK: - Color Utilities
     func darker(by percentage: Double = 0.2) -> Color {
         #if os(iOS)
         guard let components = UIColor(self).cgColor.components else { return self }
