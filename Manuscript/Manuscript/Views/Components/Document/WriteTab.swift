@@ -6,6 +6,26 @@ import UIKit
 import AppKit
 #endif
 
+// Debug logging helper
+private func debugLog(_ message: String) {
+    let logFile = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("manuscript_debug.log")
+    let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
+    let logMessage = "[\(timestamp)] \(message)\n"
+    if let data = logMessage.data(using: .utf8) {
+        if FileManager.default.fileExists(atPath: logFile.path) {
+            if let handle = try? FileHandle(forWritingTo: logFile) {
+                handle.seekToEndOfFile()
+                handle.write(data)
+                handle.closeFile()
+            }
+        } else {
+            try? data.write(to: logFile)
+        }
+    }
+    // Also print to console
+    print(message)
+}
+
 struct WriteTab: View {
     @ObservedObject var viewModel: DocumentDetailViewModel
     @StateObject private var richTextContext = RichTextContext()
@@ -18,6 +38,12 @@ struct WriteTab: View {
     #else
     @State private var textViewRef: UITextView? = nil
     #endif
+
+    // Custom undo stack for formatting changes (RichTextKit doesn't register them)
+    @State private var formattingUndoStack: [NSAttributedString] = []
+    @State private var formattingRedoStack: [NSAttributedString] = []
+    @State private var lastKnownAttributedString: NSAttributedString?
+    @State private var lastChangeWasFormatting = false
 
     // Formatting defaults from settings
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
@@ -116,9 +142,29 @@ struct WriteTab: View {
             removeKeyMonitor()
             #endif
         }
-        .onChange(of: richTextContext.attributedString) { _, newValue in
-            // Sync changes back to viewModel immediately
-            viewModel.attributedContent = newValue
+        .onChange(of: richTextContext.styles) { _, _ in
+            // Styles changed (bold, italic, etc.) - track for undo
+            NSLog("[UNDO] styles changed!")
+            trackStyleChange()
+        }
+        .onChange(of: richTextContext.fontName) { _, _ in
+            // Font changed - track for undo
+            NSLog("[UNDO] fontName changed!")
+            trackStyleChange()
+        }
+        .onChange(of: richTextContext.fontSize) { _, _ in
+            // Font size changed - track for undo
+            NSLog("[UNDO] fontSize changed!")
+            trackStyleChange()
+        }
+        .onChange(of: viewModel.attributedContent) { _, newValue in
+            // When content changes (typing), update our tracking reference
+            // but only if the string content actually changed (not just formatting)
+            if lastKnownAttributedString?.string != newValue.string {
+                NSLog("[UNDO] text content changed, updating lastKnownAttributedString")
+                lastKnownAttributedString = newValue
+                lastChangeWasFormatting = false
+            }
         }
         .onChange(of: richTextContext.selectedRange) { _, newRange in
             // Track text selection for comments
@@ -145,6 +191,9 @@ struct WriteTab: View {
         }
 
         richTextContext.setAttributedString(to: contentToSet)
+
+        // Initialize the formatting undo tracking
+        lastKnownAttributedString = contentToSet
 
         // Configure paragraph style via RichTextKit's paragraphStyle property
         configureParagraphStyle()
@@ -198,27 +247,259 @@ struct WriteTab: View {
         return mutable
     }
 
-    // MARK: - Shift+Enter Key Handling
+    // MARK: - Formatting Undo/Redo
+
+    /// Tracks style changes for undo functionality
+    private func trackStyleChange() {
+        #if os(macOS)
+        // Get the current state directly from the text view
+        guard let textView = textViewRef else {
+            NSLog("[UNDO] trackStyleChange: no textView ref")
+            return
+        }
+
+        // Capture the CURRENT state from the text view (before RichTextKit applies the change)
+        let currentTextViewState = NSAttributedString(attributedString: textView.attributedString())
+        NSLog("[UNDO] trackStyleChange: currentTextViewState length = \(currentTextViewState.length), string = '\(currentTextViewState.string)'")
+
+        // Don't track if text view is empty
+        guard currentTextViewState.length > 0 else {
+            NSLog("[UNDO] trackStyleChange: text view is empty, skipping")
+            return
+        }
+
+        // The lastKnownAttributedString contains the state BEFORE this change
+        if let previousState = lastKnownAttributedString {
+            NSLog("[UNDO] trackStyleChange: previousState length = \(previousState.length), string = '\(previousState.string)'")
+
+            // Only push if we have valid previous state and states are actually different
+            guard previousState.length > 0 else {
+                NSLog("[UNDO] trackStyleChange: previousState is empty, just updating to current")
+                lastKnownAttributedString = currentTextViewState
+                return
+            }
+
+            // Only push if the states are actually different
+            if !previousState.isEqual(to: currentTextViewState) {
+                NSLog("[UNDO] trackStyleChange: states differ, pushing previousState to undo stack")
+                formattingUndoStack.append(previousState)
+                formattingRedoStack.removeAll()
+                lastChangeWasFormatting = true
+
+                // Limit stack size
+                if formattingUndoStack.count > 50 {
+                    formattingUndoStack.removeFirst()
+                }
+                NSLog("[UNDO] trackStyleChange: undo stack size = \(formattingUndoStack.count)")
+            } else {
+                NSLog("[UNDO] trackStyleChange: states are equal, not pushing")
+            }
+        } else {
+            NSLog("[UNDO] trackStyleChange: no previousState, capturing current")
+        }
+
+        // Update lastKnownAttributedString to the current text view state
+        lastKnownAttributedString = currentTextViewState
+
+        // Also schedule a delayed update to capture state after RichTextKit finishes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [self] in
+            if let tv = textViewRef {
+                let newState = NSAttributedString(attributedString: tv.attributedString())
+                if newState.length > 0 && lastKnownAttributedString?.isEqual(to: newState) == false {
+                    NSLog("[UNDO] trackStyleChange (delayed): state changed, updating lastKnownAttributedString")
+                    lastKnownAttributedString = newState
+                }
+            }
+        }
+        #endif
+    }
+
+    /// Performs undo for formatting changes
+    private func undoFormatting() {
+        NSLog("[UNDO] undoFormatting called, stack size: \(formattingUndoStack.count)")
+        guard let lastState = formattingUndoStack.popLast() else {
+            NSLog("[UNDO]   -> Stack empty, nothing to undo")
+            return
+        }
+
+        #if os(macOS)
+        guard let textView = textViewRef,
+              let textStorage = textView.textStorage else {
+            NSLog("[UNDO]   -> No textView/textStorage reference!")
+            return
+        }
+
+        NSLog("[UNDO]   -> lastState.length: \(lastState.length), lastState.string: '\(lastState.string)'")
+
+        // Validate the state we're restoring
+        guard lastState.length > 0 else {
+            NSLog("[UNDO]   -> ERROR: lastState is empty, aborting undo")
+            return
+        }
+
+        // Push current state to redo stack
+        let currentState = NSAttributedString(attributedString: textView.attributedString())
+        formattingRedoStack.append(currentState)
+
+        NSLog("[UNDO]   -> currentState.length: \(currentState.length), currentState.string: '\(currentState.string)'")
+
+        // Only restore if the text content matches (safety check)
+        guard lastState.string == currentState.string else {
+            NSLog("[UNDO]   -> ERROR: Text content mismatch! Aborting to prevent data loss")
+            NSLog("[UNDO]   -> lastState.string: '\(lastState.string)'")
+            NSLog("[UNDO]   -> currentState.string: '\(currentState.string)'")
+            // Put it back since we're not using it
+            formattingUndoStack.append(lastState)
+            formattingRedoStack.removeLast()
+            return
+        }
+
+        if lastState.length > 0 {
+            NSLog("[UNDO]   -> Current font: \(currentState.attribute(.font, at: 0, effectiveRange: nil) ?? "nil")")
+            NSLog("[UNDO]   -> Restoring to font: \(lastState.attribute(.font, at: 0, effectiveRange: nil) ?? "nil")")
+        }
+
+        // Save selection
+        let savedSelection = textView.selectedRange()
+
+        // Replace the entire content using replaceCharacters which properly triggers updates
+        let fullRange = NSRange(location: 0, length: textStorage.length)
+        textStorage.beginEditing()
+        textStorage.replaceCharacters(in: fullRange, with: lastState)
+        textStorage.endEditing()
+
+        // Restore selection
+        let newSelection = NSRange(location: min(savedSelection.location, textStorage.length),
+                                   length: min(savedSelection.length, textStorage.length - min(savedSelection.location, textStorage.length)))
+        textView.setSelectedRange(newSelection)
+
+        // Force layout update
+        textView.layoutManager?.ensureLayout(for: textView.textContainer!)
+        textView.needsDisplay = true
+
+        // Also update the context and viewModel
+        richTextContext.setAttributedString(to: lastState)
+        viewModel.attributedContent = lastState
+        lastKnownAttributedString = lastState
+        lastChangeWasFormatting = false
+
+        NSLog("[UNDO]   -> State restored, new length: \(textStorage.length)")
+        #endif
+    }
+
+    /// Performs redo for formatting changes
+    private func redoFormatting() {
+        NSLog("[UNDO] redoFormatting called, stack size: \(formattingRedoStack.count)")
+        guard let nextState = formattingRedoStack.popLast() else {
+            NSLog("[UNDO]   -> Stack empty, nothing to redo")
+            return
+        }
+
+        #if os(macOS)
+        guard let textView = textViewRef,
+              let textStorage = textView.textStorage else {
+            NSLog("[UNDO]   -> No textView/textStorage reference!")
+            return
+        }
+
+        // Push current state to undo stack
+        let currentState = NSAttributedString(attributedString: textView.attributedString())
+        formattingUndoStack.append(currentState)
+
+        // Save selection
+        let savedSelection = textView.selectedRange()
+
+        // Replace the entire content
+        let fullRange = NSRange(location: 0, length: textStorage.length)
+        textStorage.beginEditing()
+        textStorage.replaceCharacters(in: fullRange, with: nextState)
+        textStorage.endEditing()
+
+        // Restore selection
+        let newSelection = NSRange(location: min(savedSelection.location, textStorage.length),
+                                   length: min(savedSelection.length, textStorage.length - min(savedSelection.location, textStorage.length)))
+        textView.setSelectedRange(newSelection)
+
+        // Force layout update
+        textView.layoutManager?.ensureLayout(for: textView.textContainer!)
+        textView.needsDisplay = true
+
+        // Also update the context and viewModel
+        richTextContext.setAttributedString(to: nextState)
+        viewModel.attributedContent = nextState
+        lastKnownAttributedString = nextState
+        lastChangeWasFormatting = false
+
+        NSLog("[UNDO]   -> State restored")
+        #endif
+    }
+
+    // MARK: - Keyboard Handling
 
     #if os(macOS)
-    /// Sets up keyboard monitoring to intercept Shift+Enter for soft line breaks
+    /// Sets up keyboard monitoring for Shift+Enter (soft line breaks) and Undo/Redo
     private func setupKeyMonitor() {
-        guard enableParagraphIndent else { return }
-
+        NSLog("[UNDO] setupKeyMonitor called")
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            // Check for Shift+Enter (Return key = keyCode 36)
-            if event.keyCode == 36 && event.modifierFlags.contains(.shift) {
-                // Insert line separator instead of newline
+            // Check for Shift+Enter (Return key = keyCode 36) for soft line breaks
+            if enableParagraphIndent && event.keyCode == 36 && event.modifierFlags.contains(.shift) {
                 if let textView = self.textViewRef, textView.window?.firstResponder == textView {
                     self.insertLineSeparator(in: textView)
                     return nil // Consume the event
+                }
+            }
+
+            // Check for Cmd+Z (keyCode 6 = Z key) for undo/redo
+            if event.keyCode == 6 && event.modifierFlags.contains(.command) {
+                NSLog("[UNDO] Cmd+Z detected!")
+                if let textView = self.textViewRef, textView.window?.firstResponder == textView {
+                    NSLog("[UNDO]   textView is first responder")
+                    NSLog("[UNDO]   lastChangeWasFormatting: \(self.lastChangeWasFormatting)")
+                    NSLog("[UNDO]   formattingUndoStack.count: \(self.formattingUndoStack.count)")
+                    NSLog("[UNDO]   formattingRedoStack.count: \(self.formattingRedoStack.count)")
+                    NSLog("[UNDO]   undoManager?.canUndo: \(textView.undoManager?.canUndo ?? false)")
+                    NSLog("[UNDO]   undoManager?.canRedo: \(textView.undoManager?.canRedo ?? false)")
+
+                    if event.modifierFlags.contains(.shift) {
+                        NSLog("[UNDO]   -> REDO requested")
+                        // Cmd+Shift+Z = Redo
+                        // If we have formatting redo available, prefer it
+                        if !self.formattingRedoStack.isEmpty {
+                            NSLog("[UNDO]   -> Using formatting redo")
+                            self.redoFormatting()
+                        } else if textView.undoManager?.canRedo == true {
+                            NSLog("[UNDO]   -> Using NSTextView redo")
+                            textView.undoManager?.redo()
+                        } else {
+                            NSLog("[UNDO]   -> Nothing to redo")
+                        }
+                    } else {
+                        NSLog("[UNDO]   -> UNDO requested")
+                        // Cmd+Z = Undo
+                        // If the last change was formatting, prefer our formatting undo
+                        if self.lastChangeWasFormatting && !self.formattingUndoStack.isEmpty {
+                            NSLog("[UNDO]   -> Using formatting undo (last change was formatting)")
+                            self.undoFormatting()
+                        } else if textView.undoManager?.canUndo == true {
+                            NSLog("[UNDO]   -> Using NSTextView undo")
+                            textView.undoManager?.undo()
+                        } else if !self.formattingUndoStack.isEmpty {
+                            NSLog("[UNDO]   -> Using formatting undo (fallback)")
+                            self.undoFormatting()
+                        } else {
+                            NSLog("[UNDO]   -> Nothing to undo")
+                        }
+                    }
+                    return nil // Consume the event
+                } else {
+                    NSLog("[UNDO]   textView NOT first responder or nil")
                 }
             }
             return event
         }
     }
 
-    /// Removes the key monitor when the view disappears
+    /// Removes the key monitors when the view disappears
     private func removeKeyMonitor() {
         if let monitor = keyMonitor {
             NSEvent.removeMonitor(monitor)
