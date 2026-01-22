@@ -19,10 +19,10 @@ struct FormattingToolbar: View {
     // MARK: - Shared Types
 
     private enum LineSpacingOption: String, CaseIterable {
-        case single = "Single"
+        case single = "1"
         case onePointFifteen = "1.15"
         case onePointFive = "1.5"
-        case double = "Double"
+        case double = "2"
 
         var multiplier: CGFloat {
             switch self {
@@ -45,11 +45,11 @@ struct FormattingToolbar: View {
         var color: Color? {
             switch self {
             case .none: return nil
-            case .yellow: return .yellow.opacity(0.4)
-            case .green: return .green.opacity(0.4)
-            case .blue: return .blue.opacity(0.4)
-            case .pink: return .pink.opacity(0.4)
-            case .orange: return .orange.opacity(0.4)
+            case .yellow: return .yellow.opacity(0.7)
+            case .green: return .green.opacity(0.6)
+            case .blue: return .blue.opacity(0.5)
+            case .pink: return .pink.opacity(0.6)
+            case .orange: return .orange.opacity(0.6)
             }
         }
     }
@@ -464,10 +464,10 @@ private struct ParagraphTabContent: View {
     @State private var selectedLineSpacing: CGFloat = 1.0
 
     private let lineSpacingOptions: [(String, CGFloat)] = [
-        ("Single", 1.0),
+        ("1", 1.0),
         ("1.15", 1.15),
         ("1.5", 1.5),
-        ("Double", 2.0)
+        ("2", 2.0)
     ]
 
     var body: some View {
