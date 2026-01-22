@@ -249,6 +249,8 @@ struct FormattingPalette: View {
 private struct StyleTabContent: View {
     @ObservedObject var context: RichTextContext
 
+    private let fontSizes = [10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72]
+
     var body: some View {
         Form {
             Section("Font") {
@@ -261,11 +263,14 @@ private struct StyleTabContent: View {
                     }
                 }
 
-                // Font size
-                HStack {
-                    Text("Size")
-                    Spacer()
-                    Stepper("\(Int(context.fontSize)) pt", value: $context.fontSize, in: 8...72, step: 1)
+                // Font size dropdown
+                Picker("Size", selection: Binding(
+                    get: { Int(context.fontSize) },
+                    set: { context.fontSize = CGFloat($0) }
+                )) {
+                    ForEach(fontSizes, id: \.self) { size in
+                        Text("\(size) pt").tag(size)
+                    }
                 }
             }
 
@@ -276,7 +281,7 @@ private struct StyleTabContent: View {
                 styleToggleRow(style: .strikethrough, label: "Strikethrough", icon: "strikethrough")
             }
 
-            Section("Alignment") {
+            Section {
                 Picker("", selection: $context.textAlignment) {
                     Label("Left", systemImage: "text.alignleft").tag(NSTextAlignment.left)
                     Label("Center", systemImage: "text.aligncenter").tag(NSTextAlignment.center)
@@ -321,10 +326,18 @@ private struct StyleTabContent: View {
 
 private struct ParagraphTabContent: View {
     @ObservedObject var context: RichTextContext
+    @State private var selectedLineSpacing: CGFloat = 1.0
+
+    private let lineSpacingOptions: [(String, CGFloat)] = [
+        ("Single", 1.0),
+        ("1.15", 1.15),
+        ("1.5", 1.5),
+        ("Double", 2.0)
+    ]
 
     var body: some View {
         Form {
-            Section("Alignment") {
+            Section {
                 Picker("", selection: $context.textAlignment) {
                     Label("Left", systemImage: "text.alignleft").tag(NSTextAlignment.left)
                     Label("Center", systemImage: "text.aligncenter").tag(NSTextAlignment.center)
@@ -336,8 +349,18 @@ private struct ParagraphTabContent: View {
             }
 
             Section("Line Spacing") {
-                // RichTextKit handles line spacing through the context
-                Text("Line spacing controls will be available in a future update.")
+                Picker("Spacing", selection: $selectedLineSpacing) {
+                    ForEach(lineSpacingOptions, id: \.1) { option in
+                        Text(option.0).tag(option.1)
+                    }
+                }
+                .onChange(of: selectedLineSpacing) { _, newValue in
+                    context.lineSpacing = newValue * 4
+                }
+            }
+
+            Section("Text Highlight") {
+                Text("Text highlight colors will be available in a future update.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
