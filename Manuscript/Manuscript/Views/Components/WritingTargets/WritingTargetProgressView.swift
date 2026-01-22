@@ -24,11 +24,11 @@ struct WritingTargetProgressView: View {
     private var progressColor: Color {
         switch percentage {
         case 0..<25:
-            return .red
+            return Color(red: 0.9, green: 0.45, blue: 0.45)  // Soft coral
         case 25..<75:
-            return .orange
+            return Color(red: 0.9, green: 0.7, blue: 0.4)    // Soft amber
         default:
-            return .green
+            return Color(red: 0.4, green: 0.75, blue: 0.65)  // Soft teal
         }
     }
 
@@ -133,11 +133,11 @@ struct CompactTargetProgressView: View {
         let percentage = Int(progress * 100)
         switch percentage {
         case 0..<25:
-            return .red
+            return Color(red: 0.9, green: 0.45, blue: 0.45)  // Soft coral
         case 25..<75:
-            return .orange
+            return Color(red: 0.9, green: 0.7, blue: 0.4)    // Soft amber
         default:
-            return .green
+            return Color(red: 0.4, green: 0.75, blue: 0.65)  // Soft teal
         }
     }
 
