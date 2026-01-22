@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Metadata
+
+| Property | Value |
+|----------|-------|
+| **Platform** | iOS 17.0+ / macOS 14.0+ (Sonoma) |
+| **Language** | Swift 5.9+ |
+| **UI Framework** | SwiftUI |
+| **Architecture** | MVVM |
+| **Package Management** | Swift Package Manager |
+| **License** | MPL-2.0 |
+
 ## Project Overview
 
 Manuscript is an open-source, native writing application for iOS and macOS, designed as an alternative to Scrivener and Ulysses. It prioritizes file ownership (Markdown-based), privacy (no required accounts), and optional AI integration.
@@ -20,36 +31,40 @@ Manuscript is an open-source, native writing application for iOS and macOS, desi
 This project uses XcodeBuildMCP for building. Set session defaults first:
 
 ```
-session-set-defaults:
-  projectPath: /path/to/Manuscript/Manuscript.xcodeproj
+mcp__XcodeBuildMCP__session-set-defaults:
+  projectPath: /home/user/manuscript/Manuscript/Manuscript.xcodeproj
   scheme: manuscript
+  simulatorName: iPhone 16 Pro
+  useLatestOS: true
 ```
 
 **Note:** The scheme name is lowercase `manuscript` (not `Manuscript`).
 
-**Common build commands:**
+**Build Commands:**
 
 | Command | Description |
 |---------|-------------|
-| `build_macos` | Build for macOS |
-| `build_sim` | Build for iOS Simulator (requires `simulatorId` or `simulatorName`) |
-| `build_run_macos` | Build and run on macOS |
-| `build_run_sim` | Build and run on iOS Simulator |
-| `test_macos` | Run tests on macOS |
-| `test_sim` | Run tests on iOS Simulator |
-| `list_schemes` | List available schemes |
-| `list_sims` | List available simulators |
+| `mcp__XcodeBuildMCP__build_macos` | Build for macOS |
+| `mcp__XcodeBuildMCP__build_sim` | Build for iOS Simulator |
+| `mcp__XcodeBuildMCP__build_run_macos` | Build and run on macOS |
+| `mcp__XcodeBuildMCP__build_run_sim` | Build and run on iOS Simulator |
+| `mcp__XcodeBuildMCP__test_macos` | Run tests on macOS |
+| `mcp__XcodeBuildMCP__test_sim` | Run tests on iOS Simulator |
+| `mcp__XcodeBuildMCP__list_schemes` | List available schemes |
+| `mcp__XcodeBuildMCP__list_sims` | List available simulators |
+| `mcp__XcodeBuildMCP__clean` | Clean build products |
 
-**Useful simulator commands:**
+**Simulator Interaction:**
 
 | Command | Description |
 |---------|-------------|
-| `screenshot` | Capture simulator screenshot |
-| `describe_ui` | Get view hierarchy with coordinates |
-| `tap` | Tap at coordinates or by accessibility ID |
-| `type_text` | Type text in focused field |
+| `mcp__XcodeBuildMCP__screenshot` | Capture simulator screenshot |
+| `mcp__XcodeBuildMCP__describe_ui` | Get view hierarchy with coordinates |
+| `mcp__XcodeBuildMCP__tap` | Tap at coordinates or by accessibility ID |
+| `mcp__XcodeBuildMCP__type_text` | Type text in focused field |
+| `mcp__XcodeBuildMCP__gesture` | Perform gestures (scroll, swipe) |
 
-### Building manually
+### Building Manually
 ```bash
 open Manuscript/Manuscript.xcodeproj
 ```
@@ -64,41 +79,120 @@ The marketing site lives in `docs/` and uses Jekyll with custom HTML.
 
 ## Architecture
 
-### Project Structure
+### Directory Structure
 ```
 Manuscript/
-├── Manuscript.xcodeproj     # Multi-platform Xcode project
-├── Manuscript/              # Main app code
-│   ├── Models/             # Data models
-│   ├── ViewModels/         # View models (MVVM)
-│   ├── Views/              # SwiftUI views
-│   │   └── Platform/       # Platform-specific views (iOS/macOS)
-│   └── Services/           # Business logic and services
-├── ManuscriptTests/        # Unit tests
-└── ManuscriptUITests/      # UI tests
+├── Manuscript.xcodeproj        # Multi-platform Xcode project
+├── Manuscript/                 # Main app code
+│   ├── Models/                # Data models (structs, enums)
+│   ├── ViewModels/            # View models (MVVM)
+│   ├── Views/                 # SwiftUI views
+│   │   ├── Components/        # Reusable UI components
+│   │   │   ├── Book/         # Book-related components
+│   │   │   ├── Character/    # Character components
+│   │   │   ├── Common/       # Shared components
+│   │   │   ├── Content/      # Content display components
+│   │   │   ├── Document/     # Document components
+│   │   │   ├── Location/     # Location components
+│   │   │   ├── Sheets/       # Sheet/modal components
+│   │   │   ├── Tabs/         # Tab components
+│   │   │   └── Templates/    # Template components
+│   │   ├── Import/           # Import-related views
+│   │   ├── Book/             # Book views
+│   │   └── Platform/         # Platform-specific views (iOS/macOS)
+│   ├── Services/              # Business logic and services
+│   │   └── Import/           # Import services (Scrivener, etc.)
+│   └── Extensions/            # Swift extensions
+├── ManuscriptTests/           # Unit tests
+└── ManuscriptUITests/         # UI tests
 ```
 
 ### Design Principles
 - **SwiftUI** for all UI components
-- **MVVM pattern** where applicable
+- **MVVM pattern** for separation of concerns
 - **Multi-platform** single codebase with `#if os(macOS)` / `#if os(iOS)` conditional compilation
 - Platform-specific UI in `Views/Platform/`; shared logic elsewhere
 - Standard Markdown as the primary file format
 
+## Coding Standards
+
+### Swift Best Practices
+- Follow [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
+- Use `async/await` for asynchronous operations
+- Implement early exits with `guard` statements
+- Prefer value types (structs) over reference types when possible
+- Use meaningful, descriptive names for variables and functions
+- Keep functions focused and single-purpose
+
+### SwiftUI Conventions
+- Extract views exceeding ~100 lines into smaller components
+- Use `@State` for view-local state only
+- Use `@Binding` for two-way data flow to child views
+- Use `@Environment` for dependency injection
+- Use `@Observable` (iOS 17+) for observable objects where applicable
+- Prefer `NavigationStack` over deprecated `NavigationView`
+- Place platform-specific code in `Views/Platform/`
+
+### Multi-Platform Development
+- Use `#if os(macOS)` / `#if os(iOS)` for platform-specific code
+- Test changes on both iOS and macOS when possible
+- Keep platform-specific views in `Views/Platform/`
+- Share business logic across platforms
+
+## Error Handling
+
+- Use typed errors conforming to `LocalizedError` for user-facing errors
+- Provide meaningful error messages
+- Handle errors gracefully with appropriate UI feedback
+- Log errors for debugging purposes
+
+## Testing Requirements
+
+- Write unit tests for ViewModels and business logic
+- Place tests in `ManuscriptTests/`
+- UI tests go in `ManuscriptUITests/`
+- Test on both iOS and macOS when possible
+
+## Constraints and Prohibitions
+
+**Avoid:**
+- Deprecated APIs when modern SwiftUI alternatives exist
+- Monolithic views (extract into smaller components)
+- Force unwrapping (`!`) without clear justification
+- Blocking the main thread with synchronous operations
+- Hard-coded strings for user-facing text (use localization)
+- UIKit/AppKit unless absolutely necessary
+
+**Do Not:**
+- Skip UI tests during scaffolding phases (add later)
+- Ignore compiler warnings
+- Commit code with TODO comments for critical functionality
+
 ## Key Documentation
 
-- `meta/FEATURE_PARITY.md` - Feature matrix comparing Manuscript vs Scrivener vs Ulysses
-- `CONTRIBUTING.md` - Development setup and PR process
-- `LICENSE` - MPL-2.0
+| Document | Description |
+|----------|-------------|
+| `meta/FEATURE_PARITY.md` | Feature matrix: Manuscript vs Scrivener vs Ulysses |
+| `meta/PRE_LAUNCH_CHECKLIST.md` | Pre-launch requirements |
+| `meta/SOFT_LAUNCH_PLAN.md` | Soft launch strategy |
+| `meta/SCRIVENER_IMPORT_PLAN.md` | Scrivener import implementation |
+| `CONTRIBUTING.md` | Development setup and PR process |
+| `docs/file-format.md` | Manuscript file format specification |
 
-## Folder Structure
+## Planning Workflow
+
+When implementing new features:
+
+1. **Review existing docs** - Check `meta/` for relevant planning documents
+2. **Understand architecture** - Review related Models, ViewModels, and Views
+3. **Plan incrementally** - Break large features into smaller tasks
+4. **Implement with tests** - Add unit tests for business logic
+5. **Test both platforms** - Verify on iOS and macOS
+
+## Folder Structure Summary
 
 ```
 Manuscript/     # Multi-platform app (iOS and macOS)
 docs/           # Marketing website (GitHub Pages)
 meta/           # Internal docs, feature parity, planning
 ```
-
-## Code Style
-
-Follow Swift API Design Guidelines. Test on both iOS and macOS when possible.
