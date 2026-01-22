@@ -75,6 +75,7 @@ struct ManuscriptProjectView: View {
     @State private var showOnboarding = false
     @State private var showSettings = false
     @State private var showReadingMode = false
+    @State private var hasRestoredState = false
 
     var body: some View {
         mainContent
@@ -128,9 +129,18 @@ struct ManuscriptProjectView: View {
             .onAppear {
                 viewModel.bind(to: $document)
                 checkOnboarding()
+                restoreSavedState()
             }
             .onChange(of: document) { _, newDocument in
                 viewModel.syncWithDocument(newDocument)
+            }
+            .onChange(of: detailSelection) { _, newSelection in
+                // Save state when selection changes
+                viewModel.saveProjectState(selection: newSelection)
+            }
+            .onChange(of: viewModel.expandedFolderIds) { _, _ in
+                // Save state when expanded folders change
+                viewModel.saveExpandedFolderIds()
             }
             .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
                 TextField("Name", text: $viewModel.newItemName)
@@ -192,6 +202,28 @@ struct ManuscriptProjectView: View {
     private func checkOnboarding() {
         if !UserDefaults.standard.bool(forKey: "hasSeenOnboarding") {
             showOnboarding = true
+        }
+    }
+
+    private func restoreSavedState() {
+        guard !hasRestoredState else { return }
+        hasRestoredState = true
+
+        // Restore the saved detail selection after a short delay
+        // to allow the view hierarchy to be set up
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if let savedSelection = viewModel.getSavedDetailSelection() {
+                // Expand ancestors to make the selection visible
+                switch savedSelection {
+                case .document(let doc):
+                    viewModel.expandToDocument(doc)
+                case .folder(let folder):
+                    viewModel.expandToFolder(folder)
+                default:
+                    break
+                }
+                detailSelection = savedSelection
+            }
         }
     }
 }

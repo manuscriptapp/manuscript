@@ -51,8 +51,34 @@ class DocumentViewModel: ObservableObject {
         self.rootFolder = document.wrappedValue.rootFolder
         self.currentFolder = document.wrappedValue.rootFolder
         self.documentTitle = document.wrappedValue.title
-        // Auto-expand root folder
-        expandedFolderIds.insert(document.wrappedValue.rootFolder.id)
+
+        // Restore project state (expanded folders)
+        let savedState = document.wrappedValue.projectState
+        if !savedState.expandedFolderIds.isEmpty {
+            expandedFolderIds = Set(savedState.expandedFolderIds)
+        } else {
+            // Auto-expand root folder if no saved state
+            expandedFolderIds.insert(document.wrappedValue.rootFolder.id)
+        }
+    }
+
+    /// Returns the saved detail selection from project state
+    func getSavedDetailSelection() -> DetailSelection? {
+        return document.projectState.toDetailSelection(in: document)
+    }
+
+    /// Saves the current UI state to the document
+    func saveProjectState(selection: DetailSelection?) {
+        var doc = document
+        doc.projectState = ProjectState.from(selection: selection, expandedFolderIds: expandedFolderIds)
+        document = doc
+    }
+
+    /// Updates only the expanded folder IDs in the project state
+    func saveExpandedFolderIds() {
+        var doc = document
+        doc.projectState.expandedFolderIds = Array(expandedFolderIds)
+        document = doc
     }
 
     // MARK: - Folder Expansion

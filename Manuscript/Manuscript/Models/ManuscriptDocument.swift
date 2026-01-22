@@ -41,6 +41,9 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // Writing history (imported from Scrivener or tracked in-app)
     var writingHistory: WritingHistory
 
+    // Project UI state (selected document, expanded folders, etc.)
+    var projectState: ProjectState
+
     // Required for FileDocument
     // Include .package and .folder as fallbacks for when custom UTType isn't registered (e.g., running from Xcode)
     // .folder is needed because macOS may identify .manuscript directories as folders rather than packages
@@ -70,6 +73,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         self.settings = ManuscriptSettings()
         self.compileSettings = ManuscriptCompileSettings()
         self.writingHistory = WritingHistory()
+        self.projectState = ProjectState()
     }
 
     // MARK: - FileDocument Implementation
@@ -122,6 +126,14 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         self.characters = projectData.characters ?? []
         self.locations = projectData.locations ?? []
         self.writingHistory = projectData.writingHistory ?? WritingHistory()
+
+        // Read state.json (UI state)
+        if let stateWrapper = children["state.json"],
+           let stateData = stateWrapper.regularFileContents {
+            self.projectState = (try? decoder.decode(ProjectState.self, from: stateData)) ?? ProjectState()
+        } else {
+            self.projectState = ProjectState()
+        }
 
         // Read contents folder
         if let contentsWrapper = children["contents"], contentsWrapper.isDirectory {
@@ -302,6 +314,10 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         )
         let projectJsonData = try encoder.encode(projectData)
         rootWrapper.addRegularFile(withContents: projectJsonData, preferredFilename: "project.json")
+
+        // Create state.json (UI state)
+        let stateData = try encoder.encode(projectState)
+        rootWrapper.addRegularFile(withContents: stateData, preferredFilename: "state.json")
 
         // Create contents directory
         let contentsWrapper = FileWrapper(directoryWithFileWrappers: [:])
