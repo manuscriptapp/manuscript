@@ -13,7 +13,7 @@ struct SettingsView: View {
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
     @AppStorage("defaultFontSize") private var defaultFontSize: Double = 16
     @AppStorage("defaultLineSpacing") private var defaultLineSpacing: String = "single"
-    @AppStorage("enableParagraphIndent") private var enableParagraphIndent: Bool = false
+    @AppStorage("enableParagraphIndent") private var enableParagraphIndent: Bool = true
     @AppStorage("paragraphIndentSize") private var paragraphIndentSize: Double = 24
 
     // API Key input states
