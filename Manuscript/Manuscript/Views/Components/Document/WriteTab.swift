@@ -12,6 +12,11 @@ struct WriteTab: View {
     @State private var isFormattingPalettePresented = false
     @State private var hasInitialized = false
 
+    // Formatting defaults from settings
+    @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
+    @AppStorage("defaultFontSize") private var defaultFontSize: Double = 16
+    @AppStorage("defaultLineSpacing") private var defaultLineSpacing: String = "single"
+
     var body: some View {
         VStack(spacing: 0) {
             #if os(macOS)
@@ -91,10 +96,19 @@ struct WriteTab: View {
         // Initialize context with current content
         richTextContext.setAttributedString(to: viewModel.attributedContent)
 
-        // Set default font if content is empty
+        // Set default formatting if content is empty
         if viewModel.attributedContent.string.isEmpty {
-            richTextContext.fontName = "Palatino"
-            richTextContext.fontSize = 16
+            richTextContext.fontName = defaultFontName
+            richTextContext.fontSize = CGFloat(defaultFontSize)
+
+            // Apply default line spacing
+            let lineSpacingMultiplier: CGFloat = switch defaultLineSpacing {
+            case "1.15": 1.15
+            case "1.5": 1.5
+            case "double": 2.0
+            default: 1.0
+            }
+            richTextContext.lineSpacing = lineSpacingMultiplier * 6
         }
     }
 

@@ -1,8 +1,18 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#else
+import AppKit
+#endif
 
 struct SettingsView: View {
     @AppStorage("defaultAuthorName") private var defaultAuthorName: String = ""
     @State private var aiSettings = AISettingsManager.shared
+
+    // Formatting defaults
+    @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
+    @AppStorage("defaultFontSize") private var defaultFontSize: Double = 16
+    @AppStorage("defaultLineSpacing") private var defaultLineSpacing: String = "single"
 
     // API Key input states
     @State private var openAIKeyInput: String = ""
@@ -21,6 +31,14 @@ struct SettingsView: View {
         case failure(String)
     }
 
+    private let fontSizes = [10, 12, 14, 16, 18, 20, 24, 28, 32, 36]
+    private let lineSpacingOptions = [
+        ("Single", "single"),
+        ("1.15", "1.15"),
+        ("1.5", "1.5"),
+        ("Double", "double")
+    ]
+
     var body: some View {
         Form {
             Section("Author") {
@@ -30,6 +48,8 @@ struct SettingsView: View {
                     .textInputAutocapitalization(.words)
                 #endif
             }
+
+            formattingSection
 
             aiSettingsSection
 
@@ -42,6 +62,64 @@ struct SettingsView: View {
         .onAppear {
             loadExistingKeys()
         }
+    }
+
+    // MARK: - Formatting Section
+
+    @ViewBuilder
+    private var formattingSection: some View {
+        Section {
+            // Font family picker
+            Picker("Font", selection: $defaultFontName) {
+                ForEach(availableFonts, id: \.self) { fontName in
+                    Text(fontName)
+                        .tag(fontName)
+                }
+            }
+
+            // Font size picker
+            Picker("Size", selection: Binding(
+                get: { Int(defaultFontSize) },
+                set: { defaultFontSize = Double($0) }
+            )) {
+                ForEach(fontSizes, id: \.self) { size in
+                    Text("\(size) pt").tag(size)
+                }
+            }
+
+            // Line spacing picker
+            Picker("Line Spacing", selection: $defaultLineSpacing) {
+                ForEach(lineSpacingOptions, id: \.1) { option in
+                    Text(option.0).tag(option.1)
+                }
+            }
+        } header: {
+            Text("Formatting")
+        } footer: {
+            Text("These settings apply to new documents and empty content.")
+        }
+    }
+
+    private var availableFonts: [String] {
+        let commonFonts = ["Palatino", "Georgia", "Times New Roman", "Helvetica", "Arial", "Courier New", "Menlo"]
+        #if os(macOS)
+        let allFonts = NSFontManager.shared.availableFontFamilies.sorted()
+        #else
+        let allFonts = UIFont.familyNames.sorted()
+        #endif
+
+        var result: [String] = []
+        for font in commonFonts {
+            if allFonts.contains(font) {
+                result.append(font)
+            }
+        }
+        for font in allFonts {
+            if !result.contains(font) {
+                result.append(font)
+            }
+        }
+        return result
     }
 
     // MARK: - AI Settings Section
