@@ -11,9 +11,10 @@ struct ManuscriptProjectView: View {
     @State private var isAddLocationSheetPresented = false
     @State private var showOnboarding = false
     @State private var navigationTitle = ""
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar with project structure
             ProjectSidebar(
                 viewModel: viewModel,
@@ -61,6 +62,7 @@ struct ManuscriptProjectView: View {
             viewModel.bind(to: $document)
             checkOnboarding()
             updateNavigationTitle()
+            updateColumnVisibility()
         }
         .onChange(of: document) { _, newDocument in
             viewModel.syncWithDocument(newDocument)
@@ -68,6 +70,7 @@ struct ManuscriptProjectView: View {
         }
         .onChange(of: detailSelection) { _, _ in
             updateNavigationTitle()
+            updateColumnVisibility()
         }
         .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
             TextField("Name", text: $viewModel.newItemName)
@@ -87,6 +90,7 @@ struct ManuscriptProjectView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
                         detailSelection = nil
+                        updateColumnVisibility()
                     } label: {
                         Label("Back", systemImage: "chevron.left")
                     }
@@ -124,6 +128,14 @@ struct ManuscriptProjectView: View {
         case .none:
             navigationTitle = viewModel.document.title.isEmpty ? "Untitled Project" : viewModel.document.title
         }
+    }
+
+    private func updateColumnVisibility() {
+        #if os(iOS)
+        columnVisibility = detailSelection == nil ? .sidebarOnly : .detailOnly
+        #else
+        columnVisibility = .all
+        #endif
     }
 }
 
