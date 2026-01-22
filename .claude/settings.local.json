@@ -106,7 +106,9 @@
       "Bash(git -C /Users/jonasdalesjo/code/manuscript commit -m \"$\\(cat <<''EOF''\nUpdate highlight color to brighter neon chartreuse\n\nChanged from muted yellow \\(40% opacity\\) to vibrant neon green-yellow\n\\(RGB 0.75, 1.0, 0.0 at 55% opacity\\) for better visibility.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "WebFetch(domain:www.fline.dev)",
       "WebFetch(domain:onmyway133.com)",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "WebFetch(domain:swiftwithmajid.com)",
+      "Bash(grep:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"
