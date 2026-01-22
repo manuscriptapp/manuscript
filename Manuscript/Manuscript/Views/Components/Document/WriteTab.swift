@@ -49,27 +49,58 @@ struct WriteTab: View {
                 let availableWidth = geometry.size.width
                 let horizontalPadding = max(24, (availableWidth - maxProseWidth) / 2)
 
+                #if os(macOS)
+                HStack(spacing: 0) {
+                    // Left margin - clickable area to focus editor
+                    Color.clear
+                        .frame(width: horizontalPadding)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            focusTextEditor()
+                        }
+
+                    // Center - the actual editor
+                    RichTextEditor(
+                        text: $viewModel.attributedContent,
+                        context: richTextContext,
+                        viewConfiguration: { textView in
+                            if let nsTextView = textView as? NSTextView {
+                                nsTextView.drawsBackground = false
+                                nsTextView.enclosingScrollView?.drawsBackground = false
+                                nsTextView.enclosingScrollView?.backgroundColor = .clear
+                                DispatchQueue.main.async {
+                                    textViewRef = nsTextView
+                                }
+                            }
+                        }
+                    )
+                    .focusedValue(\.richTextContext, richTextContext)
+                    .richTextEditorStyle(RichTextEditorStyle(backgroundColor: .clear))
+                    .background(.clear)
+                    .scrollContentBackground(.hidden)
+                    .frame(maxWidth: maxProseWidth)
+                    .padding(.top, 32)
+                    .padding(.bottom, 16)
+
+                    // Right margin - clickable area to focus editor
+                    Color.clear
+                        .frame(width: horizontalPadding)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            focusTextEditor()
+                        }
+                }
+                #else
                 RichTextEditor(
                     text: $viewModel.attributedContent,
                     context: richTextContext,
                     viewConfiguration: { textView in
-                        #if os(macOS)
-                        if let nsTextView = textView as? NSTextView {
-                            nsTextView.drawsBackground = false
-                            nsTextView.enclosingScrollView?.drawsBackground = false
-                            nsTextView.enclosingScrollView?.backgroundColor = .clear
-                            DispatchQueue.main.async {
-                                textViewRef = nsTextView
-                            }
-                        }
-                        #else
                         if let uiTextView = textView as? UITextView {
                             DispatchQueue.main.async {
                                 textViewRef = uiTextView
                                 setupKeyboardToolbar(for: uiTextView)
                             }
                         }
-                        #endif
                     }
                 )
                 .focusedValue(\.richTextContext, richTextContext)
@@ -77,10 +108,6 @@ struct WriteTab: View {
                 .background(.clear)
                 .scrollContentBackground(.hidden)
                 .padding(.horizontal, horizontalPadding)
-                #if os(macOS)
-                .padding(.top, 32)
-                .padding(.bottom, 16)
-                #else
                 .padding(.vertical, 16)
                 #endif
             }
