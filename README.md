@@ -26,7 +26,6 @@ Think Scrivener or Ulysses, but free and open source.
 | Rich text editing | ✅ | Bold, italic, underline, fonts, sizes, colors, highlighting |
 | Formatting toolbar | ✅ | Compact toolbar with font, size, color, and style controls |
 | Drag & drop reorder | ✅ | Reorder and move documents/folders between locations |
-| Inline renaming | ✅ | Scrivener-style click-to-rename in sidebar |
 | Document customization | ✅ | Custom icons (20+) and colors for folders and documents |
 | Characters & Locations | ✅ | World-building with character/location tracking |
 | Writing statistics | ✅ | Word counts, daily history, streaks, session tracking |
@@ -39,8 +38,8 @@ Think Scrivener or Ulysses, but free and open source.
 | Paragraph formatting | ✅ | First-line indentation, line spacing |
 | Find & replace | ✅ | Search, highlight matches, navigate, replace single/all |
 | iCloud Drive sync | ✅ | Sync across devices via iCloud Drive |
-| Snapshots | 🔜 | Version history (infrastructure ready) |
-| Corkboard view | 🔜 | Index card view for visual organization |
+| Snapshots | ✅ | Version history with manual snapshots |
+| Corkboard view | ✅ | Index card view for visual organization |
 | Outliner view | 🔜 | Hierarchical outline with metadata columns |
 | Split editor | 🔜 | View two documents side-by-side |
 | Composition mode | 🔜 | Distraction-free full-screen writing |
@@ -69,19 +68,45 @@ The project is a multi-platform SwiftUI app that supports both iOS and macOS fro
 
 ## File Format
 
-Projects are folders with Markdown and JSON. Human-readable, Git-friendly.
+Projects are standard folders with Markdown and JSON files. Human-readable, Git-friendly, no lock-in.
 
 ```
 MyNovel.manuscript/
-├── project.json
+├── project.json              # Project metadata, settings, characters, locations
+├── state.json                # UI state (selected document, expanded folders)
 ├── contents/
 │   ├── draft/
+│   │   ├── folder.json       # Folder metadata and document ordering
 │   │   ├── 01-chapter-one.md
+│   │   ├── 01-chapter-one.notes.md      # Document notes (separate file)
+│   │   ├── 01-chapter-one.comments.json # Inline comments
 │   │   └── 02-chapter-two.md
 │   ├── notes/
 │   └── research/
-├── snapshots/
-└── assets/
+├── trash/                    # Recoverable deleted items
+├── snapshots/                # Version history by document
+│   └── {document-id}/
+│       └── {snapshot-id}.json
+└── assets/                   # Media files (images, PDFs)
+```
+
+**Key files:**
+
+- **project.json** — Title, author, genre, characters, locations, labels, statuses, writing history, compile settings
+- **folder.json** — Document order, custom icons/colors, synopsis, keywords, labels
+- **\*.md** — Document content in Markdown with optional YAML frontmatter for synopsis
+- **\*.notes.md** — Document notes stored separately from content
+- **\*.comments.json** — Inline comments with text ranges and timestamps
+
+Documents support YAML frontmatter:
+
+```markdown
+---
+title: Chapter One
+synopsis: The hero begins their journey
+---
+
+It was a dark and stormy night...
 ```
 
 ## Comparison
@@ -133,16 +158,16 @@ MyNovel.manuscript/
 - [x] State restoration (last document, expanded folders)
 - [x] Drag & drop reorder in sidebar
 - [x] Move documents/folders between locations
-- [x] Inline document renaming
 
 **Phase 7: Advanced** (In Progress)
-- [ ] Find & replace
+- [x] Find & replace
+- [x] Snapshots (version history)
+- [x] Corkboard view
+- [x] iCloud Drive sync
 - [ ] Writing targets UI
 - [ ] Split editor (side-by-side documents)
 - [ ] Composition mode (distraction-free)
-- [ ] Cork board view
 - [ ] Outliner view
-- [x] iCloud Drive sync
 - [ ] DOCX, EPUB, HTML, LaTeX export
 - [ ] Version comparison for snapshots
 

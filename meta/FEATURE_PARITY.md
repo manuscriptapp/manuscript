@@ -14,7 +14,7 @@ Manuscript vs Scrivener vs Ulysses.
 | License | Proprietary | Proprietary | MPL-2.0 |
 | Platforms | macOS, iOS, Windows | macOS, iOS | macOS, iOS |
 | File format | Proprietary (.scriv) | Library-based | Markdown |
-| Cloud sync | Dropbox (manual) | iCloud | CloudKit (free) |
+| Cloud sync | Dropbox (manual) | iCloud | iCloud Drive |
 | AI features | ❌ | Paid add-on | Built-in |
 
 ---
@@ -62,7 +62,7 @@ Manuscript vs Scrivener vs Ulysses.
 
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
-| Corkboard/cards | ✅ | ❌ | 🔜 |
+| Corkboard/cards | ✅ | ❌ | ✅ |
 | Outliner | ✅ | ❌ | 🔜 |
 | Quick preview | ✅ | ✅ | 🔜 |
 | Multiple windows | ✅ | ✅ | 🔜 |
@@ -88,10 +88,10 @@ Manuscript vs Scrivener vs Ulysses.
 
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
-| Manual snapshots | ✅ | ✅ | ⚡ Infrastructure |
+| Manual snapshots | ✅ | ✅ | ✅ |
 | Compare versions | ✅ | ✅ | 🔜 |
 | Rollback | ✅ | ✅ | 🔜 |
-| Version history | ✅ | ✅ | 🔜 |
+| Version history | ✅ | ✅ | ✅ |
 
 ---
 
@@ -141,7 +141,7 @@ Manuscript vs Scrivener vs Ulysses.
 
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
-| Cloud sync | Dropbox | iCloud | ✅ CloudKit |
+| Cloud sync | Dropbox | iCloud | ✅ iCloud Drive |
 | iOS sync | ✅ | ✅ | ✅ |
 | Auto backup | ✅ | ✅ | 🔜 |
 | Backup on close | ✅ | ❌ | 🔜 |
@@ -153,7 +153,7 @@ Manuscript vs Scrivener vs Ulysses.
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
 | AI assistant | ❌ | Paid | ✅ |
-| On-device AI | ❌ | ❌ | ✅ |
+| On-device AI | ❌ | ❌ | 🔜 |
 | Cloud AI (BYOK) | ❌ | ❌ | ✅ |
 | Per-project config | ❌ | ❌ | ✅ |
 
@@ -188,12 +188,11 @@ Manuscript vs Scrivener vs Ulysses.
 
 1. **Free** — No purchase, no subscription
 2. **Open source** — MPL-2.0, full source available
-3. **On-device AI** — Apple Foundation Models, private
-4. **BYOK AI** — Use your own API keys (OpenAI, Anthropic, local)
-5. **CloudKit sync** — Free, automatic
-6. **SwiftUI** — Modern, native framework
-7. **Standard files** — Markdown, no lock-in
-8. **Scrivener import** — Full migration with history and snapshots
+3. **BYOK AI** — Use your own API keys (OpenAI, Anthropic)
+4. **iCloud Drive sync** — Free, automatic
+5. **SwiftUI** — Modern, native framework
+6. **Standard files** — Markdown, no lock-in
+7. **Scrivener import** — Full migration with history and snapshots
 
 ---
 
