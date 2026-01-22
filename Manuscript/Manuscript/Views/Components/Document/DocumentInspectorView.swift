@@ -776,6 +776,11 @@ struct DocumentInspectorView: View {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 6)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // Set tapped comment to scroll editor to this comment's text
+            detailViewModel.tappedComment = comment
+        }
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10))
         #if os(macOS)

@@ -12,6 +12,12 @@ struct WriteTab: View {
     @State private var isFormattingPalettePresented = false
     @State private var hasInitialized = false
 
+    #if os(macOS)
+    @State private var textViewRef: NSTextView? = nil
+    #else
+    @State private var textViewRef: UITextView? = nil
+    #endif
+
     // Formatting defaults from settings
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
     @AppStorage("defaultFontSize") private var defaultFontSize: Double = 16
@@ -42,6 +48,16 @@ struct WriteTab: View {
                             nsTextView.drawsBackground = false
                             nsTextView.enclosingScrollView?.drawsBackground = false
                             nsTextView.enclosingScrollView?.backgroundColor = .clear
+                            // Store reference for scrolling to comments
+                            DispatchQueue.main.async {
+                                textViewRef = nsTextView
+                            }
+                        }
+                        #else
+                        if let uiTextView = textView as? UITextView {
+                            DispatchQueue.main.async {
+                                textViewRef = uiTextView
+                            }
                         }
                         #endif
                     }
@@ -93,6 +109,10 @@ struct WriteTab: View {
         .onChange(of: richTextContext.selectedRange) { _, newRange in
             // Track text selection for comments
             updateTextSelection(range: newRange)
+        }
+        .onChange(of: viewModel.tappedComment) { _, tappedComment in
+            // Scroll to comment's text range when tapped in inspector
+            scrollToComment(tappedComment)
         }
         #if os(iOS)
         .sheet(isPresented: $isFormattingPalettePresented) {
@@ -146,6 +166,33 @@ struct WriteTab: View {
             if range.location >= 0 && range.location < fullString.count {
                 viewModel.handleTapAtCharacterIndex(range.location)
             }
+        }
+    }
+
+    private func scrollToComment(_ comment: ManuscriptDocument.DocumentComment?) {
+        guard let comment = comment,
+              let range = comment.range else { return }
+
+        let nsRange = NSRange(location: range.location, length: range.length)
+        let fullString = richTextContext.attributedString.string
+
+        // Validate range is within bounds
+        guard nsRange.location >= 0,
+              nsRange.location + nsRange.length <= fullString.count else { return }
+
+        // Use the native text view to scroll and select the range
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            #if os(macOS)
+            if let textView = textViewRef {
+                textView.setSelectedRange(nsRange)
+                textView.scrollRangeToVisible(nsRange)
+            }
+            #else
+            if let textView = textViewRef {
+                textView.selectedRange = nsRange
+                textView.scrollRangeToVisible(nsRange)
+            }
+            #endif
         }
     }
 }
