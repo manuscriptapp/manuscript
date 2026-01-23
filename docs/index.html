@@ -282,6 +282,19 @@
             border-radius: 32px;
         }
 
+        .screenshot-ipad {
+            width: 500px;
+            border-radius: 12px;
+        }
+
+        .screenshots-mobile {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
         .screenshot-caption {
             margin-top: 1.25rem;
             font-family: var(--serif);
@@ -295,7 +308,14 @@
                 width: 100%;
             }
             .screenshot-ios {
-                width: 180px;
+                width: 160px;
+            }
+            .screenshot-ipad {
+                width: 100%;
+            }
+            .screenshots-mobile {
+                flex-direction: column;
+                align-items: center;
             }
         }
 
@@ -552,7 +572,10 @@
         <section class="screenshot-section">
             <div class="container">
                 <figure class="screenshot-figure">
-                    <img src="images/screenshot-ios.png" alt="Manuscript on iOS" class="screenshot screenshot-ios">
+                    <div class="screenshots-mobile">
+                        <img src="images/screenshot-ipad-launch.png" alt="Manuscript on iPad" class="screenshot screenshot-ipad">
+                        <img src="images/screenshot-ios.png" alt="Manuscript on iPhone" class="screenshot screenshot-ios">
+                    </div>
                     <figcaption class="screenshot-caption">Write anywhere on iPhone and iPad</figcaption>
                 </figure>
             </div>
