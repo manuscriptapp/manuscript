@@ -57,7 +57,7 @@ struct ProjectSidebar: View {
                                 Text(character.name)
                             } icon: {
                                 Image(systemName: "person")
-                                    .foregroundStyle(Color(red: 0.7, green: 0.2, blue: 0.3)) // Rose/maroon
+                                    .foregroundStyle(Color(red: 0.6, green: 0.4, blue: 0.2)) // Brown for children
                             }
                         }
                     }
@@ -67,7 +67,7 @@ struct ProjectSidebar: View {
                     } label: {
                         Label("Add Character", systemImage: "plus")
                             .font(.callout)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.secondary)
                     }
                     .buttonStyle(.borderless)
                     .padding(.leading, 4)
@@ -90,7 +90,7 @@ struct ProjectSidebar: View {
                                 Text(location.name)
                             } icon: {
                                 Image(systemName: "mappin")
-                                    .foregroundStyle(Color(red: 0.2, green: 0.55, blue: 0.35))
+                                    .foregroundStyle(Color(red: 0.6, green: 0.4, blue: 0.2)) // Brown for children
                             }
                         }
                     }
@@ -100,7 +100,7 @@ struct ProjectSidebar: View {
                     } label: {
                         Label("Add Location", systemImage: "plus")
                             .font(.callout)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.secondary)
                     }
                     .buttonStyle(.borderless)
                     .padding(.leading, 4)
@@ -109,7 +109,7 @@ struct ProjectSidebar: View {
                     NavigationLink(value: DetailSelection.worldMap) {
                         Label("World Map", systemImage: "map")
                             .font(.callout)
-                            .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.2)) // Brown
+                            .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
                     .padding(.leading, 4)

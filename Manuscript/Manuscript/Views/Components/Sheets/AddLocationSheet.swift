@@ -118,6 +118,11 @@ struct AddLocationSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
                         viewModel.addLocation(name: name, latitude: coordinate.latitude, longitude: coordinate.longitude)
