@@ -215,9 +215,9 @@ struct DocumentDetailView: View {
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
         #if os(macOS)
-        // iCloud sync status (navigation area)
+        // iCloud sync status (right side)
         if #available(macOS 26.0, *) {
-            ToolbarItem(placement: .navigation) {
+            ToolbarItem(placement: .automatic) {
                 ICloudSyncStatusView(syncService: syncService)
             }
             .sharedBackgroundVisibility(.hidden)
@@ -323,9 +323,9 @@ struct DocumentDetailView: View {
                 ProgressView()
                     .controlSize(.small)
             } else if audioPlayback.isPlaying || audioPlayback.isPaused {
-                Label("Audio Player", systemImage: "speaker.wave.2.fill")
+                Label("Audio Player", systemImage: "mic.fill")
             } else {
-                Label("Read Aloud", systemImage: "speaker.wave.2")
+                Label("Read Aloud", systemImage: "mic")
             }
         }
         .help(readAloudHelpText)
