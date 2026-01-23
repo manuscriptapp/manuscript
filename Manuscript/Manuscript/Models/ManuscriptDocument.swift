@@ -67,7 +67,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         self.rootFolder = ManuscriptFolder(title: "Draft", folderType: .draft, iconName: "text.book.closed")
         self.notesFolder = ManuscriptFolder(title: "Notes", folderType: .notes)
         self.researchFolder = ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
-        self.trashFolder = ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash")
+        self.trashFolder = ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
         self.characters = []
         self.locations = []
         self.labels = ManuscriptLabel.defaults
@@ -198,7 +198,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             defaultColor = "#FF9500"  // Orange
         case .trash:
             defaultIcon = "trash"
-            defaultColor = ManuscriptFolder.defaultIconColor
+            defaultColor = "#8E8E93"  // Gray
         default:
             defaultIcon = "folder"
             defaultColor = ManuscriptFolder.defaultIconColor

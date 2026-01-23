@@ -10,11 +10,9 @@ struct ProjectSidebar: View {
     @Binding var showSettings: Bool
     @Binding var showReadingMode: Bool
     @State private var isContentExpanded: Bool = true
-    @State private var isProjectExpanded: Bool = true
     @State private var isProgressExpanded: Bool = true
     @State private var isCharactersExpanded: Bool = false
     @State private var isLocationsExpanded: Bool = false
-    @State private var isStatsExpanded: Bool = false
 
     init(
         viewModel: DocumentViewModel,
@@ -42,8 +40,9 @@ struct ProjectSidebar: View {
 
         // Create the content as a separate variable
         let listContent = Group {
-            // Folder structure
+            // Binder - everything related to your story
             Section(isExpanded: $isContentExpanded) {
+                // Draft folder
                 FolderItemView(
                     folder: viewModel.rootFolder,
                     viewModel: viewModel,
@@ -57,27 +56,6 @@ struct ProjectSidebar: View {
                     detailSelection: typedSelection
                 )
 
-                // Trash folder
-                FolderItemView(
-                    folder: viewModel.trashFolder,
-                    viewModel: viewModel,
-                    detailSelection: typedSelection
-                )
-            } header: {
-                Text("Content")
-            }
-            
-            // Basic project info
-            Section(isExpanded: $isProjectExpanded) {
-                NavigationLink(value: DetailSelection.projectInfo) {
-                    Label {
-                        Text("Project Info")
-                    } icon: {
-                        Image(systemName: "info.circle")
-                            .foregroundStyle(.brown)
-                    }
-                }
-
                 // Characters in a disclosure group
                 DisclosureGroup(isExpanded: $isCharactersExpanded) {
                     ForEach(viewModel.document.characters) { character in
@@ -86,7 +64,7 @@ struct ProjectSidebar: View {
                                 Text(character.name)
                             } icon: {
                                 Image(systemName: "person")
-                                    .foregroundStyle(.brown)
+                                    .foregroundStyle(Color(red: 0.7, green: 0.2, blue: 0.3)) // Rose/maroon
                             }
                         }
                     }
@@ -106,7 +84,7 @@ struct ProjectSidebar: View {
                         Text("Characters")
                     } icon: {
                         Image(systemName: "person.2")
-                            .foregroundStyle(.brown)
+                            .foregroundStyle(Color(red: 0.7, green: 0.2, blue: 0.3)) // Rose/maroon
                     }
                     .badge(viewModel.document.characters.count)
                 }
@@ -119,7 +97,7 @@ struct ProjectSidebar: View {
                                 Text(location.name)
                             } icon: {
                                 Image(systemName: "mappin")
-                                    .foregroundStyle(.brown)
+                                    .foregroundStyle(Color(red: 0.2, green: 0.55, blue: 0.35))
                             }
                         }
                     }
@@ -139,12 +117,24 @@ struct ProjectSidebar: View {
                         Text("Locations")
                     } icon: {
                         Image(systemName: "mappin.and.ellipse")
-                            .foregroundStyle(.brown)
+                            .foregroundStyle(Color(red: 0.2, green: 0.55, blue: 0.35))
                     }
                     .badge(viewModel.document.locations.count)
                 }
 
-                // Calendar
+                // Trash folder
+                FolderItemView(
+                    folder: viewModel.trashFolder,
+                    viewModel: viewModel,
+                    detailSelection: typedSelection
+                )
+            } header: {
+                Text("Binder")
+            }
+
+            // Progress - tracking your writing
+            Section(isExpanded: $isProgressExpanded) {
+                // Calendar (Writing History)
                 NavigationLink(value: DetailSelection.writingHistory) {
                     Label {
                         Text("Calendar")
@@ -153,43 +143,26 @@ struct ProjectSidebar: View {
                             .foregroundStyle(.brown)
                     }
                 }
-            } header: {
-                Text("Project")
-            }
 
-            // Progress Section (Writing Targets)
-            #if os(iOS)
-            if viewModel.document.targets.draftWordCount != nil || viewModel.document.targets.sessionWordCount != nil {
-                Section(isExpanded: $isProgressExpanded) {
-                    VStack(spacing: 10) {
-                        if let draftTarget = viewModel.document.targets.draftWordCount {
-                            WritingTargetProgressView(
-                                title: "Draft Progress",
-                                currentWords: viewModel.rootFolder.totalWordCount,
-                                targetWords: draftTarget,
-                                style: .linear
-                            )
-                        }
-                        if let sessionTarget = viewModel.document.targets.sessionWordCount {
-                            WritingTargetProgressView(
-                                title: "Session Progress",
-                                currentWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0,
-                                targetWords: sessionTarget,
-                                style: .linear
-                            )
-                        }
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 4)
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                } header: {
-                    Text("Progress")
+                // Writing targets (if set)
+                if let draftTarget = viewModel.document.targets.draftWordCount {
+                    WritingTargetProgressView(
+                        title: "Draft Progress",
+                        currentWords: viewModel.rootFolder.totalWordCount,
+                        targetWords: draftTarget,
+                        style: .linear
+                    )
                 }
-            }
+                if let sessionTarget = viewModel.document.targets.sessionWordCount {
+                    WritingTargetProgressView(
+                        title: "Session Progress",
+                        currentWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0,
+                        targetWords: sessionTarget,
+                        style: .linear
+                    )
+                }
 
-            // Stats Section (collapsed by default)
-            Section(isExpanded: $isStatsExpanded) {
+                // Stats
                 SidebarStatRow(
                     icon: "character.cursor.ibeam",
                     color: .blue,
@@ -221,73 +194,8 @@ struct ProjectSidebar: View {
                     value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
                 )
             } header: {
-                Text("Stats")
+                Text("Progress")
             }
-            #else
-            // Progress Section (Writing Targets)
-            if viewModel.document.targets.draftWordCount != nil || viewModel.document.targets.sessionWordCount != nil {
-                Section(isExpanded: $isProgressExpanded) {
-                    if let draftTarget = viewModel.document.targets.draftWordCount {
-                        WritingTargetProgressView(
-                            title: "Draft Progress",
-                            currentWords: viewModel.rootFolder.totalWordCount,
-                            targetWords: draftTarget,
-                            style: .linear
-                        )
-                    }
-                    if let sessionTarget = viewModel.document.targets.sessionWordCount {
-                        WritingTargetProgressView(
-                            title: "Session Progress",
-                            currentWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0,
-                            targetWords: sessionTarget,
-                            style: .linear
-                        )
-                    }
-                } header: {
-                    Text("Progress")
-                }
-            }
-
-            // Stats Section (collapsed by default)
-            Section(isExpanded: $isStatsExpanded) {
-                SidebarStatRow(
-                    icon: "character.cursor.ibeam",
-                    color: .blue,
-                    title: "Total Words",
-                    value: viewModel.rootFolder.totalWordCount.formatted()
-                )
-
-                SidebarStatRow(
-                    icon: "calendar.badge.clock",
-                    color: .green,
-                    title: "Days Written",
-                    value: "\(viewModel.document.writingHistory.daysWritten)"
-                )
-
-                SidebarStatRow(
-                    icon: "flame.fill",
-                    color: viewModel.document.writingHistory.currentStreak > 0 ? .orange : .secondary,
-                    title: "Current Streak",
-                    value: "\(viewModel.document.writingHistory.currentStreak) days"
-                )
-
-                SidebarStatRow(
-                    icon: "trophy.fill",
-                    color: .yellow,
-                    title: "Longest Streak",
-                    value: "\(viewModel.document.writingHistory.longestStreak) days"
-                )
-
-                SidebarStatRow(
-                    icon: "chart.line.uptrend.xyaxis",
-                    color: .purple,
-                    title: "Avg Words/Day",
-                    value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
-                )
-            } header: {
-                Text("Stats")
-            }
-            #endif
         }
         
         // Use the pre-defined content in the List
@@ -314,6 +222,12 @@ struct ProjectSidebar: View {
 
                     Button(action: { isAddLocationSheetPresented.toggle() }) {
                         Label("Add Location", systemImage: "mappin.and.ellipse")
+                    }
+
+                    Divider()
+
+                    NavigationLink(value: DetailSelection.projectInfo) {
+                        Label("Project Info", systemImage: "info.circle")
                     }
                 } label: {
                     Label("Add", systemImage: "plus")
@@ -367,6 +281,10 @@ struct ProjectSidebar: View {
                     }
 
                     Divider()
+
+                    NavigationLink(value: DetailSelection.projectInfo) {
+                        Label("Project Info", systemImage: "info.circle")
+                    }
 
                     Button(action: { showSettings = true }) {
                         Label("Settings", systemImage: "gear")

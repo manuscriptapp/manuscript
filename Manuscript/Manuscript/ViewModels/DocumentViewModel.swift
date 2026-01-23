@@ -18,7 +18,7 @@ class DocumentViewModel: ObservableObject {
 
     // Published special folders for sidebar display
     @Published private(set) var researchFolder: ManuscriptFolder = ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
-    @Published private(set) var trashFolder: ManuscriptFolder = ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: ManuscriptFolder.defaultIconColor)
+    @Published private(set) var trashFolder: ManuscriptFolder = ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
 
     // Published document title for sidebar display
     @Published private(set) var documentTitle: String = ""
@@ -50,7 +50,7 @@ class DocumentViewModel: ObservableObject {
             rootFolder = newValue.rootFolder
             // Update the published special folders
             researchFolder = newValue.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
-            trashFolder = newValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: ManuscriptFolder.defaultIconColor)
+            trashFolder = newValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
             // Update the published title for sidebar display
             documentTitle = newValue.title
         }
@@ -67,7 +67,7 @@ class DocumentViewModel: ObservableObject {
         self.currentFolder = document.wrappedValue.rootFolder
         self.documentTitle = document.wrappedValue.title
         self.researchFolder = document.wrappedValue.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
-        self.trashFolder = document.wrappedValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: ManuscriptFolder.defaultIconColor)
+        self.trashFolder = document.wrappedValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
 
         // Restore project state (expanded folders)
         let savedState = document.wrappedValue.projectState
@@ -203,7 +203,7 @@ class DocumentViewModel: ObservableObject {
         rootFolder = newDocument.rootFolder
         // Update the published special folders
         researchFolder = newDocument.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
-        trashFolder = newDocument.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: ManuscriptFolder.defaultIconColor)
+        trashFolder = newDocument.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
         // Update the published title
         documentTitle = newDocument.title
         // Update current folder if it still exists, otherwise go to root
