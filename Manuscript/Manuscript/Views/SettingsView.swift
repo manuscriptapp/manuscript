@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 #if os(iOS)
 import UIKit
 #else
@@ -8,6 +9,7 @@ import AppKit
 struct SettingsView: View {
     @AppStorage("defaultAuthorName") private var defaultAuthorName: String = ""
     @State private var aiSettings = AISettingsManager.shared
+    @State private var elevenLabsSettings = ElevenLabsSettingsManager.shared
 
     // Formatting defaults
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
@@ -19,14 +21,23 @@ struct SettingsView: View {
     // API Key input states
     @State private var openAIKeyInput: String = ""
     @State private var claudeKeyInput: String = ""
+    @State private var elevenLabsKeyInput: String = ""
     @State private var showOpenAIKey: Bool = false
     @State private var showClaudeKey: Bool = false
+    @State private var showElevenLabsKey: Bool = false
 
     // Connection test states
     @State private var isTestingOpenAI: Bool = false
     @State private var isTestingClaude: Bool = false
+    @State private var isTestingElevenLabs: Bool = false
     @State private var openAITestResult: TestResult?
     @State private var claudeTestResult: TestResult?
+    @State private var elevenLabsTestResult: TestResult?
+
+    // ElevenLabs voice loading state
+    @State private var isLoadingVoices: Bool = false
+    @State private var isPreviewingVoice: Bool = false
+    @State private var previewAudioPlayer: AVAudioPlayer?
 
     enum TestResult {
         case success
@@ -55,6 +66,8 @@ struct SettingsView: View {
             formattingSection
 
             aiSettingsSection
+
+            ttsSettingsSection
 
             Section("App Info") {
                 LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
@@ -239,6 +252,233 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - TTS Settings Section
+
+    @ViewBuilder
+    private var ttsSettingsSection: some View {
+        Section {
+            Text("Listen to your documents read aloud with natural-sounding AI voices.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .listRowBackground(Color.clear)
+                .padding(.vertical, 4)
+
+            elevenLabsKeyField
+
+            // Voice picker (only shown when API key is saved)
+            if elevenLabsSettings.hasAPIKey {
+                HStack {
+                    Picker("Voice", selection: Binding(
+                        get: { elevenLabsSettings.selectedVoiceId ?? "" },
+                        set: { newId in
+                            if let voice = elevenLabsSettings.cachedVoices.first(where: { $0.voiceId == newId }) {
+                                elevenLabsSettings.selectVoice(voice)
+                            }
+                        }
+                    )) {
+                        if elevenLabsSettings.cachedVoices.isEmpty {
+                            Text("Load voices first").tag("")
+                        } else {
+                            ForEach(elevenLabsSettings.cachedVoices) { voice in
+                                Text(voice.name).tag(voice.voiceId)
+                            }
+                        }
+                    }
+                    #if os(iOS)
+                    .pickerStyle(.menu)
+                    #endif
+
+                    // Refresh voices button
+                    Button {
+                        Task {
+                            await loadVoices()
+                        }
+                    } label: {
+                        if isLoadingVoices {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isLoadingVoices)
+                }
+
+                // Preview and test buttons
+                HStack {
+                    // Preview voice button
+                    Button {
+                        Task {
+                            await previewVoice()
+                        }
+                    } label: {
+                        HStack {
+                            if isPreviewingVoice {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "play.fill")
+                            }
+                            Text("Preview")
+                        }
+                    }
+                    .disabled(isPreviewingVoice || elevenLabsSettings.selectedVoiceId == nil)
+
+                    Spacer()
+
+                    // Test connection button
+                    elevenLabsTestButton
+                }
+            }
+        } header: {
+            Text("Text-to-Speech")
+        } footer: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Powered by ElevenLabs. API keys are securely stored in your iCloud Keychain.")
+                Link("Browse Voice Library for more voices →", destination: URL(string: "https://elevenlabs.io/voice-library")!)
+                    .font(.caption)
+            }
+        }
+
+        // Voice Settings Section (only when configured)
+        if elevenLabsSettings.hasAPIKey {
+            Section {
+                // Stability slider
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Stability")
+                        Spacer()
+                        Text("\(Int(elevenLabsSettings.stability * 100))%")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    Slider(value: $elevenLabsSettings.stability, in: 0...1, step: 0.05)
+                    Text("Lower = more expressive, Higher = more consistent")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+
+                // Similarity Boost slider
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Clarity + Similarity")
+                        Spacer()
+                        Text("\(Int(elevenLabsSettings.similarityBoost * 100))%")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    Slider(value: $elevenLabsSettings.similarityBoost, in: 0...1, step: 0.05)
+                    Text("How closely to match the original voice")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+
+                // Style slider
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Style Exaggeration")
+                        Spacer()
+                        Text("\(Int(elevenLabsSettings.style * 100))%")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    Slider(value: $elevenLabsSettings.style, in: 0...1, step: 0.05)
+                    Text("Higher values amplify style but use more processing")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+
+                // Speaker Boost toggle
+                Toggle("Speaker Boost", isOn: $elevenLabsSettings.useSpeakerBoost)
+            } header: {
+                Text("Voice Settings")
+            } footer: {
+                Text("Adjust how the voice sounds. Changes apply to both preview and document reading.")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var elevenLabsTestButton: some View {
+        Button {
+            Task {
+                await testElevenLabsConnection()
+            }
+        } label: {
+            HStack {
+                if isTestingElevenLabs {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Testing...")
+                } else {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                    Text("Test Connection")
+                }
+            }
+        }
+        .disabled(isTestingElevenLabs)
+
+        // Show test result
+        if let result = elevenLabsTestResult {
+            testResultView(result)
+        }
+    }
+
+    // MARK: - ElevenLabs Key Field
+
+    @ViewBuilder
+    private var elevenLabsKeyField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                if showElevenLabsKey {
+                    TextField("ElevenLabs API Key", text: $elevenLabsKeyInput)
+                        .textFieldStyle(.automatic)
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        #endif
+                } else {
+                    SecureField("ElevenLabs API Key", text: $elevenLabsKeyInput)
+                        .textFieldStyle(.automatic)
+                }
+
+                Button {
+                    showElevenLabsKey.toggle()
+                } label: {
+                    Image(systemName: showElevenLabsKey ? "eye.slash" : "eye")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if elevenLabsSettings.hasAPIKey && elevenLabsKeyInput.isEmpty {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text("Key saved: \(elevenLabsSettings.apiKeyPreview)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Button("Remove", role: .destructive) {
+                        removeElevenLabsKey()
+                    }
+                    .font(.caption)
+                }
+            }
+
+            if !elevenLabsKeyInput.isEmpty {
+                Button("Save Key") {
+                    saveElevenLabsKey()
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+            }
+        }
+    }
+
     // MARK: - OpenAI Key Field
 
     @ViewBuilder
@@ -408,6 +648,7 @@ struct SettingsView: View {
         // Clear input fields - we show preview of saved keys separately
         openAIKeyInput = ""
         claudeKeyInput = ""
+        elevenLabsKeyInput = ""
     }
 
     private func saveOpenAIKey() {
@@ -448,6 +689,78 @@ struct SettingsView: View {
         } catch {
             claudeTestResult = .failure("Failed to remove key: \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - ElevenLabs Key Management
+
+    private func saveElevenLabsKey() {
+        do {
+            try elevenLabsSettings.saveAPIKey(elevenLabsKeyInput)
+            elevenLabsKeyInput = ""
+            elevenLabsTestResult = nil
+            // Load voices after saving key
+            Task {
+                await loadVoices()
+            }
+        } catch {
+            elevenLabsTestResult = .failure("Failed to save key: \(error.localizedDescription)")
+        }
+    }
+
+    private func removeElevenLabsKey() {
+        do {
+            try elevenLabsSettings.deleteAPIKey()
+            elevenLabsKeyInput = ""
+            elevenLabsTestResult = nil
+        } catch {
+            elevenLabsTestResult = .failure("Failed to remove key: \(error.localizedDescription)")
+        }
+    }
+
+    private func loadVoices() async {
+        isLoadingVoices = true
+        do {
+            let voices = try await ElevenLabsService.shared.fetchVoices()
+            // Auto-select a voice if none selected
+            if elevenLabsSettings.selectedVoiceId == nil {
+                elevenLabsSettings.autoSelectVoice(from: voices)
+            }
+        } catch {
+            elevenLabsTestResult = .failure("Failed to load voices: \(error.localizedDescription)")
+        }
+        isLoadingVoices = false
+    }
+
+    private func previewVoice() async {
+        guard let voiceId = elevenLabsSettings.selectedVoiceId else { return }
+
+        isPreviewingVoice = true
+        elevenLabsTestResult = nil
+
+        // Preview text in Swedish
+        let previewText = "Hej! Det här är en förhandsvisning av rösten. Så här kommer din text att låta."
+
+        do {
+            let audioData = try await ElevenLabsService.shared.generateSpeech(text: previewText, voiceId: voiceId)
+            previewAudioPlayer = try AVAudioPlayer(data: audioData)
+            previewAudioPlayer?.play()
+        } catch {
+            elevenLabsTestResult = .failure("Preview failed: \(error.localizedDescription)")
+        }
+
+        isPreviewingVoice = false
+    }
+
+    private func testElevenLabsConnection() async {
+        isTestingElevenLabs = true
+        elevenLabsTestResult = nil
+        do {
+            _ = try await ElevenLabsService.shared.testConnection()
+            elevenLabsTestResult = .success
+        } catch {
+            elevenLabsTestResult = .failure(error.localizedDescription)
+        }
+        isTestingElevenLabs = false
     }
 
     private func testConnection(for provider: AIModelProvider) async {

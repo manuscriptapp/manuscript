@@ -12,6 +12,9 @@ struct DocumentDetailView: View {
     @State private var isReadMode = false
     @State private var showSettings = false
     @State private var isCompositionModeActive = false
+    @State private var audioPlayback = AudioPlaybackManager.shared
+    @State private var elevenLabsSettings = ElevenLabsSettingsManager.shared
+    @State private var showAudioPlayer = false
     #if os(macOS)
     @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
     @StateObject private var syncService = ICloudSyncService()
@@ -212,16 +215,12 @@ struct DocumentDetailView: View {
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
         #if os(macOS)
-        // iCloud sync status (near title)
+        // iCloud sync status (navigation area)
         if #available(macOS 26.0, *) {
             ToolbarItem(placement: .navigation) {
                 ICloudSyncStatusView(syncService: syncService)
             }
             .sharedBackgroundVisibility(.hidden)
-        } else {
-            ToolbarItem(placement: .navigation) {
-                ICloudSyncStatusView(syncService: syncService)
-            }
         }
 
         // Center: View modes (Composition, Read)
@@ -241,21 +240,14 @@ struct DocumentDetailView: View {
                 Label(isReadMode ? "Edit" : "Read", systemImage: isReadMode ? "pencil" : "book")
             }
             .help(isReadMode ? "Switch to Edit Mode" : "Switch to Read Mode")
+
+            // Read Aloud button
+            readAloudButton
         }
 
         // Right: Split View
         ToolbarItem(placement: .primaryAction) {
             splitViewToolbarMenu
-        }
-
-        // Right: Find & Replace
-        ToolbarItem(placement: .primaryAction) {
-            Button {
-                detailViewModel.showFindBar = true
-            } label: {
-                Label("Find", systemImage: "magnifyingglass")
-            }
-            .help("Find (⌘F)")
         }
 
         // Right: Inspector toggle (rightmost)
@@ -300,8 +292,63 @@ struct DocumentDetailView: View {
             } label: {
                 Label(isReadMode ? "Edit" : "Read", systemImage: isReadMode ? "pencil" : "book")
             }
+
+            // Read Aloud button
+            readAloudButton
         }
         #endif
+    }
+
+    // MARK: - Read Aloud Button
+
+    /// Text to be read aloud - uses selection if available, otherwise full content
+    private var textToRead: String {
+        if detailViewModel.hasTextSelection && !detailViewModel.selectedText.isEmpty {
+            return detailViewModel.selectedText
+        }
+        return detailViewModel.editedContent
+    }
+
+    /// Whether reading selected text vs full document
+    private var isReadingSelection: Bool {
+        detailViewModel.hasTextSelection && !detailViewModel.selectedText.isEmpty
+    }
+
+    @ViewBuilder
+    private var readAloudButton: some View {
+        Button {
+            showAudioPlayer.toggle()
+        } label: {
+            if audioPlayback.isLoading {
+                ProgressView()
+                    .controlSize(.small)
+            } else if audioPlayback.isPlaying || audioPlayback.isPaused {
+                Label("Audio Player", systemImage: "speaker.wave.2.fill")
+            } else {
+                Label("Read Aloud", systemImage: "speaker.wave.2")
+            }
+        }
+        .help(readAloudHelpText)
+        .disabled(detailViewModel.editedContent.isEmpty)
+        .popover(isPresented: $showAudioPlayer) {
+            AudioPlayerPopover(
+                isPresented: $showAudioPlayer,
+                text: textToRead,
+                isSelection: isReadingSelection
+            )
+        }
+    }
+
+    private var readAloudHelpText: String {
+        if !elevenLabsSettings.isConfigured {
+            return "Configure ElevenLabs in Settings to enable Read Aloud"
+        } else if audioPlayback.isPlaying {
+            return "Audio Player"
+        } else if isReadingSelection {
+            return "Read Selection Aloud"
+        } else {
+            return "Read Aloud"
+        }
     }
 
     @ViewBuilder

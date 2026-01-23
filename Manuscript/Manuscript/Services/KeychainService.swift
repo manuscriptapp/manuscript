@@ -13,6 +13,7 @@ final class KeychainService {
     enum KeychainKey: String {
         case openAIAPIKey = "openai_api_key"
         case claudeAPIKey = "claude_api_key"
+        case elevenLabsAPIKey = "elevenlabs_api_key"
     }
 
     enum KeychainError: LocalizedError {
