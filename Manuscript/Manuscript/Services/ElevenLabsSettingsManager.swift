@@ -133,10 +133,10 @@ final class ElevenLabsSettingsManager {
         self.selectedVoiceId = userDefaults.string(forKey: DefaultsKey.selectedVoiceId)
         self.selectedVoiceName = userDefaults.string(forKey: DefaultsKey.selectedVoiceName)
 
-        // Load voice settings with defaults
-        self.stability = userDefaults.object(forKey: DefaultsKey.stability) as? Double ?? 0.5
-        self.similarityBoost = userDefaults.object(forKey: DefaultsKey.similarityBoost) as? Double ?? 0.75
-        self.style = userDefaults.object(forKey: DefaultsKey.style) as? Double ?? 0.0
+        // Load voice settings with defaults optimized for audiobook narration
+        self.stability = userDefaults.object(forKey: DefaultsKey.stability) as? Double ?? 0.70
+        self.similarityBoost = userDefaults.object(forKey: DefaultsKey.similarityBoost) as? Double ?? 0.70
+        self.style = userDefaults.object(forKey: DefaultsKey.style) as? Double ?? 0.25
         self.useSpeakerBoost = userDefaults.object(forKey: DefaultsKey.useSpeakerBoost) as? Bool ?? true
 
         // Load cached voices from UserDefaults

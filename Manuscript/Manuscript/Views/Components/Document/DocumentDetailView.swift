@@ -15,6 +15,7 @@ struct DocumentDetailView: View {
     @State private var audioPlayback = AudioPlaybackManager.shared
     @State private var elevenLabsSettings = ElevenLabsSettingsManager.shared
     @State private var showAudioPlayer = false
+    @State private var showExportSheet = false
     #if os(macOS)
     @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
     @StateObject private var syncService = ICloudSyncService()
@@ -94,6 +95,9 @@ struct DocumentDetailView: View {
             .navigationTitle(detailViewModel.editedTitle)
             .toolbar { toolbarContent }
             .sheet(isPresented: $showSettings) { settingsSheet }
+            .sheet(isPresented: $showExportSheet) {
+                CompileSheet(document: viewModel.document)
+            }
             #if os(iOS)
             .fullScreenCover(isPresented: $isCompositionModeActive) {
                 CompositionModeView(viewModel: detailViewModel, isPresented: $isCompositionModeActive)
@@ -215,10 +219,11 @@ struct DocumentDetailView: View {
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
         #if os(macOS)
-        // iCloud sync status (right side)
+        // iCloud sync status (left side)
         if #available(macOS 26.0, *) {
-            ToolbarItem(placement: .automatic) {
+            ToolbarItem(placement: .navigation) {
                 ICloudSyncStatusView(syncService: syncService)
+                    .scaleEffect(0.85)
             }
             .sharedBackgroundVisibility(.hidden)
         }
@@ -243,6 +248,16 @@ struct DocumentDetailView: View {
 
             // Read Aloud button
             readAloudButton
+        }
+
+        // Right: Export
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                showExportSheet = true
+            } label: {
+                Label("Export", systemImage: "square.and.arrow.up")
+            }
+            .help("Export Document")
         }
 
         // Right: Split View
@@ -295,6 +310,13 @@ struct DocumentDetailView: View {
 
             // Read Aloud button
             readAloudButton
+
+            // Export button
+            Button {
+                showExportSheet = true
+            } label: {
+                Label("Export", systemImage: "square.and.arrow.up")
+            }
         }
         #endif
     }
