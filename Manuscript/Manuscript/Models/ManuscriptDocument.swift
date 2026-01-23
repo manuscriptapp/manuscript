@@ -258,11 +258,11 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
 
         // Determine default icon and color based on folder type
         let defaultIcon: String
-        let defaultColor: String
+        let defaultColor: String?
         switch type {
         case .draft:
             defaultIcon = "text.book.closed"
-            defaultColor = ManuscriptFolder.defaultIconColor
+            defaultColor = nil  // Uses .blue in views
         case .research:
             defaultIcon = "books.vertical"
             defaultColor = "#A2845E"  // Brown
@@ -271,7 +271,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             defaultColor = "#8E8E93"  // Gray
         default:
             defaultIcon = "folder"
-            defaultColor = ManuscriptFolder.defaultIconColor
+            defaultColor = nil  // Uses .blue in views
         }
 
         var folder = ManuscriptFolder(
