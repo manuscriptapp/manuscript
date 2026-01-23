@@ -49,6 +49,20 @@ struct ProjectSidebar: View {
                     viewModel: viewModel,
                     detailSelection: typedSelection
                 )
+
+                // Research folder
+                FolderItemView(
+                    folder: viewModel.researchFolder,
+                    viewModel: viewModel,
+                    detailSelection: typedSelection
+                )
+
+                // Trash folder
+                FolderItemView(
+                    folder: viewModel.trashFolder,
+                    viewModel: viewModel,
+                    detailSelection: typedSelection
+                )
             } header: {
                 Text("Content")
             }

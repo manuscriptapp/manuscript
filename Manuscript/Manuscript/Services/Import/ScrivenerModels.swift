@@ -18,6 +18,7 @@ struct ScrivenerProject {
     let binderItems: [ScrivenerBinderItem]
     let labels: [ScrivenerLabel]
     let statuses: [ScrivenerStatus]
+    let keywords: [ScrivenerKeyword]
     let targets: ScrivenerTargets?
     let customMetadata: [ScrivenerCustomField]
 }
@@ -39,6 +40,7 @@ struct ScrivenerBinderItem {
     let children: [ScrivenerBinderItem]
     let targetWordCount: Int?
     let iconFileName: String?           // Custom icon name e.g., "Flag (Red)"
+    let keywordIDs: [Int]               // References to project keywords
 
     init(
         id: String,
@@ -53,7 +55,8 @@ struct ScrivenerBinderItem {
         includeInCompile: Bool = true,
         children: [ScrivenerBinderItem] = [],
         targetWordCount: Int? = nil,
-        iconFileName: String? = nil
+        iconFileName: String? = nil,
+        keywordIDs: [Int] = []
     ) {
         self.id = id
         self.uuid = uuid
@@ -68,6 +71,7 @@ struct ScrivenerBinderItem {
         self.children = children
         self.targetWordCount = targetWordCount
         self.iconFileName = iconFileName
+        self.keywordIDs = keywordIDs
     }
 }
 
@@ -137,6 +141,21 @@ struct ScrivenerStatus {
     init(id: Int, name: String) {
         self.id = id
         self.name = name
+    }
+}
+
+// MARK: - Keyword
+
+/// A keyword definition from Scrivener
+struct ScrivenerKeyword {
+    let id: Int
+    let name: String
+    let color: Color?
+
+    init(id: Int, name: String, color: Color? = nil) {
+        self.id = id
+        self.name = name
+        self.color = color
     }
 }
 

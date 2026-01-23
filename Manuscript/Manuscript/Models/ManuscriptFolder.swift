@@ -46,6 +46,9 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         lhs.iconColor == rhs.iconColor
     }
 
+    /// Default cyan color for folder icons (hex)
+    static let defaultIconColor = "#32ADE6"
+
     init(
         id: UUID = UUID(),
         title: String,
@@ -54,7 +57,7 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         order: Int = 0,
         expanded: Bool = true,
         iconName: String = "folder",
-        iconColor: String? = nil,
+        iconColor: String? = defaultIconColor,
         subfolders: [ManuscriptFolder] = [],
         documents: [ManuscriptDocument.Document] = []
     ) {

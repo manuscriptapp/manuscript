@@ -5,11 +5,13 @@ import SwiftData
 enum FolderViewMode: String, CaseIterable {
     case grid
     case corkboard
+    case outline
 
     var icon: String {
         switch self {
         case .grid: return "square.grid.2x2"
         case .corkboard: return "rectangle.on.rectangle"
+        case .outline: return "list.bullet.indent"
         }
     }
 
@@ -17,6 +19,7 @@ enum FolderViewMode: String, CaseIterable {
         switch self {
         case .grid: return "Grid"
         case .corkboard: return "Corkboard"
+        case .outline: return "Outline"
         }
     }
 }
@@ -34,6 +37,8 @@ struct FolderDetailView: View {
                 gridView
             case .corkboard:
                 CorkboardView(folderId: folder.id, viewModel: viewModel, selection: $selection)
+            case .outline:
+                OutlineView(folderId: folder.id, viewModel: viewModel, selection: $selection)
             }
         }
         .navigationTitle(folder.title)
@@ -59,7 +64,7 @@ struct FolderDetailView: View {
         }
         .pickerStyle(.segmented)
         .labelsHidden()
-        .frame(width: 80)
+        .frame(width: 120)
     }
 
     private var addDocumentButton: some View {

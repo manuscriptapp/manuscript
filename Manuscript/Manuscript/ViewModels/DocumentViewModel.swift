@@ -16,6 +16,10 @@ class DocumentViewModel: ObservableObject {
     // Published root folder for sidebar display - this is the source of truth for UI
     @Published private(set) var rootFolder: ManuscriptFolder = ManuscriptFolder(title: "Draft")
 
+    // Published special folders for sidebar display
+    @Published private(set) var researchFolder: ManuscriptFolder = ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+    @Published private(set) var trashFolder: ManuscriptFolder = ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: ManuscriptFolder.defaultIconColor)
+
     // Published document title for sidebar display
     @Published private(set) var documentTitle: String = ""
 
@@ -44,6 +48,9 @@ class DocumentViewModel: ObservableObject {
             documentBinding?.wrappedValue = newValue
             // Update the published rootFolder for immediate UI updates
             rootFolder = newValue.rootFolder
+            // Update the published special folders
+            researchFolder = newValue.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+            trashFolder = newValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: ManuscriptFolder.defaultIconColor)
             // Update the published title for sidebar display
             documentTitle = newValue.title
         }
@@ -59,6 +66,8 @@ class DocumentViewModel: ObservableObject {
         self.rootFolder = document.wrappedValue.rootFolder
         self.currentFolder = document.wrappedValue.rootFolder
         self.documentTitle = document.wrappedValue.title
+        self.researchFolder = document.wrappedValue.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+        self.trashFolder = document.wrappedValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: ManuscriptFolder.defaultIconColor)
 
         // Restore project state (expanded folders)
         let savedState = document.wrappedValue.projectState
@@ -192,10 +201,13 @@ class DocumentViewModel: ObservableObject {
     func syncWithDocument(_ newDocument: ManuscriptDocument) {
         // Update the published rootFolder for sidebar display
         rootFolder = newDocument.rootFolder
+        // Update the published special folders
+        researchFolder = newDocument.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+        trashFolder = newDocument.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: ManuscriptFolder.defaultIconColor)
         // Update the published title
         documentTitle = newDocument.title
         // Update current folder if it still exists, otherwise go to root
-        if let updatedFolder = findFolder(withId: currentFolder.id, in: newDocument.rootFolder) {
+        if let updatedFolder = findFolderInAllFolders(withId: currentFolder.id) {
             currentFolder = updatedFolder
         } else {
             currentFolder = newDocument.rootFolder
@@ -244,6 +256,23 @@ class DocumentViewModel: ObservableObject {
         return nil
     }
 
+    /// Finds a folder by ID in all folder hierarchies (root, research, trash)
+    func findFolderInAllFolders(withId id: UUID) -> ManuscriptFolder? {
+        // Search in root folder
+        if let found = findFolder(withId: id, in: rootFolder) {
+            return found
+        }
+        // Search in research folder
+        if let found = findFolder(withId: id, in: researchFolder) {
+            return found
+        }
+        // Search in trash folder
+        if let found = findFolder(withId: id, in: trashFolder) {
+            return found
+        }
+        return nil
+    }
+
     /// Finds the parent folder containing a given document
     func findParentFolder(of doc: ManuscriptDocument.Document) -> ManuscriptFolder? {
         return findParentFolderRecursively(of: doc.id, in: rootFolder)
@@ -275,14 +304,43 @@ class DocumentViewModel: ObservableObject {
 
     // MARK: - Folder Management
 
+    /// Determines which folder hierarchy contains the given folder ID
+    private func folderHierarchyContaining(folderId: UUID) -> FolderHierarchy? {
+        if findFolder(withId: folderId, in: rootFolder) != nil {
+            return .root
+        }
+        if findFolder(withId: folderId, in: researchFolder) != nil {
+            return .research
+        }
+        if findFolder(withId: folderId, in: trashFolder) != nil {
+            return .trash
+        }
+        return nil
+    }
+
+    private enum FolderHierarchy {
+        case root, research, trash
+    }
+
     func addFolder(to parentFolder: ManuscriptFolder, title: String) {
         let newFolder = ManuscriptFolder(title: title)
         var doc = document
-        doc.rootFolder = addFolderRecursively(to: doc.rootFolder, parentId: parentFolder.id, newFolder: newFolder)
+
+        // Determine which folder hierarchy to update
+        if let hierarchy = folderHierarchyContaining(folderId: parentFolder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = addFolderRecursively(to: doc.rootFolder, parentId: parentFolder.id, newFolder: newFolder)
+            case .research:
+                doc.researchFolder = addFolderRecursively(to: doc.researchFolder ?? researchFolder, parentId: parentFolder.id, newFolder: newFolder)
+            case .trash:
+                doc.trashFolder = addFolderRecursively(to: doc.trashFolder ?? trashFolder, parentId: parentFolder.id, newFolder: newFolder)
+            }
+        }
         document = doc
 
         // Update current folder if needed
-        if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
             currentFolder = updated
         }
 
@@ -308,10 +366,29 @@ class DocumentViewModel: ObservableObject {
 
     func renameFolder(_ folder: ManuscriptFolder, newTitle: String) {
         var doc = document
-        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
-            var updated = f
-            updated.title = newTitle
-            return updated
+
+        // Update in all folder hierarchies
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.title = newTitle
+                    return updated
+                }
+            case .research:
+                doc.researchFolder = updateFolderRecursively(doc.researchFolder ?? researchFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.title = newTitle
+                    return updated
+                }
+            case .trash:
+                doc.trashFolder = updateFolderRecursively(doc.trashFolder ?? trashFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.title = newTitle
+                    return updated
+                }
+            }
         }
         document = doc
 
@@ -322,13 +399,38 @@ class DocumentViewModel: ObservableObject {
 
     func updateFolderIcon(_ folder: ManuscriptFolder, iconName: String, iconColor: String? = nil) {
         var doc = document
-        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
-            var updated = f
-            updated.iconName = iconName
-            if let color = iconColor {
-                updated.iconColor = color
+
+        // Update in all folder hierarchies
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.iconName = iconName
+                    if let color = iconColor {
+                        updated.iconColor = color
+                    }
+                    return updated
+                }
+            case .research:
+                doc.researchFolder = updateFolderRecursively(doc.researchFolder ?? researchFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.iconName = iconName
+                    if let color = iconColor {
+                        updated.iconColor = color
+                    }
+                    return updated
+                }
+            case .trash:
+                doc.trashFolder = updateFolderRecursively(doc.trashFolder ?? trashFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.iconName = iconName
+                    if let color = iconColor {
+                        updated.iconColor = color
+                    }
+                    return updated
+                }
             }
-            return updated
         }
         document = doc
 
@@ -342,10 +444,29 @@ class DocumentViewModel: ObservableObject {
 
     func updateFolderIconColor(_ folder: ManuscriptFolder, hexColor: String?) {
         var doc = document
-        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
-            var updated = f
-            updated.iconColor = hexColor
-            return updated
+
+        // Update in all folder hierarchies
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.iconColor = hexColor
+                    return updated
+                }
+            case .research:
+                doc.researchFolder = updateFolderRecursively(doc.researchFolder ?? researchFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.iconColor = hexColor
+                    return updated
+                }
+            case .trash:
+                doc.trashFolder = updateFolderRecursively(doc.trashFolder ?? trashFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.iconColor = hexColor
+                    return updated
+                }
+            }
         }
         document = doc
 
@@ -355,10 +476,24 @@ class DocumentViewModel: ObservableObject {
     }
 
     func deleteFolder(_ folder: ManuscriptFolder) {
-        guard folder.id != document.rootFolder.id else { return }
+        // Don't allow deleting root folders
+        guard folder.id != document.rootFolder.id,
+              folder.id != researchFolder.id,
+              folder.id != trashFolder.id else { return }
 
         var doc = document
-        doc.rootFolder = removeFolderRecursively(doc.rootFolder, folderIdToRemove: folder.id)
+
+        // Remove from all folder hierarchies
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = removeFolderRecursively(doc.rootFolder, folderIdToRemove: folder.id)
+            case .research:
+                doc.researchFolder = removeFolderRecursively(doc.researchFolder ?? researchFolder, folderIdToRemove: folder.id)
+            case .trash:
+                doc.trashFolder = removeFolderRecursively(doc.trashFolder ?? trashFolder, folderIdToRemove: folder.id)
+            }
+        }
         document = doc
 
         if folder.id == currentFolder.id {
@@ -403,14 +538,33 @@ class DocumentViewModel: ObservableObject {
         )
 
         var doc = document
-        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
-            var updated = f
-            updated.documents.append(newDoc)
-            return updated
+
+        // Determine which folder hierarchy to update
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.documents.append(newDoc)
+                    return updated
+                }
+            case .research:
+                doc.researchFolder = updateFolderRecursively(doc.researchFolder ?? researchFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.documents.append(newDoc)
+                    return updated
+                }
+            case .trash:
+                doc.trashFolder = updateFolderRecursively(doc.trashFolder ?? trashFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.documents.append(newDoc)
+                    return updated
+                }
+            }
         }
         document = doc
 
-        if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
             currentFolder = updated
         }
 
@@ -439,14 +593,33 @@ class DocumentViewModel: ObservableObject {
         )
 
         var doc = document
-        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
-            var updated = f
-            updated.documents.append(newDoc)
-            return updated
+
+        // Determine which folder hierarchy to update
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.documents.append(newDoc)
+                    return updated
+                }
+            case .research:
+                doc.researchFolder = updateFolderRecursively(doc.researchFolder ?? researchFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.documents.append(newDoc)
+                    return updated
+                }
+            case .trash:
+                doc.trashFolder = updateFolderRecursively(doc.trashFolder ?? trashFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.documents.append(newDoc)
+                    return updated
+                }
+            }
         }
         document = doc
 
-        if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
             currentFolder = updated
         }
 
@@ -474,7 +647,11 @@ class DocumentViewModel: ObservableObject {
         if let comments = comments { updatedDoc.comments = comments }
 
         var doc = document
+
+        // Update in all folder hierarchies
         doc.rootFolder = updateDocumentInFolder(doc.rootFolder, docId: docToUpdate.id, updatedDoc: updatedDoc)
+        doc.researchFolder = updateDocumentInFolder(doc.researchFolder ?? researchFolder, docId: docToUpdate.id, updatedDoc: updatedDoc)
+        doc.trashFolder = updateDocumentInFolder(doc.trashFolder ?? trashFolder, docId: docToUpdate.id, updatedDoc: updatedDoc)
 
         // Track writing history if content changed and words were added
         if content != nil {
@@ -490,7 +667,7 @@ class DocumentViewModel: ObservableObject {
         if selectedDocument?.id == docToUpdate.id {
             selectedDocument = updatedDoc
         }
-        if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
             currentFolder = updated
         }
     }
@@ -509,7 +686,11 @@ class DocumentViewModel: ObservableObject {
 
     func deleteDocument(_ doc: ManuscriptDocument.Document) {
         var document = self.document
+
+        // Remove from all folder hierarchies
         document.rootFolder = removeDocumentFromFolder(document.rootFolder, docId: doc.id)
+        document.researchFolder = removeDocumentFromFolder(document.researchFolder ?? researchFolder, docId: doc.id)
+        document.trashFolder = removeDocumentFromFolder(document.trashFolder ?? trashFolder, docId: doc.id)
 
         // Clean up character references
         for i in 0..<document.characters.count {
@@ -526,7 +707,7 @@ class DocumentViewModel: ObservableObject {
         if selectedDocument?.id == doc.id {
             selectedDocument = nil
         }
-        if let updated = findFolder(withId: currentFolder.id, in: document.rootFolder) {
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
             currentFolder = updated
         }
     }
@@ -546,6 +727,29 @@ class DocumentViewModel: ObservableObject {
 
     func updateDocumentColor(_ doc: ManuscriptDocument.Document, colorName: String) {
         updateDocument(doc, colorName: colorName)
+    }
+
+    /// Update document label and status metadata (used by outline view inline editing)
+    func updateDocumentMetadata(_ doc: ManuscriptDocument.Document, labelId: String?, statusId: String?) {
+        var updatedDoc = doc
+        updatedDoc.labelId = labelId
+        updatedDoc.statusId = statusId
+
+        var document = self.document
+
+        // Update in all folder hierarchies
+        document.rootFolder = updateDocumentInFolder(document.rootFolder, docId: doc.id, updatedDoc: updatedDoc)
+        document.researchFolder = updateDocumentInFolder(document.researchFolder ?? researchFolder, docId: doc.id, updatedDoc: updatedDoc)
+        document.trashFolder = updateDocumentInFolder(document.trashFolder ?? trashFolder, docId: doc.id, updatedDoc: updatedDoc)
+
+        self.document = document
+
+        if selectedDocument?.id == doc.id {
+            selectedDocument = updatedDoc
+        }
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
+            currentFolder = updated
+        }
     }
 
     // MARK: - Character Management
@@ -630,7 +834,8 @@ class DocumentViewModel: ObservableObject {
         objectWillChange.send()
 
         var doc = document
-        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+
+        let moveTransform: (ManuscriptFolder) -> ManuscriptFolder = { f in
             var updated = f
             updated.documents.move(fromOffsets: source, toOffset: destination)
             // Update order property to match new positions
@@ -639,8 +844,20 @@ class DocumentViewModel: ObservableObject {
             }
             return updated
         }
+
+        // Determine which folder hierarchy to update
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id, transform: moveTransform)
+            case .research:
+                doc.researchFolder = updateFolderRecursively(doc.researchFolder ?? researchFolder, folderId: folder.id, transform: moveTransform)
+            case .trash:
+                doc.trashFolder = updateFolderRecursively(doc.trashFolder ?? trashFolder, folderId: folder.id, transform: moveTransform)
+            }
+        }
         document = doc
-        if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
             currentFolder = updated
         }
     }
@@ -648,7 +865,8 @@ class DocumentViewModel: ObservableObject {
     /// Move subfolders within a folder from source indices to a destination index
     func moveSubfolders(in folder: ManuscriptFolder, from source: IndexSet, to destination: Int) {
         var doc = document
-        doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+
+        let moveTransform: (ManuscriptFolder) -> ManuscriptFolder = { f in
             var updated = f
             updated.subfolders.move(fromOffsets: source, toOffset: destination)
             // Update order property to match new positions
@@ -657,8 +875,20 @@ class DocumentViewModel: ObservableObject {
             }
             return updated
         }
+
+        // Determine which folder hierarchy to update
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id, transform: moveTransform)
+            case .research:
+                doc.researchFolder = updateFolderRecursively(doc.researchFolder ?? researchFolder, folderId: folder.id, transform: moveTransform)
+            case .trash:
+                doc.trashFolder = updateFolderRecursively(doc.trashFolder ?? trashFolder, folderId: folder.id, transform: moveTransform)
+            }
+        }
         document = doc
-        if let updated = findFolder(withId: currentFolder.id, in: doc.rootFolder) {
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
             currentFolder = updated
         }
     }

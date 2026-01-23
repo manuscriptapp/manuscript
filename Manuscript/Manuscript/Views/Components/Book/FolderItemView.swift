@@ -11,19 +11,9 @@ struct FolderItemView: View {
         @Binding var detailSelection: DetailSelection?
         @State private var isAddFolderSheetPresented = false
 
-        /// Look up the current folder from the published rootFolder to ensure we always have fresh data
+        /// Look up the current folder from all folder hierarchies to ensure we always have fresh data
         private var folder: ManuscriptFolder {
-            findFolder(withId: folderId, in: viewModel.rootFolder) ?? ManuscriptFolder(title: "Unknown")
-        }
-
-        private func findFolder(withId id: UUID, in searchFolder: ManuscriptFolder) -> ManuscriptFolder? {
-            if searchFolder.id == id { return searchFolder }
-            for subfolder in searchFolder.subfolders {
-                if let found = findFolder(withId: id, in: subfolder) {
-                    return found
-                }
-            }
-            return nil
+            viewModel.findFolderInAllFolders(withId: folderId) ?? ManuscriptFolder(title: "Unknown")
         }
 
         // Icon options for folders
@@ -324,13 +314,6 @@ struct FolderItemView: View {
             viewModel: viewModel,
             detailSelection: $detailSelection
         )
-    }
-}
-
-// Extension to make colors darker - needed for the UI
-extension Color {
-    func darker(by percentage: CGFloat = 0.2) -> Color {
-        return self.opacity(1.0 - percentage)
     }
 }
 

@@ -23,6 +23,7 @@ final class ScrivenerImporter {
     // Mapping tables built during import
     private var labelMap: [Int: ManuscriptLabel] = [:]
     private var statusMap: [Int: ManuscriptStatus] = [:]
+    private var keywordMap: [Int: String] = [:]  // Keyword ID to name
 
     // MARK: - Initialization
 
@@ -118,6 +119,7 @@ final class ScrivenerImporter {
         importedFolders = 0
         labelMap = [:]
         statusMap = [:]
+        keywordMap = [:]
 
         // 1. Validate
         progress?(0.05, "Validating Scrivener project...")
@@ -175,6 +177,11 @@ final class ScrivenerImporter {
         }
         if manuscript.statuses.isEmpty {
             manuscript.statuses = ManuscriptStatus.defaults
+        }
+
+        // 6b. Build keyword map from Scrivener
+        for keyword in scrivProject.keywords {
+            keywordMap[keyword.id] = keyword.name
         }
 
         // 7. Map targets
@@ -656,6 +663,9 @@ final class ScrivenerImporter {
             statusId = status.id
         }
 
+        // Map keyword IDs to keyword names
+        let keywordNames = item.keywordIDs.compactMap { keywordMap[$0] }
+
         // Map Scrivener icon to SF Symbol with optional color
         let iconMapping = ScrivenerIconMapper.map(
             scrivenerIcon: item.iconFileName,
@@ -676,7 +686,7 @@ final class ScrivenerImporter {
             iconColor: iconMapping.colorHex,
             labelId: labelId,
             statusId: statusId,
-            keywords: [],
+            keywords: keywordNames,
             includeInCompile: item.includeInCompile,
             characterIds: [],
             locationIds: [],

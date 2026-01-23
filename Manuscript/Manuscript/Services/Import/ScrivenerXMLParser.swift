@@ -10,6 +10,7 @@ final class ScrivenerXMLParser: NSObject {
     private var binderItems: [ScrivenerBinderItem] = []
     private var labels: [ScrivenerLabel] = []
     private var statuses: [ScrivenerStatus] = []
+    private var keywords: [ScrivenerKeyword] = []
     private var draftTarget: Int?
     private var sessionTarget: Int?
 
@@ -36,10 +37,17 @@ final class ScrivenerXMLParser: NSObject {
     private var currentLabelColor: String?
     private var currentStatusID: Int?
 
+    // Keyword parsing state
+    private var currentKeywordID: Int?
+    private var currentKeywordColor: String?
+    private var currentItemKeywordIDs: [Int] = []
+    private var inItemKeywords = false
+
     // Context tracking
     private var inBinder = false
     private var inLabelSettings = false
     private var inStatusSettings = false
+    private var inKeywordSettings = false
     private var inProjectTargets = false
 
     // MARK: - Partial Item for Building
@@ -57,6 +65,7 @@ final class ScrivenerXMLParser: NSObject {
         var includeInCompile: Bool = true
         var targetWordCount: Int?
         var iconFileName: String?
+        var keywordIDs: [Int] = []
     }
 
     // MARK: - Public Methods
@@ -90,6 +99,7 @@ final class ScrivenerXMLParser: NSObject {
             binderItems: rootItems,
             labels: labels,
             statuses: statuses,
+            keywords: keywords,
             targets: ScrivenerTargets(
                 draftWordCount: draftTarget,
                 sessionWordCount: sessionTarget,
@@ -111,6 +121,7 @@ final class ScrivenerXMLParser: NSObject {
         binderItems = []
         labels = []
         statuses = []
+        keywords = []
         draftTarget = nil
         sessionTarget = nil
         draftDeadline = nil
@@ -126,9 +137,14 @@ final class ScrivenerXMLParser: NSObject {
         currentLabelID = nil
         currentLabelColor = nil
         currentStatusID = nil
+        currentKeywordID = nil
+        currentKeywordColor = nil
+        currentItemKeywordIDs = []
+        inItemKeywords = false
         inBinder = false
         inLabelSettings = false
         inStatusSettings = false
+        inKeywordSettings = false
         inProjectTargets = false
     }
 
@@ -263,6 +279,25 @@ extension ScrivenerXMLParser: XMLParserDelegate {
                 }
             }
 
+        case "KeywordSettings":
+            inKeywordSettings = true
+
+        case "Keyword":
+            if inKeywordSettings {
+                // Project-level keyword definition
+                if let idStr = attributeDict["ID"], let id = Int(idStr) {
+                    currentKeywordID = id
+                    currentKeywordColor = attributeDict["Color"]
+                }
+            }
+
+        case "Keywords":
+            // Item-level keywords (within MetaData)
+            if !itemStack.isEmpty {
+                inItemKeywords = true
+                currentItemKeywordIDs = []
+            }
+
         default:
             break
         }
@@ -360,7 +395,8 @@ extension ScrivenerXMLParser: XMLParserDelegate {
                     includeInCompile: partialItem.includeInCompile,
                     children: children,
                     targetWordCount: partialItem.targetWordCount,
-                    iconFileName: partialItem.iconFileName
+                    iconFileName: partialItem.iconFileName,
+                    keywordIDs: partialItem.keywordIDs
                 )
 
                 // Add to parent's children or root
@@ -383,6 +419,31 @@ extension ScrivenerXMLParser: XMLParserDelegate {
             if inStatusSettings, let id = currentStatusID {
                 statuses.append(ScrivenerStatus(id: id, name: trimmedText))
                 currentStatusID = nil
+            }
+
+        case "KeywordSettings":
+            inKeywordSettings = false
+
+        case "Keyword":
+            if inKeywordSettings, let id = currentKeywordID {
+                let color = currentKeywordColor.map { parseColor($0) }
+                keywords.append(ScrivenerKeyword(id: id, name: trimmedText, color: color))
+                currentKeywordID = nil
+                currentKeywordColor = nil
+            }
+
+        case "Keywords":
+            // End of item-level keywords
+            if inItemKeywords && !itemStack.isEmpty {
+                itemStack[itemStack.count - 1].keywordIDs = currentItemKeywordIDs
+                inItemKeywords = false
+                currentItemKeywordIDs = []
+            }
+
+        case "KeywordID":
+            // Item-level keyword reference
+            if inItemKeywords, let keywordID = Int(trimmedText) {
+                currentItemKeywordIDs.append(keywordID)
             }
 
         default:

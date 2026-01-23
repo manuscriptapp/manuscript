@@ -64,10 +64,10 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         self.synopsis = ""
         self.creationDate = Date()
         self.modifiedDate = Date()
-        self.rootFolder = ManuscriptFolder(title: "Draft", folderType: .draft)
+        self.rootFolder = ManuscriptFolder(title: "Draft", folderType: .draft, iconName: "text.book.closed")
         self.notesFolder = ManuscriptFolder(title: "Notes", folderType: .notes)
-        self.researchFolder = ManuscriptFolder(title: "Research", folderType: .research)
-        self.trashFolder = ManuscriptFolder(title: "Trash", folderType: .trash)
+        self.researchFolder = ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+        self.trashFolder = ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash")
         self.characters = []
         self.locations = []
         self.labels = ManuscriptLabel.defaults
@@ -186,13 +186,31 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             folderMetadata = try? decoder.decode(FolderJSON.self, from: folderJsonData)
         }
 
+        // Determine default icon and color based on folder type
+        let defaultIcon: String
+        let defaultColor: String
+        switch type {
+        case .draft:
+            defaultIcon = "text.book.closed"
+            defaultColor = ManuscriptFolder.defaultIconColor
+        case .research:
+            defaultIcon = "books.vertical"
+            defaultColor = "#FF9500"  // Orange
+        case .trash:
+            defaultIcon = "trash"
+            defaultColor = ManuscriptFolder.defaultIconColor
+        default:
+            defaultIcon = "folder"
+            defaultColor = ManuscriptFolder.defaultIconColor
+        }
+
         var folder = ManuscriptFolder(
             id: UUID(uuidString: folderMetadata?.id ?? "") ?? UUID(),
             title: folderMetadata?.title ?? fileWrapper.filename ?? "Untitled",
             folderType: type,
             creationDate: folderMetadata?.created ?? Date(),
-            iconName: folderMetadata?.iconName ?? "folder",
-            iconColor: folderMetadata?.iconColor
+            iconName: folderMetadata?.iconName ?? defaultIcon,
+            iconColor: folderMetadata?.iconColor ?? defaultColor
         )
 
         // Read items from folder.json to maintain order
