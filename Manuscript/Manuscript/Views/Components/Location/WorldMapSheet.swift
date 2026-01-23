@@ -114,9 +114,15 @@ struct WorldMapSheet: View {
     var body: some View {
         ZStack {
             // Show either map or Look Around view
-            if showLookAround, let scene = lookAroundScene {
-                LookAroundPreview(scene: .constant(scene))
+            if showLookAround, lookAroundScene != nil {
+                LookAroundPreview(scene: $lookAroundScene)
                     .ignoresSafeArea()
+                    .onChange(of: lookAroundScene) { _, newValue in
+                        // Exit streetview mode when user dismisses via built-in X button
+                        if newValue == nil {
+                            showLookAround = false
+                        }
+                    }
             } else {
                 // Full screen map
                 Map(position: $mapCameraPosition) {
@@ -137,50 +143,47 @@ struct WorldMapSheet: View {
                 }
                 .mapStyle(.standard(elevation: .realistic))
                 .ignoresSafeArea()
-            }
 
-            // Top toolbar overlay
-            VStack {
-                HStack {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title)
-                            .foregroundStyle(.white, .black.opacity(0.5))
-                    }
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-
-                    Spacer()
-
-                    // Look Around toggle - visible when location selected with scene available
-                    if selectedLocation != nil && lookAroundScene != nil {
+                // Top toolbar overlay - only show when NOT in streetview
+                VStack {
+                    HStack {
                         Button {
-                            showLookAround.toggle()
-                            if showLookAround {
-                                sheetDetent = .fraction(0.25) // Minimize sheet when entering streetview
-                            }
+                            dismiss()
                         } label: {
-                            ZStack {
-                                Circle()
-                                    .fill(.black.opacity(0.5))
-                                    .frame(width: 34, height: 34)
-                                Image(systemName: showLookAround ? "map.fill" : "binoculars.fill")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
-                            }
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title)
+                                .foregroundStyle(.white, .black.opacity(0.5))
                         }
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
-                    }
-                }
-                .padding()
-                .padding(.top, 44) // Safe area
 
-                Spacer()
+                        Spacer()
+
+                        // Look Around toggle - visible when location selected with scene available
+                        if selectedLocation != nil && lookAroundScene != nil {
+                            Button {
+                                showLookAround = true
+                                sheetDetent = .fraction(0.25) // Minimize sheet when entering streetview
+                            } label: {
+                                ZStack {
+                                    Circle()
+                                        .fill(.black.opacity(0.5))
+                                        .frame(width: 34, height: 34)
+                                    Image(systemName: "binoculars.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                }
+                            }
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
+                        }
+                    }
+                    .padding()
+                    .padding(.top, 44) // Safe area
+
+                    Spacer()
+                }
             }
-            .allowsHitTesting(true)
         }
         .sheet(isPresented: $showLocationsList) {
             NavigationStack {
