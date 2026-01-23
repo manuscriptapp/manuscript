@@ -179,6 +179,323 @@ struct LaunchTemplatePickerView: View {
     }
 }
 
+/// Scrivener import view for the document launch scene
+struct LaunchScrivenerImportView: View {
+    @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
+    @Environment(\.dismiss) private var dismiss
+    @State private var isShowingFilePicker = false
+    @State private var selectedURL: URL?
+    @State private var isImporting = false
+    @State private var importError: Error?
+    @State private var validationResult: ScrivenerValidationResult?
+    @State private var importProgress: Double = 0
+    @State private var statusMessage = ""
+
+    // Import options
+    @State private var importResearch = true
+    @State private var importTrash = false
+    @State private var importSnapshots = true
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isImporting {
+                    importingView
+                } else if let error = importError {
+                    errorView(error)
+                } else if let validation = validationResult, selectedURL != nil {
+                    validationView(validation)
+                } else {
+                    selectFileView
+                }
+            }
+            .navigationTitle("Import Scrivener")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        continuation?.resume(returning: nil)
+                        continuation = nil
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .fileImporter(
+            isPresented: $isShowingFilePicker,
+            allowedContentTypes: [.folder, .package],
+            allowsMultipleSelection: false
+        ) { result in
+            handleFileSelection(result)
+        }
+    }
+
+    private var selectFileView: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            Image(systemName: "doc.badge.arrow.up")
+                .font(.system(size: 60))
+                .foregroundColor(.accentColor)
+
+            Text("Import Scrivener Project")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text("Select a .scriv project to import. Your original Scrivener project will not be modified.")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button {
+                isShowingFilePicker = true
+            } label: {
+                Label("Select Scrivener Project", systemImage: "folder")
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(.borderedProminent)
+
+            Spacer()
+            Spacer()
+        }
+        .padding()
+    }
+
+    private func validationView(_ result: ScrivenerValidationResult) -> some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Project info
+                VStack(spacing: 8) {
+                    Image(systemName: result.isValid ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .font(.system(size: 50))
+                        .foregroundColor(result.isValid ? .green : .red)
+
+                    Text(result.projectTitle)
+                        .font(.title2)
+                        .fontWeight(.semibold)
+
+                    Text("\(result.itemCount) items • Scrivener \(result.version == .v3 ? "3" : "2") format")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Warnings
+                if !result.warnings.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Warnings", systemImage: "exclamationmark.triangle")
+                            .font(.headline)
+                            .foregroundColor(.orange)
+
+                        ForEach(result.warnings, id: \.self) { warning in
+                            HStack(alignment: .top) {
+                                Text("•")
+                                Text(warning)
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(Color.orange.opacity(0.1))
+                    .cornerRadius(8)
+                }
+
+                // Import options
+                if result.isValid {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Import Options")
+                            .font(.headline)
+
+                        Toggle("Import Research folder", isOn: $importResearch)
+                        Toggle("Import Trash folder", isOn: $importTrash)
+                        Toggle("Import Snapshots", isOn: $importSnapshots)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(8)
+                }
+
+                // Action buttons
+                HStack {
+                    Button("Select Different File") {
+                        selectedURL = nil
+                        validationResult = nil
+                        isShowingFilePicker = true
+                    }
+
+                    Spacer()
+
+                    if result.isValid {
+                        Button {
+                            startImport()
+                        } label: {
+                            Label("Import", systemImage: "square.and.arrow.down")
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+            }
+            .padding()
+        }
+    }
+
+    private var importingView: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            ProgressView(value: importProgress, total: 1.0)
+                .progressViewStyle(.circular)
+                .scaleEffect(1.5)
+
+            Text("Importing Project...")
+                .font(.headline)
+
+            Text(statusMessage)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            Text("\(Int(importProgress * 100))%")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Spacer()
+        }
+        .padding()
+    }
+
+    private func errorView(_ error: Error) -> some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            Image(systemName: "xmark.circle.fill")
+                .font(.system(size: 60))
+                .foregroundColor(.red)
+
+            Text("Import Failed")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text(error.localizedDescription)
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button("Try Again") {
+                importError = nil
+                selectedURL = nil
+                validationResult = nil
+            }
+            .buttonStyle(.borderedProminent)
+
+            Spacer()
+        }
+        .padding()
+    }
+
+    private func handleFileSelection(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else { return }
+
+            // Check if it's a .scriv bundle
+            if url.pathExtension.lowercased() == "scriv" {
+                selectedURL = url
+                validateProject(at: url)
+            } else if url.pathExtension.lowercased() == "scrivx" {
+                // User selected the .scrivx file inside - use the parent directory
+                let scrivURL = url.deletingLastPathComponent()
+                selectedURL = scrivURL
+                validateProject(at: scrivURL)
+            } else {
+                importError = NSError(
+                    domain: "ScrivenerImport",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Please select a Scrivener project (.scriv folder)"]
+                )
+            }
+
+        case .failure(let error):
+            importError = error
+        }
+    }
+
+    private func validateProject(at url: URL) {
+        // Start security-scoped access
+        let didStartAccessing = url.startAccessingSecurityScopedResource()
+
+        Task {
+            let importer = ScrivenerImporter()
+            let result = importer.validateProject(at: url)
+
+            await MainActor.run {
+                validationResult = result
+
+                if didStartAccessing {
+                    // Keep access for import, will release after
+                }
+            }
+        }
+    }
+
+    private func startImport() {
+        guard let url = selectedURL else { return }
+
+        isImporting = true
+        importProgress = 0
+
+        // Start security-scoped access
+        let didStartAccessing = url.startAccessingSecurityScopedResource()
+
+        Task {
+            let importer = ScrivenerImporter()
+            let options = ScrivenerImportOptions(
+                importSnapshots: importSnapshots,
+                importTrash: importTrash,
+                importResearch: importResearch
+            )
+
+            do {
+                let result = try await importer.importProject(
+                    from: url,
+                    options: options
+                ) { progress, status in
+                    Task { @MainActor in
+                        self.importProgress = progress
+                        self.statusMessage = status
+                    }
+                }
+
+                await MainActor.run {
+                    if didStartAccessing {
+                        url.stopAccessingSecurityScopedResource()
+                    }
+
+                    // Return the imported document
+                    continuation?.resume(returning: result.document)
+                    continuation = nil
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    if didStartAccessing {
+                        url.stopAccessingSecurityScopedResource()
+                    }
+
+                    isImporting = false
+                    importError = error
+                }
+            }
+        }
+    }
+}
+
 /// Card view for templates in the launch picker
 struct LaunchTemplateCard: View {
     let template: BookTemplate
@@ -365,6 +682,8 @@ struct ManuscriptApp: App {
     @State private var isTemplatePickerPresented = false
     @State private var nameContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @State private var isNameInputPresented = false
+    @State private var importContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
+    @State private var isScrivenerImportPresented = false
     #endif
 
     init() {
@@ -481,6 +800,16 @@ struct ManuscriptApp: App {
             }
             .sheet(isPresented: $isTemplatePickerPresented) {
                 LaunchTemplatePickerView(continuation: $templateContinuation)
+            }
+
+            NewDocumentButton("Import Scrivener", for: ManuscriptDocument.self) {
+                try await withCheckedThrowingContinuation { continuation in
+                    self.importContinuation = continuation
+                    self.isScrivenerImportPresented = true
+                }
+            }
+            .sheet(isPresented: $isScrivenerImportPresented) {
+                LaunchScrivenerImportView(continuation: $importContinuation)
             }
         } background: {
             // Warm paper-like gradient background
