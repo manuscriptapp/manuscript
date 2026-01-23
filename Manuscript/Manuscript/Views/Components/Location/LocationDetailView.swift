@@ -26,7 +26,128 @@ struct LocationDetailView: View {
     }
 
     var body: some View {
+        #if os(macOS)
+        ScrollView {
+            formContent
+                .frame(maxWidth: 600)
+                .padding()
+        }
+        .frame(maxWidth: .infinity)
+        .navigationTitle(location.name)
+        .onAppear {
+            fetchLookAroundScene()
+        }
+        .onChange(of: editedLatitude) { _, _ in
+            updateMapPosition()
+            fetchLookAroundScene()
+        }
+        .onChange(of: editedLongitude) { _, _ in
+            updateMapPosition()
+            fetchLookAroundScene()
+        }
+        #else
         Form {
+            formContent
+        }
+        .navigationTitle(location.name)
+        .lookAroundViewer(isPresented: $showLookAround, scene: $lookAroundScene)
+        .onAppear {
+            fetchLookAroundScene()
+        }
+        .onChange(of: editedLatitude) { _, _ in
+            updateMapPosition()
+            fetchLookAroundScene()
+        }
+        .onChange(of: editedLongitude) { _, _ in
+            updateMapPosition()
+            fetchLookAroundScene()
+        }
+        #endif
+    }
+
+    @ViewBuilder
+    private var formContent: some View {
+        #if os(macOS)
+        VStack(alignment: .leading, spacing: 20) {
+            // Map section
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Map")
+                        .font(.headline)
+                    Spacer()
+                    if lookAroundScene == nil {
+                        Text("Look Around unavailable")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Map(position: $mapCameraPosition) {
+                    Marker(location.name, coordinate: CLLocationCoordinate2D(
+                        latitude: editedLatitude,
+                        longitude: editedLongitude
+                    ))
+                }
+                .mapStyle(.standard(elevation: .realistic))
+                .frame(height: 250)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+
+            Divider()
+
+            // Location Details section
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Location Details")
+                    .font(.headline)
+
+                LabeledContent("Name") {
+                    TextField("Name", text: $editedName)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 300)
+                        .onChange(of: editedName) { _, _ in updateLocation() }
+                }
+
+                LabeledContent("Latitude") {
+                    TextField("Latitude", value: $editedLatitude, format: .number)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 200)
+                        .onChange(of: editedLatitude) { _, _ in updateLocation() }
+                }
+
+                LabeledContent("Longitude") {
+                    TextField("Longitude", value: $editedLongitude, format: .number)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 200)
+                        .onChange(of: editedLongitude) { _, _ in updateLocation() }
+                }
+            }
+
+            Divider()
+
+            // Appears in Documents section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Appears in Documents")
+                    .font(.headline)
+
+                if location.appearsInDocumentIds.isEmpty {
+                    Text("This location doesn't appear in any documents yet.")
+                        .foregroundStyle(.secondary)
+                        .italic()
+                } else {
+                    ForEach(location.appearsInDocumentIds, id: \.self) { docId in
+                        if let doc = viewModel.findDocument(withId: docId) {
+                            HStack {
+                                Image(systemName: doc.iconName)
+                                    .foregroundStyle(Color(doc.colorName.lowercased()))
+                                Text(doc.title)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        #else
+        Group {
             // Map section with Look Around button
             Section {
                 ZStack {
@@ -41,7 +162,6 @@ struct LocationDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
 
                     // Look Around button overlay (iOS only)
-                    #if os(iOS)
                     if lookAroundScene != nil {
                         VStack {
                             HStack {
@@ -64,7 +184,6 @@ struct LocationDetailView: View {
                             Spacer()
                         }
                     }
-                    #endif
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
@@ -88,9 +207,7 @@ struct LocationDetailView: View {
                     Text("Latitude")
                     Spacer()
                     TextField("Latitude", value: $editedLatitude, format: .number)
-                        #if os(iOS)
                         .keyboardType(.decimalPad)
-                        #endif
                         .multilineTextAlignment(.trailing)
                         .onChange(of: editedLatitude) { _, _ in updateLocation() }
                 }
@@ -99,9 +216,7 @@ struct LocationDetailView: View {
                     Text("Longitude")
                     Spacer()
                     TextField("Longitude", value: $editedLongitude, format: .number)
-                        #if os(iOS)
                         .keyboardType(.decimalPad)
-                        #endif
                         .multilineTextAlignment(.trailing)
                         .onChange(of: editedLongitude) { _, _ in updateLocation() }
                 }
@@ -129,21 +244,7 @@ struct LocationDetailView: View {
                 Text("Appears in Documents")
             }
         }
-        .navigationTitle(location.name)
-        #if os(iOS)
-        .lookAroundViewer(isPresented: $showLookAround, scene: $lookAroundScene)
         #endif
-        .onAppear {
-            fetchLookAroundScene()
-        }
-        .onChange(of: editedLatitude) { _, _ in
-            updateMapPosition()
-            fetchLookAroundScene()
-        }
-        .onChange(of: editedLongitude) { _, _ in
-            updateMapPosition()
-            fetchLookAroundScene()
-        }
     }
 
     private func updateLocation() {

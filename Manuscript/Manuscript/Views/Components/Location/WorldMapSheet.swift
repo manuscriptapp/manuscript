@@ -111,7 +111,112 @@ struct WorldMapView: View {
     }
 
     var body: some View {
-        // Full screen map
+        mapContent
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        mapCameraPosition = Self.calculateInitialCameraPosition(for: locations)
+                    }
+                }
+            }
+            .navigationTitle("World Map")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+    }
+
+    // MARK: - Platform-specific layouts
+
+    @ViewBuilder
+    private var mapContent: some View {
+        #if os(macOS)
+        macOSLayout
+        #else
+        iOSLayout
+        #endif
+    }
+
+    #if os(macOS)
+    private var macOSLayout: some View {
+        HStack(spacing: 0) {
+            // Main map view
+            mapView
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            // Inspector sidebar
+            if showLocationsList {
+                Divider()
+                inspectorSidebar
+                    .frame(width: 320)
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    withAnimation {
+                        showLocationsList.toggle()
+                    }
+                } label: {
+                    Image(systemName: "sidebar.trailing")
+                }
+                .help("Toggle Locations Panel")
+            }
+        }
+    }
+
+    private var inspectorSidebar: some View {
+        LocationsInspectorView(
+            viewModel: viewModel,
+            locations: locations,
+            selectedLocation: $selectedLocation,
+            onLocationSelected: { location in
+                selectLocation(location)
+            }
+        )
+    }
+    #endif
+
+    #if os(iOS)
+    private var iOSLayout: some View {
+        mapView
+            .toolbar {
+                if selectedLocation != nil, lookAroundScene != nil {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            sheetDetent = .fraction(0.25)
+                            showLookAround = true
+                        } label: {
+                            Image(systemName: "binoculars.fill")
+                        }
+                    }
+                }
+            }
+            .lookAroundViewer(isPresented: $showLookAround, scene: $lookAroundScene)
+            .sheet(isPresented: $showLocationsList) {
+                NavigationStack {
+                    LocationsListSheet(
+                        viewModel: viewModel,
+                        locations: locations,
+                        selectedLocation: $selectedLocation,
+                        onLocationSelected: { location in
+                            selectLocation(location)
+                        },
+                        onEnterStreetview: {
+                            sheetDetent = .fraction(0.25)
+                        }
+                    )
+                }
+                .presentationDetents([.medium, .large, .fraction(0.25)], selection: $sheetDetent)
+                .presentationDragIndicator(.visible)
+                .presentationBackgroundInteraction(.enabled)
+                .interactiveDismissDisabled()
+            }
+    }
+    #endif
+
+    // MARK: - Shared map view
+
+    private var mapView: some View {
         Map(position: $mapCameraPosition) {
             ForEach(annotations) { annotation in
                 Annotation(annotation.name, coordinate: annotation.coordinate) {
@@ -130,53 +235,6 @@ struct WorldMapView: View {
         }
         .mapStyle(.standard(elevation: .realistic))
         .ignoresSafeArea()
-        .toolbar {
-            #if os(iOS)
-            if selectedLocation != nil, lookAroundScene != nil {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        sheetDetent = .fraction(0.25)
-                        showLookAround = true
-                    } label: {
-                        Image(systemName: "binoculars.fill")
-                    }
-                }
-            }
-            #endif
-        }
-        #if os(iOS)
-        .lookAroundViewer(isPresented: $showLookAround, scene: $lookAroundScene)
-        #endif
-        .sheet(isPresented: $showLocationsList) {
-            NavigationStack {
-                LocationsListSheet(
-                    viewModel: viewModel,
-                    locations: locations,
-                    selectedLocation: $selectedLocation,
-                    onLocationSelected: { location in
-                        selectLocation(location)
-                    },
-                    onEnterStreetview: {
-                        sheetDetent = .fraction(0.25)
-                    }
-                )
-            }
-            .presentationDetents([.medium, .large, .fraction(0.25)], selection: $sheetDetent)
-            .presentationDragIndicator(.visible)
-            .presentationBackgroundInteraction(.enabled)
-            .interactiveDismissDisabled()
-        }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    mapCameraPosition = Self.calculateInitialCameraPosition(for: locations)
-                }
-            }
-        }
-        .navigationTitle("World Map")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
     }
 
     private func selectLocation(_ location: ManuscriptLocation) {
@@ -291,6 +349,74 @@ struct LocationsListSheet: View {
         #endif
     }
 }
+
+// MARK: - macOS Inspector Sidebar
+
+#if os(macOS)
+struct LocationsInspectorView: View {
+    @ObservedObject var viewModel: DocumentViewModel
+    let locations: [ManuscriptLocation]
+    @Binding var selectedLocation: ManuscriptLocation?
+    let onLocationSelected: (ManuscriptLocation) -> Void
+    @State private var navigationPath = NavigationPath()
+
+    var body: some View {
+        NavigationStack(path: $navigationPath) {
+            List {
+                Section {
+                    ForEach(locations) { location in
+                        HStack {
+                            Image(systemName: "mappin.circle.fill")
+                                .foregroundColor(selectedLocation?.id == location.id
+                                    ? .blue
+                                    : Color(red: 0.6, green: 0.4, blue: 0.2))
+                                .font(.title3)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(location.name)
+                                    .font(.headline)
+
+                                Text(String(format: "%.4f, %.4f", location.latitude, location.longitude))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            Button {
+                                navigationPath.append(location.id)
+                            } label: {
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 12)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onLocationSelected(location)
+                        }
+                        .background(selectedLocation?.id == location.id ? Color.accentColor.opacity(0.2) : Color.clear)
+                        .cornerRadius(6)
+                    }
+                } header: {
+                    Text("Locations")
+                }
+            }
+            .listStyle(.sidebar)
+            .navigationDestination(for: UUID.self) { locationId in
+                if let location = locations.first(where: { $0.id == locationId }) {
+                    LocationDetailView(viewModel: viewModel, location: location)
+                }
+            }
+        }
+    }
+}
+#endif
 
 #if DEBUG
 #Preview {
