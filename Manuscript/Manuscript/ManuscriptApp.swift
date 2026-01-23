@@ -95,9 +95,71 @@ struct FindMenuCommands: View {
 }
 #endif
 
-// MARK: - iOS Template Picker for DocumentGroupLaunchScene
+// MARK: - iOS Launch Scene Components
 
 #if os(iOS)
+/// Adaptive background for the document launch scene
+struct LaunchSceneBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ZStack {
+            // Base gradient that adapts to color scheme
+            if colorScheme == .dark {
+                // Dark mode: subtle dark gradient with slight warmth
+                LinearGradient(
+                    colors: [
+                        Color(white: 0.12),
+                        Color(white: 0.08)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            } else {
+                // Light mode: soft warm gradient
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.97, green: 0.96, blue: 0.94),
+                        Color(red: 0.93, green: 0.91, blue: 0.88)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// Adaptive title for the document launch scene
+struct LaunchSceneTitle: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var primaryColor: Color {
+        colorScheme == .dark ? .white.opacity(0.9) : Color(white: 0.15)
+    }
+
+    private var secondaryColor: Color {
+        colorScheme == .dark ? .white.opacity(0.45) : Color(white: 0.45)
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Text("Manuscript")
+                .font(.system(size: 17, weight: .semibold, design: .default))
+                .tracking(3)
+                .textCase(.uppercase)
+                .foregroundStyle(primaryColor)
+
+            Text("for writers, by writers")
+                .font(.system(size: 10, weight: .medium, design: .default))
+                .tracking(1.2)
+                .foregroundStyle(secondaryColor)
+        }
+    }
+}
+
+// MARK: - iOS Template Picker for DocumentGroupLaunchScene
 /// Combined template picker and blank document sheet for new manuscript
 struct LaunchNewDocumentView: View {
     @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
@@ -820,27 +882,14 @@ struct ManuscriptApp: App {
                 LaunchScrivenerImportView(continuation: $importContinuation)
             }
         } background: {
-            // Warm paper-like gradient background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.96, green: 0.94, blue: 0.90),  // Warm cream
-                    Color(red: 0.92, green: 0.88, blue: 0.82),  // Light tan
-                    Color(red: 0.85, green: 0.80, blue: 0.72)   // Deeper tan
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            LaunchSceneBackground()
         } overlayAccessoryView: { geometry in
-            // Custom smaller title - at top of white card, above buttons
-            Text("Manuscript")
-                .font(.system(size: 32, weight: .semibold, design: .serif))
-                .foregroundStyle(Color(red: 0.35, green: 0.25, blue: 0.15))
+            // Title with extra margin above buttons
+            LaunchSceneTitle()
                 .position(
                     x: geometry.titleViewFrame.midX,
-                    y: geometry.titleViewFrame.minY + 10
+                    y: geometry.titleViewFrame.minY - 8
                 )
-
         }
         #endif
 
