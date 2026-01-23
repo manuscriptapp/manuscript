@@ -58,7 +58,7 @@ struct ProjectSidebar: View {
 
                 // Characters in a disclosure group
                 DisclosureGroup(isExpanded: $isCharactersExpanded) {
-                    ForEach(viewModel.document.characters) { character in
+                    ForEach(viewModel.characters) { character in
                         NavigationLink(value: DetailSelection.character(character)) {
                             Label {
                                 Text(character.name)
@@ -86,12 +86,12 @@ struct ProjectSidebar: View {
                         Image(systemName: "person.2")
                             .foregroundStyle(Color(red: 0.7, green: 0.2, blue: 0.3)) // Rose/maroon
                     }
-                    .badge(viewModel.document.characters.count)
+                    .badge(viewModel.characters.count)
                 }
 
                 // Locations in a disclosure group
                 DisclosureGroup(isExpanded: $isLocationsExpanded) {
-                    ForEach(viewModel.document.locations) { location in
+                    ForEach(viewModel.locations) { location in
                         NavigationLink(value: DetailSelection.location(location)) {
                             Label {
                                 Text(location.name)
@@ -119,7 +119,7 @@ struct ProjectSidebar: View {
                         Image(systemName: "mappin.and.ellipse")
                             .foregroundStyle(Color(red: 0.2, green: 0.55, blue: 0.35))
                     }
-                    .badge(viewModel.document.locations.count)
+                    .badge(viewModel.locations.count)
                 }
 
                 // Trash folder

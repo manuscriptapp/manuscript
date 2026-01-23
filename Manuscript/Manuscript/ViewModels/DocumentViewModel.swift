@@ -23,6 +23,10 @@ class DocumentViewModel: ObservableObject {
     // Published document title for sidebar display
     @Published private(set) var documentTitle: String = ""
 
+    // Published characters and locations for sidebar display
+    @Published private(set) var characters: [ManuscriptCharacter] = []
+    @Published private(set) var locations: [ManuscriptLocation] = []
+
     // Rename state
     @Published var isRenameAlertPresented = false
     @Published var renameAlertTitle = ""
@@ -53,6 +57,9 @@ class DocumentViewModel: ObservableObject {
             trashFolder = newValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
             // Update the published title for sidebar display
             documentTitle = newValue.title
+            // Update the published characters and locations for immediate UI updates
+            characters = newValue.characters
+            locations = newValue.locations
         }
     }
 
@@ -68,6 +75,8 @@ class DocumentViewModel: ObservableObject {
         self.documentTitle = document.wrappedValue.title
         self.researchFolder = document.wrappedValue.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
         self.trashFolder = document.wrappedValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
+        self.characters = document.wrappedValue.characters
+        self.locations = document.wrappedValue.locations
 
         // Restore project state (expanded folders)
         let savedState = document.wrappedValue.projectState
@@ -1006,23 +1015,35 @@ class DocumentViewModel: ObservableObject {
     func showRenameAlert(for item: Any) {
         itemToRename = item
 
+        var title = ""
+        var name = ""
+
         if let folder = item as? ManuscriptFolder {
-            renameAlertTitle = "Rename Folder"
-            newItemName = folder.title
-            isRenameAlertPresented = true
+            title = "Rename Folder"
+            name = folder.title
         } else if let doc = item as? ManuscriptDocument.Document {
-            renameAlertTitle = "Rename Document"
-            newItemName = doc.title
-            isRenameAlertPresented = true
+            title = "Rename Document"
+            name = doc.title
         } else if let character = item as? ManuscriptCharacter {
-            renameAlertTitle = "Rename Character"
-            newItemName = character.name
-            isRenameAlertPresented = true
+            title = "Rename Character"
+            name = character.name
         } else if let location = item as? ManuscriptLocation {
-            renameAlertTitle = "Rename Location"
-            newItemName = location.name
-            isRenameAlertPresented = true
+            title = "Rename Location"
+            name = location.name
         }
+
+        renameAlertTitle = title
+        newItemName = name
+
+        // Delay alert presentation slightly on iOS to allow context menu to fully dismiss
+        // This prevents the alert from being immediately dismissed due to iOS timing issues
+        #if os(iOS)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.isRenameAlertPresented = true
+        }
+        #else
+        isRenameAlertPresented = true
+        #endif
     }
 
     func performRename() {

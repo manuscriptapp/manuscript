@@ -5,7 +5,7 @@ struct CharactersView: View {
     
     var body: some View {
         List {
-            ForEach(viewModel.document.characters) { character in
+            ForEach(viewModel.characters) { character in
                 NavigationLink(value: DetailSelection.character(character)) {
                     VStack(alignment: .leading) {
                         Text(character.name)

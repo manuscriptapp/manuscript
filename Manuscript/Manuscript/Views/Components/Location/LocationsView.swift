@@ -5,7 +5,7 @@ struct LocationsView: View {
     
     var body: some View {
         List {
-            ForEach(viewModel.document.locations) { location in
+            ForEach(viewModel.locations) { location in
                 NavigationLink(value: DetailSelection.location(location)) {
                     VStack(alignment: .leading) {
                         Text(location.name)

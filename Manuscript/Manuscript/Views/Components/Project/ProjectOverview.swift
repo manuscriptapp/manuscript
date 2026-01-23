@@ -29,14 +29,14 @@ struct ProjectOverview: View {
                 HStack {
                     Text("Characters:")
                     Spacer()
-                    Text("\(viewModel.document.characters.count)")
+                    Text("\(viewModel.characters.count)")
                         .foregroundColor(.secondary)
                 }
 
                 HStack {
                     Text("Locations:")
                     Spacer()
-                    Text("\(viewModel.document.locations.count)")
+                    Text("\(viewModel.locations.count)")
                         .foregroundColor(.secondary)
                 }
             }
