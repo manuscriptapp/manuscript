@@ -247,7 +247,7 @@ struct ProjectSidebar: View {
 
                     Divider()
 
-                    NavigationLink(value: DetailSelection.projectInfo) {
+                    Button(action: { detailSelection = .projectInfo }) {
                         Label("Project Info", systemImage: "info.circle")
                     }
                 } label: {
@@ -303,7 +303,7 @@ struct ProjectSidebar: View {
 
                     Divider()
 
-                    NavigationLink(value: DetailSelection.projectInfo) {
+                    Button(action: { detailSelection = .projectInfo }) {
                         Label("Project Info", systemImage: "info.circle")
                     }
 
