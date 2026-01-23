@@ -20,6 +20,7 @@ extension ManuscriptDocument {
         var document = ManuscriptDocument()
         document.title = title
         document.author = author
+        document.templateId = template.id
 
         // Apply the template structure to the root folder
         for subfolder in template.structure.subfolders {
@@ -37,7 +38,7 @@ extension ManuscriptDocument {
         for docTemplate in template.documents {
             let document = ManuscriptDocument.Document(
                 title: docTemplate.title,
-                outline: docTemplate.outline,
+                synopsis: docTemplate.synopsis,
                 notes: docTemplate.notes,
                 content: docTemplate.content,
                 order: docTemplate.order
@@ -513,6 +514,8 @@ struct LaunchTemplateCard: View {
             return "figure.walk.motion"
         case "Romance Outline":
             return "heart.fill"
+        case "Save the Cat":
+            return "cat.fill"
         default:
             return "doc.badge.plus"
         }
@@ -529,6 +532,12 @@ struct LaunchTemplateCard: View {
         case "Romance Outline":
             return LinearGradient(
                 colors: [.pink.opacity(0.8), .red.opacity(0.8)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case "Save the Cat":
+            return LinearGradient(
+                colors: [.orange.opacity(0.8), .yellow.opacity(0.8)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

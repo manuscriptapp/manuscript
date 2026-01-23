@@ -11,6 +11,13 @@ struct ProjectInfoView: View {
     @State private var selectedStorytellingStyle: String = ""
     @State private var editedSynopsis: String = ""
     @State private var activeTab: Int = 0
+    @State private var showingTemplateSheet: Bool = false
+
+    /// The template used to create this document, if any
+    private var template: BookTemplate? {
+        guard let templateId = viewModel.document.templateId else { return nil }
+        return BookTemplate.find(byId: templateId)
+    }
     
     private let commonGenres = [
         "Fantasy", "Science Fiction", "Mystery", "Romance",
@@ -181,9 +188,47 @@ struct ProjectInfoView: View {
                 .lineLimit(5...10)
                 .onChange(of: editedDescription) { _, newValue in
                     var doc = viewModel.document
-                    doc.metaDescription = newValue
+                    doc.description = newValue
                     viewModel.document = doc
                 }
+        }
+
+        if let template = template {
+            Section("Template") {
+                Button {
+                    showingTemplateSheet = true
+                } label: {
+                    HStack {
+                        Label(template.name, systemImage: templateIcon(for: template))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+            .sheet(isPresented: $showingTemplateSheet) {
+                TemplateDetailSheet(template: template) {
+                    showingTemplateSheet = false
+                }
+            }
+        }
+    }
+
+    private func templateIcon(for template: BookTemplate) -> String {
+        switch template.name {
+        case "Hero's Journey": return "figure.walk.motion"
+        case "Romance Outline": return "heart.fill"
+        case "Save the Cat": return "cat.fill"
+        case "Three-Act Structure": return "rectangle.split.3x1.fill"
+        case "Story Circle": return "circle.dashed"
+        case "Seven-Point Structure": return "7.circle.fill"
+        case "Freytag's Pyramid": return "triangle.fill"
+        case "Fichtean Curve": return "waveform.path.ecg"
+        case "Kishōtenketsu": return "square.grid.2x2.fill"
+        default: return "doc.badge.plus"
         }
     }
 
@@ -359,9 +404,31 @@ struct ProjectInfoView: View {
                     .lineLimit(5...10)
                     .onChange(of: editedDescription) { _, newValue in
                         var doc = viewModel.document
-                        doc.metaDescription = newValue
+                        doc.description = newValue
                         viewModel.document = doc
                     }
+            }
+
+            if let template = template {
+                Section("Template") {
+                    Button {
+                        showingTemplateSheet = true
+                    } label: {
+                        HStack {
+                            Label(template.name, systemImage: templateIcon(for: template))
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .sheet(isPresented: $showingTemplateSheet) {
+                    TemplateDetailSheet(template: template) {
+                        showingTemplateSheet = false
+                    }
+                }
             }
         }
     }
@@ -607,7 +674,7 @@ struct ProjectInfoView: View {
     private func loadData() {
         editedTitle = viewModel.document.title
         editedAuthor = viewModel.document.author
-        editedDescription = viewModel.document.metaDescription
+        editedDescription = viewModel.document.description
         editedSynopsis = viewModel.document.synopsis
         
         // Load genres

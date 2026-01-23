@@ -10,7 +10,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // Document properties
     var title: String
     var author: String
-    var metaDescription: String
+    var description: String
     var style: String
     var genre: String
     var synopsis: String
@@ -47,6 +47,9 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // Document snapshots
     var documentSnapshots: [DocumentSnapshot] = []
 
+    // Template reference (ID of the template used to create this document)
+    var templateId: String?
+
     // Required for FileDocument
     // Include .package and .folder as fallbacks for when custom UTType isn't registered (e.g., running from Xcode)
     // .folder is needed because macOS may identify .manuscript directories as folders rather than packages
@@ -58,7 +61,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         self.formatVersion = .current
         self.title = ""
         self.author = ""
-        self.metaDescription = ""
+        self.description = ""
         self.style = ""
         self.genre = ""
         self.synopsis = ""
@@ -115,7 +118,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         self.formatVersion = ManuscriptFormatVersion(rawValue: projectData.version) ?? .current
         self.title = projectData.title
         self.author = projectData.author
-        self.metaDescription = projectData.metaDescription ?? ""
+        self.description = projectData.description ?? ""
         self.style = projectData.style ?? ""
         self.genre = projectData.genre ?? ""
         self.synopsis = projectData.synopsis ?? ""
@@ -242,7 +245,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                         let document = ManuscriptDocument.Document(
                             id: UUID(uuidString: item.id) ?? UUID(),
                             title: item.title,
-                            outline: item.synopsis ?? "",
+                            synopsis: item.synopsis ?? "",
                             notes: notes,
                             content: extractContentFromMarkdown(content),
                             creationDate: item.created ?? Date(),
@@ -350,7 +353,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             version: formatVersion.rawValue,
             title: title,
             author: author,
-            metaDescription: metaDescription.isEmpty ? nil : metaDescription,
+            description: description.isEmpty ? nil : description,
             style: style.isEmpty ? nil : style,
             genre: genre.isEmpty ? nil : genre,
             synopsis: synopsis.isEmpty ? nil : synopsis,
@@ -440,7 +443,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 label: document.labelId,
                 status: document.statusId,
                 keywords: document.keywords.isEmpty ? nil : document.keywords,
-                synopsis: document.outline.isEmpty ? nil : document.outline,
+                synopsis: document.synopsis.isEmpty ? nil : document.synopsis,
                 includeInCompile: document.includeInCompile,
                 created: document.creationDate,
                 modified: Date(),
@@ -554,10 +557,10 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         var content = ""
 
         // Add YAML frontmatter if there's metadata (synopsis only, notes are stored separately)
-        if !document.outline.isEmpty {
+        if !document.synopsis.isEmpty {
             content += "---\n"
             content += "title: \(document.title)\n"
-            content += "synopsis: \(document.outline.replacingOccurrences(of: "\n", with: " "))\n"
+            content += "synopsis: \(document.synopsis.replacingOccurrences(of: "\n", with: " "))\n"
             content += "---\n\n"
         }
 
@@ -577,7 +580,7 @@ private struct ProjectJSON: Codable {
     let version: String
     var title: String
     var author: String
-    var metaDescription: String?
+    var description: String?
     var style: String?
     var genre: String?
     var synopsis: String?

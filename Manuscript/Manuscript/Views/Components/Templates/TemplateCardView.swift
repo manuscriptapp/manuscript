@@ -24,11 +24,25 @@ struct TemplateCardView: View {
             return "figure.walk.motion"
         case "Romance Outline":
             return "heart.fill"
+        case "Save the Cat":
+            return "cat.fill"
+        case "Three-Act Structure":
+            return "rectangle.split.3x1.fill"
+        case "Story Circle":
+            return "circle.dashed"
+        case "Seven-Point Structure":
+            return "7.circle.fill"
+        case "Freytag's Pyramid":
+            return "triangle.fill"
+        case "Fichtean Curve":
+            return "waveform.path.ecg"
+        case "Kishōtenketsu":
+            return "square.grid.2x2.fill"
         default:
             return "doc.badge.plus"
         }
     }
-    
+
     private var gradient: LinearGradient {
         switch template.name {
         case "Hero's Journey":
@@ -40,6 +54,48 @@ struct TemplateCardView: View {
         case "Romance Outline":
             return LinearGradient(
                 colors: [.pink.opacity(0.8), .red.opacity(0.8)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case "Save the Cat":
+            return LinearGradient(
+                colors: [.orange.opacity(0.8), .yellow.opacity(0.8)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case "Three-Act Structure":
+            return LinearGradient(
+                colors: [.blue.opacity(0.8), .cyan.opacity(0.8)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case "Story Circle":
+            return LinearGradient(
+                colors: [.purple.opacity(0.8), .pink.opacity(0.8)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case "Seven-Point Structure":
+            return LinearGradient(
+                colors: [.green.opacity(0.8), .mint.opacity(0.8)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case "Freytag's Pyramid":
+            return LinearGradient(
+                colors: [.indigo.opacity(0.8), .purple.opacity(0.8)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case "Fichtean Curve":
+            return LinearGradient(
+                colors: [.red.opacity(0.8), .orange.opacity(0.8)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case "Kishōtenketsu":
+            return LinearGradient(
+                colors: [.teal.opacity(0.8), .green.opacity(0.8)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
