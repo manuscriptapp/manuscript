@@ -11,6 +11,7 @@ struct WelcomeView: View {
     @State private var isShowingFileImporter = false
     @State private var isShowingScrivenerImporter = false
     @State private var templateToShow: BookTemplate?
+    @State private var shuffledTemplates: [BookTemplate] = BookTemplate.templates.shuffled()
 
     var onOpenDocument: (URL) -> Void
     var onCreateNewDocument: () -> Void
@@ -162,7 +163,7 @@ struct WelcomeView: View {
             )
 
             quickActionButton(
-                title: "Import Scrivener",
+                title: "Import Scrivener Project",
                 systemImage: "square.and.arrow.down",
                 action: { isShowingScrivenerImporter = true }
             )
@@ -190,7 +191,7 @@ struct WelcomeView: View {
                 )
 
                 quickActionButton(
-                    title: "Import Scrivener",
+                    title: "Import Scrivener Project",
                     systemImage: "square.and.arrow.down",
                     action: { isShowingScrivenerImporter = true }
                 )
@@ -278,7 +279,7 @@ struct WelcomeView: View {
                     }
                     .frame(width: 100)
 
-                    ForEach(BookTemplate.templates, id: \.id) { template in
+                    ForEach(shuffledTemplates, id: \.id) { template in
                         TemplateCardView(template: template)
                             .frame(width: 100)
                             .onTapGesture {
@@ -296,7 +297,7 @@ struct WelcomeView: View {
                     isShowingNewProjectSheet = true
                 }
 
-                ForEach(BookTemplate.templates, id: \.id) { template in
+                ForEach(shuffledTemplates, id: \.id) { template in
                     TemplateCardView(template: template)
                         .onTapGesture {
                             templateToShow = template
