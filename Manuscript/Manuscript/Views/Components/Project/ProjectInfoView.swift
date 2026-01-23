@@ -217,21 +217,6 @@ struct ProjectInfoView: View {
         }
     }
 
-    private func templateIcon(for template: BookTemplate) -> String {
-        switch template.name {
-        case "Hero's Journey": return "figure.walk.motion"
-        case "Romance Outline": return "heart.fill"
-        case "Save the Cat": return "cat.fill"
-        case "Three-Act Structure": return "rectangle.split.3x1.fill"
-        case "Story Circle": return "circle.dashed"
-        case "Seven-Point Structure": return "7.circle.fill"
-        case "Freytag's Pyramid": return "triangle.fill"
-        case "Fichtean Curve": return "waveform.path.ecg"
-        case "Kishōtenketsu": return "square.grid.2x2.fill"
-        default: return "doc.badge.plus"
-        }
-    }
-
     @ViewBuilder
     private var genreSection: some View {
         Section("Selected Genres (max 3)") {
@@ -644,6 +629,23 @@ struct ProjectInfoView: View {
         }
     }
     #endif
+
+    // MARK: - Shared Helpers
+
+    private func templateIcon(for template: BookTemplate) -> String {
+        switch template.name {
+        case "Hero's Journey": return "figure.walk.motion"
+        case "Romance Outline": return "heart.fill"
+        case "Save the Cat": return "cat.fill"
+        case "Three-Act Structure": return "rectangle.split.3x1.fill"
+        case "Story Circle": return "circle.dashed"
+        case "Seven-Point Structure": return "7.circle.fill"
+        case "Freytag's Pyramid": return "triangle.fill"
+        case "Fichtean Curve": return "waveform.path.ecg"
+        case "Kishōtenketsu": return "square.grid.2x2.fill"
+        default: return "doc.badge.plus"
+        }
+    }
 
     private func styleSelectionGrid(styles: [String], selectedStyle: Binding<String>) -> some View {
         LazyVGrid(columns: [GridItem(.flexible())], spacing: 8) {

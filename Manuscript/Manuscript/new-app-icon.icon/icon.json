@@ -6,9 +6,8 @@
     {
       "layers" : [
         {
-          "glass" : true,
-          "image-name" : "App icon.png",
-          "name" : "App icon"
+          "image-name" : "App icon 2.png",
+          "name" : "App icon 2"
         }
       ],
       "shadow" : {
