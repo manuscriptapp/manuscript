@@ -341,62 +341,6 @@ struct SettingsView: View {
             }
         }
 
-        // Voice Settings Section (only when configured)
-        if elevenLabsSettings.hasAPIKey {
-            Section {
-                // Stability slider
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text("Stability")
-                        Spacer()
-                        Text("\(Int(elevenLabsSettings.stability * 100))%")
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
-                    Slider(value: $elevenLabsSettings.stability, in: 0...1, step: 0.05)
-                    Text("Lower = more expressive, Higher = more consistent")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-
-                // Similarity Boost slider
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text("Clarity + Similarity")
-                        Spacer()
-                        Text("\(Int(elevenLabsSettings.similarityBoost * 100))%")
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
-                    Slider(value: $elevenLabsSettings.similarityBoost, in: 0...1, step: 0.05)
-                    Text("How closely to match the original voice")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-
-                // Style slider
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text("Style Exaggeration")
-                        Spacer()
-                        Text("\(Int(elevenLabsSettings.style * 100))%")
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
-                    Slider(value: $elevenLabsSettings.style, in: 0...1, step: 0.05)
-                    Text("Higher values amplify style but use more processing")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-
-                // Speaker Boost toggle
-                Toggle("Speaker Boost", isOn: $elevenLabsSettings.useSpeakerBoost)
-            } header: {
-                Text("Voice Settings")
-            } footer: {
-                Text("Adjust how the voice sounds. Changes apply to both preview and document reading.")
-            }
-        }
     }
 
     @ViewBuilder
