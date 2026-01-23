@@ -312,7 +312,7 @@ struct ProjectSidebar: View {
         } message: {
             Text("A snapshot of \"\(viewModel.lastSnapshotDocumentTitle)\" has been saved. View it in the Snapshots tab of the document inspector.")
         }
-        .sheet(isPresented: $isWorldMapSheetPresented) {
+        .fullScreenCover(isPresented: $isWorldMapSheetPresented) {
             WorldMapSheet(locations: viewModel.locations)
         }
     }
