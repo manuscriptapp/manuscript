@@ -131,12 +131,28 @@ struct LaunchSceneBackground: View {
     }
 }
 
-/// Adaptive title for the document launch scene
+/// Adaptive title for the document launch scene with animated gradient
 struct LaunchSceneTitle: View {
     @Environment(\.colorScheme) private var colorScheme
+    private let startDate = Date()
 
-    private var primaryColor: Color {
-        colorScheme == .dark ? .white.opacity(0.9) : Color(white: 0.15)
+    // Gradient colors - earthy editorial tones: browns, grays, dark greens
+    private var gradientColor1: Color {
+        colorScheme == .dark
+            ? Color(red: 0.75, green: 0.65, blue: 0.55)  // warm brown
+            : Color(red: 0.45, green: 0.35, blue: 0.25)   // rich brown
+    }
+
+    private var gradientColor2: Color {
+        colorScheme == .dark
+            ? Color(red: 0.6, green: 0.6, blue: 0.58)    // warm gray
+            : Color(red: 0.4, green: 0.4, blue: 0.38)     // slate gray
+    }
+
+    private var gradientColor3: Color {
+        colorScheme == .dark
+            ? Color(red: 0.45, green: 0.55, blue: 0.45)  // forest green
+            : Color(red: 0.2, green: 0.35, blue: 0.25)    // dark green
     }
 
     private var secondaryColor: Color {
@@ -144,16 +160,27 @@ struct LaunchSceneTitle: View {
     }
 
     var body: some View {
-        VStack(spacing: 6) {
-            Text("Manuscript")
-                .font(.system(size: 17, weight: .semibold, design: .default))
-                .tracking(3)
-                .textCase(.uppercase)
-                .foregroundStyle(primaryColor)
+        VStack(spacing: 10) {
+            TimelineView(.animation(minimumInterval: 1/30)) { timeline in
+                let time = Float(timeline.date.timeIntervalSince(startDate))
+
+                Text("manuscript")
+                    .font(.system(size: 30, weight: .medium, design: .rounded))
+                    .tracking(0.8)
+                    .foregroundStyle(.white)
+                    .colorEffect(
+                        ShaderLibrary.gradientShift(
+                            .float(time),
+                            .color(gradientColor1),
+                            .color(gradientColor2),
+                            .color(gradientColor3)
+                        )
+                    )
+            }
 
             Text("for writers, by writers")
-                .font(.system(size: 10, weight: .medium, design: .default))
-                .tracking(1.2)
+                .font(.system(size: 13, weight: .regular, design: .default))
+                .tracking(0.5)
                 .foregroundStyle(secondaryColor)
         }
     }
