@@ -149,6 +149,8 @@ struct WorldMapSheet: View {
                             .font(.title)
                             .foregroundStyle(.white, .black.opacity(0.5))
                     }
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
 
                     Spacer()
 
@@ -156,7 +158,9 @@ struct WorldMapSheet: View {
                     if selectedLocation != nil && lookAroundScene != nil {
                         Button {
                             showLookAround.toggle()
-                            sheetDetent = .fraction(0.25) // Minimize sheet to show more view
+                            if showLookAround {
+                                sheetDetent = .fraction(0.25) // Minimize sheet when entering streetview
+                            }
                         } label: {
                             ZStack {
                                 Circle()
@@ -167,6 +171,8 @@ struct WorldMapSheet: View {
                                     .foregroundColor(.white)
                             }
                         }
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                     }
                 }
                 .padding()
@@ -174,6 +180,7 @@ struct WorldMapSheet: View {
 
                 Spacer()
             }
+            .allowsHitTesting(true)
         }
         .sheet(isPresented: $showLocationsList) {
             NavigationStack {
