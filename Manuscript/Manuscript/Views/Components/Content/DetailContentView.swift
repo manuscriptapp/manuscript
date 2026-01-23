@@ -49,7 +49,7 @@ struct DetailContentView: View {
         case .character(let character):
             CharacterDetailView(character: character, viewModel: viewModel)
         case .location(let location):
-            ManuscriptLocationDetailView(viewModel: viewModel, location: location)
+            LocationDetailView(viewModel: viewModel, location: location)
         }
     }
 }
