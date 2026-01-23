@@ -8,39 +8,29 @@ struct AddCharacterSheet: View {
     @State private var gender: ManuscriptCharacterGender = .notSpecified
     
     var body: some View {
-        NavigationStack {
-            Form {
-                Section(header: Text("Basic Information")) {
-                    TextField("Character Name", text: $name)
-                    TextField("Age", text: $age)
-                    #if os(iOS)
-                        .keyboardType(.numberPad)
-                    #endif
-                    
-                    Picker("Gender", selection: $gender) {
-                        ForEach(ManuscriptCharacterGender.allCases, id: \.self) { gender in
-                            Text(gender.rawValue).tag(gender)
-                        }
+        SheetForm(
+            title: "Add Character",
+            cancelAction: { dismiss() },
+            confirmAction: {
+                let ageInt = Int(age)
+                viewModel.addCharacter(name: name, age: ageInt, gender: gender)
+                dismiss()
+            },
+            isConfirmDisabled: name.isEmpty
+        ) {
+            Section("Basic Information") {
+                TextField("Character Name", text: $name)
+                TextField("Age", text: $age)
+                #if os(iOS)
+                    .keyboardType(.numberPad)
+                #endif
+
+                Picker("Gender", selection: $gender) {
+                    ForEach(ManuscriptCharacterGender.allCases, id: \.self) { gender in
+                        Text(gender.rawValue).tag(gender)
                     }
-                }
-            }
-            .navigationTitle("Add Character")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
-                        let ageInt = Int(age)
-                        viewModel.addCharacter(name: name, age: ageInt, gender: gender)
-                        dismiss()
-                    }
-                    .disabled(name.isEmpty)
                 }
             }
         }
-        .presentationBackground(.regularMaterial)
     }
 } 

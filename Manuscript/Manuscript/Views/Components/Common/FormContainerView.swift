@@ -57,30 +57,48 @@ struct SheetForm<Content: View>: View {
     #if os(macOS)
     private var macOSLayout: some View {
         VStack(spacing: 0) {
-            // Header
-            Text(title)
-                .font(.headline)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
-
-            Divider()
-
-            // Content
-            VStack(alignment: .leading, spacing: 16) {
-                content()
-            }
-            .padding(20)
-
-            Divider()
-
-            // Footer with buttons
+            // Header with close button
             HStack {
-                Spacer()
-                Button("Cancel") {
+                Button {
                     cancelAction()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
                 }
+                .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
 
+                Spacer()
+
+                Text(title)
+                    .font(.headline)
+
+                Spacer()
+
+                // Invisible spacer to balance the close button
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+                    .opacity(0)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+
+            Divider()
+
+            // Content - using Form with grouped style for native appearance
+            Form {
+                content()
+            }
+            .formStyle(.grouped)
+
+            Divider()
+
+            // Footer with confirm button only
+            HStack {
+                Spacer()
                 Button(confirmTitle) {
                     confirmAction()
                 }
@@ -89,7 +107,7 @@ struct SheetForm<Content: View>: View {
             }
             .padding(16)
         }
-        .frame(minWidth: 320, idealWidth: 400, maxWidth: 500)
+        .frame(minWidth: 350, idealWidth: 420, maxWidth: 500)
         .background(.regularMaterial)
     }
     #else
@@ -101,11 +119,6 @@ struct SheetForm<Content: View>: View {
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        cancelAction()
-                    }
-                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(confirmTitle) {
                         confirmAction()
@@ -122,6 +135,7 @@ struct SheetForm<Content: View>: View {
 // MARK: - Sheet Form Field Components
 
 /// A labeled text field for use in SheetForm
+/// Uses standard TextField - Form handles styling on both platforms
 struct SheetTextField: View {
     let label: String
     let placeholder: String
@@ -134,38 +148,21 @@ struct SheetTextField: View {
     }
 
     var body: some View {
-        #if os(macOS)
-        LabeledContent(label) {
-            TextField(placeholder, text: $text)
-                .textFieldStyle(.roundedBorder)
-        }
-        #else
         TextField(label, text: $text, prompt: Text(placeholder))
-        #endif
     }
 }
 
 /// A labeled picker for use in SheetForm
+/// Uses standard Picker - Form handles styling on both platforms
 struct SheetPicker<SelectionValue: Hashable, Content: View>: View {
     let label: String
     @Binding var selection: SelectionValue
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        #if os(macOS)
-        LabeledContent(label) {
-            Picker("", selection: $selection) {
-                content()
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-        }
-        #else
         Picker(label, selection: $selection) {
             content()
         }
-        .pickerStyle(.menu)
-        #endif
     }
 }
 

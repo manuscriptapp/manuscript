@@ -27,10 +27,11 @@ struct AddDocumentSheet: View {
             },
             isConfirmDisabled: title.isEmpty
         ) {
-            SheetTextField("Title", text: $title, placeholder: "Document Title")
-
-            SheetPicker(label: "Folder", selection: $selectedFolder) {
-                folderPickerContent(viewModel.document.rootFolder)
+            Section {
+                SheetTextField("Title", text: $title, placeholder: "Document Title")
+                SheetPicker(label: "Folder", selection: $selectedFolder) {
+                    folderPickerContent(viewModel.document.rootFolder)
+                }
             }
         }
     }

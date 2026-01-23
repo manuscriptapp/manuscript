@@ -78,6 +78,117 @@ struct AddLocationSheet: View {
     }
 
     var body: some View {
+        #if os(macOS)
+        macOSLayout
+        #else
+        iOSLayout
+        #endif
+    }
+
+    #if os(macOS)
+    private var macOSLayout: some View {
+        VStack(spacing: 0) {
+            // Header with close button
+            HStack {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                Text("Add Location")
+                    .font(.headline)
+
+                Spacer()
+
+                // Invisible spacer to balance the close button
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+                    .opacity(0)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+
+            Divider()
+
+            // Map content
+            ZStack {
+                mapContent
+
+                // Center pin indicator
+                VStack {
+                    Spacer()
+                    Image(systemName: "mappin")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.red)
+                        .shadow(color: .black.opacity(0.3), radius: 2, y: 2)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+
+                // Map controls overlay
+                VStack(spacing: 0) {
+                    HStack(alignment: .top) {
+                        Spacer()
+                        mapControls
+                    }
+                    .padding(.top, 8)
+                    .padding(.horizontal, 16)
+
+                    Spacer()
+
+                    inputPanel
+                }
+
+                // Search overlay
+                if isSearching {
+                    searchOverlay
+                }
+            }
+
+            Divider()
+
+            // Footer with Add button
+            HStack {
+                Spacer()
+                Button("Add") {
+                    viewModel.addLocation(name: name, latitude: coordinate.latitude, longitude: coordinate.longitude)
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(name.isEmpty)
+            }
+            .padding(16)
+        }
+        .frame(minWidth: 500, idealWidth: 600, maxWidth: 700, minHeight: 500, idealHeight: 600)
+        .background(.regularMaterial)
+        .onAppear {
+            locationManager.requestLocationPermission()
+        }
+        .onChange(of: locationManager.location) { _, newLocation in
+            if let location = newLocation {
+                currentSpan = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+                position = .region(MKCoordinateRegion(
+                    center: location.coordinate,
+                    span: currentSpan
+                ))
+                coordinate = location.coordinate
+                updateTextFields()
+            }
+        }
+    }
+    #endif
+
+    #if os(iOS)
+    private var iOSLayout: some View {
         NavigationStack {
             ZStack {
                 // Full-screen map
@@ -96,15 +207,16 @@ struct AddLocationSheet: View {
                 .allowsHitTesting(false)
 
                 // Map controls overlay
-                VStack {
-                    HStack {
+                VStack(spacing: 0) {
+                    HStack(alignment: .top) {
                         Spacer()
                         mapControls
                     }
                     .padding(.top, 8)
-                    .padding(.trailing, 16)
+                    .padding(.horizontal, 16)
 
                     Spacer()
+
                     inputPanel
                 }
 
@@ -114,15 +226,8 @@ struct AddLocationSheet: View {
                 }
             }
             .navigationTitle("Add Location")
-            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
-            #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
                         viewModel.addLocation(name: name, latitude: coordinate.latitude, longitude: coordinate.longitude)
@@ -147,6 +252,7 @@ struct AddLocationSheet: View {
             }
         }
     }
+    #endif
 
     // MARK: - Map Controls
 

@@ -21,10 +21,11 @@ struct AddFolderSheet: View {
             },
             isConfirmDisabled: title.isEmpty
         ) {
-            SheetTextField("Title", text: $title, placeholder: "Folder Title")
-
-            SheetPicker(label: "Parent Folder", selection: $selectedFolder) {
-                folderPickerContent(viewModel.document.rootFolder)
+            Section {
+                SheetTextField("Title", text: $title, placeholder: "Folder Title")
+                SheetPicker(label: "Parent Folder", selection: $selectedFolder) {
+                    folderPickerContent(viewModel.document.rootFolder)
+                }
             }
         }
     }
