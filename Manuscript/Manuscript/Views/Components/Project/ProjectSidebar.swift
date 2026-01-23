@@ -13,6 +13,7 @@ struct ProjectSidebar: View {
     @State private var isProgressExpanded: Bool = true
     @State private var isCharactersExpanded: Bool = false
     @State private var isLocationsExpanded: Bool = false
+    @State private var isWorldMapSheetPresented: Bool = false
 
     init(
         viewModel: DocumentViewModel,
@@ -45,13 +46,6 @@ struct ProjectSidebar: View {
                 // Draft folder
                 FolderItemView(
                     folder: viewModel.rootFolder,
-                    viewModel: viewModel,
-                    detailSelection: typedSelection
-                )
-
-                // Research folder
-                FolderItemView(
-                    folder: viewModel.researchFolder,
                     viewModel: viewModel,
                     detailSelection: typedSelection
                 )
@@ -112,6 +106,17 @@ struct ProjectSidebar: View {
                     .buttonStyle(.borderless)
                     .padding(.leading, 4)
                     .padding(.top, 4)
+
+                    Button {
+                        isWorldMapSheetPresented.toggle()
+                    } label: {
+                        Label("World Map", systemImage: "map")
+                            .font(.callout)
+                            .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.2)) // Brown
+                    }
+                    .buttonStyle(.borderless)
+                    .padding(.leading, 4)
+                    .padding(.top, 2)
                 } label: {
                     Label {
                         Text("Locations")
@@ -121,6 +126,13 @@ struct ProjectSidebar: View {
                     }
                     .badge(viewModel.locations.count)
                 }
+
+                // Research folder
+                FolderItemView(
+                    folder: viewModel.researchFolder,
+                    viewModel: viewModel,
+                    detailSelection: typedSelection
+                )
 
                 // Trash folder
                 FolderItemView(
@@ -295,19 +307,13 @@ struct ProjectSidebar: View {
             }
             #endif
         }
-        .alert(viewModel.renameAlertTitle, isPresented: $viewModel.isRenameAlertPresented) {
-            TextField("Name", text: $viewModel.newItemName)
-            Button("Cancel", role: .cancel) { }
-            Button("Rename") {
-                viewModel.performRename()
-            }
-        } message: {
-            Text("Enter new name")
-        }
         .alert("Snapshot Created", isPresented: $viewModel.showSnapshotConfirmation) {
             Button("OK", role: .cancel) { }
         } message: {
             Text("A snapshot of \"\(viewModel.lastSnapshotDocumentTitle)\" has been saved. View it in the Snapshots tab of the document inspector.")
+        }
+        .sheet(isPresented: $isWorldMapSheetPresented) {
+            WorldMapSheet(locations: viewModel.locations)
         }
     }
 

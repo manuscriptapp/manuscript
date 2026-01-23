@@ -1035,10 +1035,11 @@ class DocumentViewModel: ObservableObject {
         renameAlertTitle = title
         newItemName = name
 
-        // Delay alert presentation slightly on iOS to allow context menu to fully dismiss
+        // Delay alert presentation on iOS to allow context menu to fully dismiss
         // This prevents the alert from being immediately dismissed due to iOS timing issues
         #if os(iOS)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
             self.isRenameAlertPresented = true
         }
         #else
