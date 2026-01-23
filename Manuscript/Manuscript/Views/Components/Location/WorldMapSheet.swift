@@ -4,17 +4,19 @@ import MapKit
 /// A fullscreen map showing all project locations with pins and a bottom sheet listing locations
 // TODO: Add streetview toggle/icon to switch between map and streetview at selected location
 struct WorldMapSheet: View {
-    let locations: [ManuscriptLocation]
-    let onLocationDetailRequested: ((ManuscriptLocation) -> Void)?
+    @ObservedObject var viewModel: DocumentViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var mapCameraPosition: MapCameraPosition
     @State private var selectedLocation: ManuscriptLocation?
     @State private var showLocationsList: Bool = true
 
-    init(locations: [ManuscriptLocation], onLocationDetailRequested: ((ManuscriptLocation) -> Void)? = nil) {
-        self.locations = locations
-        self.onLocationDetailRequested = onLocationDetailRequested
-        self._mapCameraPosition = State(initialValue: Self.calculateInitialCameraPosition(for: locations))
+    private var locations: [ManuscriptLocation] {
+        viewModel.locations
+    }
+
+    init(viewModel: DocumentViewModel) {
+        self.viewModel = viewModel
+        self._mapCameraPosition = State(initialValue: Self.calculateInitialCameraPosition(for: viewModel.locations))
     }
 
     /// Calculates initial camera position focusing on the densest cluster of locations
@@ -149,19 +151,16 @@ struct WorldMapSheet: View {
             }
         }
         .sheet(isPresented: $showLocationsList) {
-            LocationsListSheet(
-                locations: locations,
-                selectedLocation: $selectedLocation,
-                onLocationSelected: { location in
-                    selectLocation(location)
-                },
-                onLocationDetailRequested: onLocationDetailRequested != nil ? { location in
-                    // Store the pending navigation, then dismiss
-                    // ProjectSidebar handles navigation after dismiss via onChange
-                    onLocationDetailRequested?(location)
-                    dismiss()
-                } : nil
-            )
+            NavigationStack {
+                LocationsListSheet(
+                    viewModel: viewModel,
+                    locations: locations,
+                    selectedLocation: $selectedLocation,
+                    onLocationSelected: { location in
+                        selectLocation(location)
+                    }
+                )
+            }
             .presentationDetents([.medium, .large, .fraction(0.25)])
             .presentationDragIndicator(.visible)
             .presentationBackgroundInteraction(.enabled)
@@ -196,10 +195,10 @@ struct WorldMapSheet: View {
 // MARK: - Locations List Bottom Sheet
 
 struct LocationsListSheet: View {
+    @ObservedObject var viewModel: DocumentViewModel
     let locations: [ManuscriptLocation]
     @Binding var selectedLocation: ManuscriptLocation?
     let onLocationSelected: (ManuscriptLocation) -> Void
-    let onLocationDetailRequested: ((ManuscriptLocation) -> Void)?
 
     var body: some View {
         List(locations) { location in
@@ -230,33 +229,27 @@ struct LocationsListSheet: View {
 
                 Spacer()
 
-                // Detail button
-                if onLocationDetailRequested != nil {
-                    Button {
-                        onLocationDetailRequested?(location)
-                    } label: {
-                        Image(systemName: "info.circle")
-                            .foregroundColor(.secondary)
-                            .font(.title3)
-                    }
-                    .buttonStyle(.plain)
+                // Detail button - pushes LocationDetailView
+                NavigationLink {
+                    LocationDetailView(viewModel: viewModel, location: location)
+                } label: {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.secondary)
+                        .font(.title3)
                 }
+                .buttonStyle(.plain)
             }
             .contentShape(Rectangle())
         }
         .listStyle(.plain)
+        .navigationTitle("Locations")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #if DEBUG
 #Preview {
-    WorldMapSheet(
-        locations: [
-            ManuscriptLocation(name: "New York", latitude: 40.7128, longitude: -74.0060),
-            ManuscriptLocation(name: "London", latitude: 51.5074, longitude: -0.1278),
-            ManuscriptLocation(name: "Tokyo", latitude: 35.6762, longitude: 139.6503)
-        ],
-        onLocationDetailRequested: nil
-    )
+    // Preview requires a DocumentViewModel, so we can't easily preview this
+    Text("WorldMapSheet Preview - requires DocumentViewModel")
 }
 #endif
