@@ -2,13 +2,14 @@ import SwiftUI
 import MapKit
 
 /// A fullscreen map showing all project locations with pins and a bottom sheet listing locations
-// TODO: Add streetview toggle/icon to switch between map and streetview at selected location
 struct WorldMapSheet: View {
     @ObservedObject var viewModel: DocumentViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var mapCameraPosition: MapCameraPosition
     @State private var selectedLocation: ManuscriptLocation?
     @State private var showLocationsList: Bool = true
+    @State private var showLookAround: Bool = false
+    @State private var lookAroundScene: MKLookAroundScene?
 
     private var locations: [ManuscriptLocation] {
         viewModel.locations
@@ -111,27 +112,33 @@ struct WorldMapSheet: View {
 
     var body: some View {
         ZStack {
-            // Full screen map
-            Map(position: $mapCameraPosition) {
-                ForEach(annotations) { annotation in
-                    Annotation(annotation.name, coordinate: annotation.coordinate) {
-                        ZStack {
-                            Circle()
-                                .fill(selectedLocation?.id == annotation.id
-                                    ? Color.blue
-                                    : Color(red: 0.6, green: 0.4, blue: 0.2))
-                                .frame(width: 30, height: 30)
-                            Image(systemName: "mappin")
-                                .foregroundColor(.white)
-                                .font(.system(size: 16, weight: .bold))
+            // Show either map or Look Around view
+            if showLookAround, let scene = lookAroundScene {
+                LookAroundPreview(scene: .constant(scene))
+                    .ignoresSafeArea()
+            } else {
+                // Full screen map
+                Map(position: $mapCameraPosition) {
+                    ForEach(annotations) { annotation in
+                        Annotation(annotation.name, coordinate: annotation.coordinate) {
+                            ZStack {
+                                Circle()
+                                    .fill(selectedLocation?.id == annotation.id
+                                        ? Color.blue
+                                        : Color(red: 0.6, green: 0.4, blue: 0.2))
+                                    .frame(width: 30, height: 30)
+                                Image(systemName: "mappin")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 16, weight: .bold))
+                            }
                         }
                     }
                 }
+                .mapStyle(.standard(elevation: .realistic))
+                .ignoresSafeArea()
             }
-            .mapStyle(.standard(elevation: .realistic))
-            .ignoresSafeArea()
 
-            // Top toolbar overlay - just close button
+            // Top toolbar overlay
             VStack {
                 HStack {
                     Button {
@@ -143,6 +150,17 @@ struct WorldMapSheet: View {
                     }
 
                     Spacer()
+
+                    // Look Around toggle - always visible, enabled when location selected with scene available
+                    Button {
+                        showLookAround.toggle()
+                    } label: {
+                        Image(systemName: showLookAround ? "map.fill" : "binoculars.fill")
+                            .font(.title)
+                            .foregroundStyle(.white, .black.opacity(0.5))
+                    }
+                    .disabled(selectedLocation == nil || (lookAroundScene == nil && !showLookAround))
+                    .opacity(selectedLocation != nil && lookAroundScene != nil ? 1.0 : 0.4)
                 }
                 .padding()
                 .padding(.top, 44) // Safe area
@@ -177,11 +195,33 @@ struct WorldMapSheet: View {
 
     private func selectLocation(_ location: ManuscriptLocation) {
         selectedLocation = location
+        showLookAround = false // Reset to map view when selecting new location
         withAnimation(.easeInOut(duration: 0.5)) {
             mapCameraPosition = .region(MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
                 span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
             ))
+        }
+        // Fetch Look Around scene for the selected location
+        fetchLookAroundScene(for: location)
+    }
+
+    private func fetchLookAroundScene(for location: ManuscriptLocation) {
+        lookAroundScene = nil
+        let coordinate = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+        Task {
+            let request = MKLookAroundSceneRequest(coordinate: coordinate)
+            do {
+                let scene = try await request.scene
+                await MainActor.run {
+                    lookAroundScene = scene
+                }
+            } catch {
+                // Look Around not available for this location
+                await MainActor.run {
+                    lookAroundScene = nil
+                }
+            }
         }
     }
 
