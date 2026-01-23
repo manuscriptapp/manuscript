@@ -12,8 +12,14 @@ struct CompileSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var showShareSheet = false
+    @State private var isExportingScrivener = false
+    @State private var scrivenerExportProgress: Double = 0
+    @State private var scrivenerExportMessage: String = ""
+
+    private let document: ManuscriptDocument
 
     init(document: ManuscriptDocument) {
+        self.document = document
         self._viewModel = StateObject(wrappedValue: CompileViewModel(document: document))
     }
 
@@ -23,12 +29,19 @@ struct CompileSheet: View {
                 // Format section
                 formatSection
 
-                // Content options section
-                contentOptionsSection
+                // Content options section (hide for Scrivener)
+                if viewModel.settings.format != .scrivener {
+                    contentOptionsSection
+                }
 
                 // Format-specific options
                 if viewModel.settings.format == .pdf {
                     pdfOptionsSection
+                }
+
+                // Scrivener info section
+                if viewModel.settings.format == .scrivener {
+                    scrivenerInfoSection
                 }
 
                 // Preview section
@@ -40,32 +53,45 @@ struct CompileSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         Task {
-                            await viewModel.compile()
-                            if viewModel.compiledData != nil {
-                                #if os(iOS)
-                                showShareSheet = true
-                                #else
-                                saveOnMacOS()
-                                #endif
+                            if viewModel.settings.format == .scrivener {
+                                await exportScrivener()
+                            } else {
+                                await viewModel.compile()
+                                if viewModel.compiledData != nil {
+                                    #if os(iOS)
+                                    showShareSheet = true
+                                    #else
+                                    saveOnMacOS()
+                                    #endif
+                                }
                             }
                         }
                     } label: {
-                        if viewModel.isCompiling {
+                        if viewModel.isCompiling || isExportingScrivener {
                             ProgressView()
                                 .controlSize(.small)
                         } else {
                             Text("Export")
                         }
                     }
-                    .disabled(viewModel.isCompiling || viewModel.compilableDocuments.isEmpty)
+                    .disabled(viewModel.isCompiling || isExportingScrivener || viewModel.compilableDocuments.isEmpty)
                 }
             }
             .overlay {
                 if viewModel.isCompiling {
                     compileProgressOverlay
+                }
+                if isExportingScrivener {
+                    scrivenerProgressOverlay
                 }
             }
             .alert("Export Error", isPresented: .constant(viewModel.error != nil)) {
@@ -182,6 +208,40 @@ struct CompileSheet: View {
         }
     }
 
+    // MARK: - Scrivener Info Section
+
+    private var scrivenerInfoSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Scrivener 3 Project", systemImage: "folder.fill")
+                    .font(.headline)
+
+                Text("Exports your entire project to Scrivener 3 format (.scriv), preserving:")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("Binder structure", systemImage: "list.bullet.indent")
+                    Label("Labels and statuses", systemImage: "tag")
+                    Label("Keywords", systemImage: "number")
+                    Label("Synopsis and notes", systemImage: "note.text")
+                    Label("Document content (as RTF)", systemImage: "doc.richtext")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+        } header: {
+            Text("Export Details")
+        } footer: {
+            #if os(iOS)
+            Text("The project will be exported as a ZIP archive that you can share or save.")
+            #else
+            Text("Choose where to save your Scrivener project.")
+            #endif
+        }
+    }
+
     // MARK: - Preview Section
 
     private var previewSection: some View {
@@ -243,7 +303,7 @@ struct CompileSheet: View {
         }
     }
 
-    // MARK: - Progress Overlay
+    // MARK: - Progress Overlays
 
     private var compileProgressOverlay: some View {
         ZStack {
@@ -265,6 +325,77 @@ struct CompileSheet: View {
             }
             .padding(24)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    private var scrivenerProgressOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+                ProgressView()
+                    .controlSize(.large)
+
+                Text(scrivenerExportMessage)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                ProgressView(value: scrivenerExportProgress)
+                    .frame(width: 200)
+            }
+            .padding(24)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    // MARK: - Scrivener Export
+
+    private func exportScrivener() async {
+        isExportingScrivener = true
+        scrivenerExportProgress = 0
+        scrivenerExportMessage = "Preparing export..."
+
+        do {
+            #if os(iOS)
+            // On iOS, export as ZIP for easy sharing
+            let zipData = try await ScrivenerExporter.shared.exportAsZip(
+                document: document,
+                progress: { progress, message in
+                    Task { @MainActor in
+                        scrivenerExportProgress = progress
+                        scrivenerExportMessage = message
+                    }
+                }
+            )
+
+            // Set compiled data for sharing
+            viewModel.compiledData = zipData
+            let projectName = document.title.isEmpty ? "Untitled" : document.title.slugified
+            viewModel.compiledFilename = "\(projectName).scriv.zip"
+
+            isExportingScrivener = false
+            showShareSheet = true
+            #else
+            // On macOS, export as folder
+            let scrivURL = try await ScrivenerExporter.shared.export(
+                document: document,
+                progress: { progress, message in
+                    Task { @MainActor in
+                        scrivenerExportProgress = progress
+                        scrivenerExportMessage = message
+                    }
+                }
+            )
+
+            isExportingScrivener = false
+
+            // Show save panel to let user choose destination
+            await saveScrivenerOnMacOS(sourceURL: scrivURL)
+            #endif
+        } catch {
+            isExportingScrivener = false
+            viewModel.error = .exportFailed(underlying: error)
         }
     }
 
@@ -292,6 +423,40 @@ struct CompileSheet: View {
         }
     }
 
+    @MainActor
+    private func saveScrivenerOnMacOS(sourceURL: URL) async {
+        let savePanel = NSSavePanel()
+        savePanel.allowedContentTypes = [UTType(filenameExtension: "scriv") ?? .folder]
+        let projectName = document.title.isEmpty ? "Untitled" : document.title.slugified
+        savePanel.nameFieldStringValue = "\(projectName).scriv"
+        savePanel.canCreateDirectories = true
+        savePanel.message = "Choose where to save your Scrivener project"
+
+        let response = await savePanel.beginSheetModal(for: NSApp.keyWindow ?? NSWindow())
+
+        if response == .OK, let destinationURL = savePanel.url {
+            do {
+                // Remove existing if present
+                if FileManager.default.fileExists(atPath: destinationURL.path) {
+                    try FileManager.default.removeItem(at: destinationURL)
+                }
+
+                // Copy the .scriv folder to chosen location
+                try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+
+                // Clean up temp
+                try? FileManager.default.removeItem(at: sourceURL)
+
+                dismiss()
+            } catch {
+                viewModel.error = .fileWriteFailed
+            }
+        } else {
+            // User cancelled - clean up temp
+            try? FileManager.default.removeItem(at: sourceURL)
+        }
+    }
+
     private func contentType(for format: ExportFormat) -> UTType {
         switch format {
         case .pdf: return .pdf
@@ -299,6 +464,7 @@ struct CompileSheet: View {
         case .epub: return UTType(filenameExtension: "epub") ?? .data
         case .markdown: return UTType(filenameExtension: "md") ?? .plainText
         case .plainText: return .plainText
+        case .scrivener: return UTType(filenameExtension: "scriv") ?? .folder
         }
     }
     #endif

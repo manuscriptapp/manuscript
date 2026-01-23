@@ -119,6 +119,8 @@ class CompileViewModel: ObservableObject {
         case .plainText:
             settings.includeFrontMatter = false
             settings.includeTitlePage = false
+        case .scrivener:
+            settings.includeTitlePage = false
         }
     }
 }

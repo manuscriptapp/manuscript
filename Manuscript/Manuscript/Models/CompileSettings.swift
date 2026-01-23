@@ -8,6 +8,7 @@ enum ExportFormat: String, Codable, CaseIterable, Identifiable {
     case epub = "EPUB"
     case markdown = "Markdown"
     case plainText = "Plain Text"
+    case scrivener = "Scrivener"
 
     var id: String { rawValue }
 
@@ -18,6 +19,7 @@ enum ExportFormat: String, Codable, CaseIterable, Identifiable {
         case .epub: return "epub"
         case .markdown: return "md"
         case .plainText: return "txt"
+        case .scrivener: return "scriv"
         }
     }
 
@@ -28,6 +30,15 @@ enum ExportFormat: String, Codable, CaseIterable, Identifiable {
         case .epub: return "book.fill"
         case .markdown: return "doc.text"
         case .plainText: return "doc.plaintext"
+        case .scrivener: return "folder.fill"
+        }
+    }
+
+    /// Whether this format produces a folder/package instead of a single file
+    var isPackageFormat: Bool {
+        switch self {
+        case .scrivener: return true
+        default: return false
         }
     }
 }

@@ -136,6 +136,15 @@ class CompileService {
                 progress: progress
             )
             fileExtension = "txt"
+
+        case .scrivener:
+            // Scrivener export uses the full document, not just compilable documents
+            // This is handled separately in CompileSheet since it produces a folder
+            throw CompileError.exportFailed(underlying: NSError(
+                domain: "CompileService",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Scrivener export should be handled via ScrivenerExporter"]
+            ))
         }
 
         // Report complete
