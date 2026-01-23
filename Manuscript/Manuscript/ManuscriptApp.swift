@@ -742,9 +742,13 @@ struct ManuscriptApp: App {
                 recentDocumentsManager: recentDocumentsManager,
                 notificationManager: notificationManager
             )
+            .containerBackground(.ultraThinMaterial, for: .window)
+            .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         }
+        .windowStyle(.hiddenTitleBar)
+        .windowBackgroundDragBehavior(.enabled)
         .windowResizability(.contentSize)
-        .defaultSize(width: 800, height: 600)
+        .defaultSize(width: 720, height: 460)
         #endif
 
         // Document-based app structure

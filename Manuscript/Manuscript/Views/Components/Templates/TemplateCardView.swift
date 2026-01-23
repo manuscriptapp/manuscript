@@ -2,7 +2,7 @@ import SwiftUI
 
 struct TemplateCardView: View {
     let template: BookTemplate
-    
+
     private var documentCount: Int {
         func countDocuments(in folder: FolderTemplate) -> Int {
             let documentsInFolder = folder.documents.count
@@ -13,11 +13,11 @@ struct TemplateCardView: View {
         }
         return countDocuments(in: template.structure)
     }
-    
+
     private var actCount: Int {
         template.structure.subfolders.count
     }
-    
+
     private var symbol: String {
         switch template.name {
         case "Hero's Journey":
@@ -43,111 +43,81 @@ struct TemplateCardView: View {
         }
     }
 
-    private var gradient: LinearGradient {
+    private var bookColor: Color {
         switch template.name {
         case "Hero's Journey":
-            return LinearGradient(
-                colors: [.brown.opacity(0.8), Color(red: 0.6, green: 0.4, blue: 0.2).opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.55, green: 0.35, blue: 0.2)
         case "Romance Outline":
-            return LinearGradient(
-                colors: [.pink.opacity(0.8), .red.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.85, green: 0.3, blue: 0.4)
         case "Save the Cat":
-            return LinearGradient(
-                colors: [.orange.opacity(0.8), .yellow.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.95, green: 0.6, blue: 0.2)
         case "Three-Act Structure":
-            return LinearGradient(
-                colors: [.blue.opacity(0.8), .cyan.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.25, green: 0.5, blue: 0.75)
         case "Story Circle":
-            return LinearGradient(
-                colors: [.purple.opacity(0.8), .pink.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.6, green: 0.35, blue: 0.65)
         case "Seven-Point Structure":
-            return LinearGradient(
-                colors: [.green.opacity(0.8), .mint.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.25, green: 0.6, blue: 0.5)
         case "Freytag's Pyramid":
-            return LinearGradient(
-                colors: [.indigo.opacity(0.8), .purple.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.45, green: 0.35, blue: 0.7)
         case "Fichtean Curve":
-            return LinearGradient(
-                colors: [.red.opacity(0.8), .orange.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.8, green: 0.35, blue: 0.3)
         case "Kishōtenketsu":
-            return LinearGradient(
-                colors: [.teal.opacity(0.8), .green.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.3, green: 0.55, blue: 0.55)
         default:
-            return LinearGradient(
-                colors: [.gray.opacity(0.6), .gray.opacity(0.4)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 0.5, green: 0.5, blue: 0.5)
         }
     }
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(gradient)
-                    .frame(height: 120)
-                
-                VStack(spacing: 8) {
-                    Image(systemName: symbol)
-                        .font(.system(size: 32))
-                        .foregroundStyle(.white)
-                    
-                    VStack(spacing: 2) {
-                        Text("\(actCount) acts")
-                            .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.9))
-                        Text("\(documentCount) chapters")
-                            .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.9))
-                    }
-                }
+        ZStack(alignment: .bottomLeading) {
+            // Main cover
+            RoundedRectangle(cornerRadius: 3)
+                .fill(bookColor)
+
+            // Spine edge effect
+            HStack(spacing: 0) {
+                Rectangle()
+                    .fill(.black.opacity(0.15))
+                    .frame(width: 6)
+                Spacer()
             }
-            
-            Text(template.name)
-                .font(.headline)
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .padding(.horizontal, 4)
+
+            // Content on cover
+            VStack(alignment: .leading, spacing: 6) {
+                Spacer()
+
+                Image(systemName: symbol)
+                    .font(.system(size: 18, weight: .light))
+                    .foregroundStyle(.white.opacity(0.6))
+
+                Text(template.name)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("\(actCount) acts · \(documentCount) scenes")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.white.opacity(0.6))
+            }
+            .padding(.leading, 12)
+            .padding(.trailing, 10)
+            .padding(.vertical, 10)
         }
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.background)
-                .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
-        )
+        .aspectRatio(0.7, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: 3))
+        .shadow(color: .black.opacity(0.25), radius: 2, x: 1, y: 2)
     }
 }
 
 #if DEBUG
 #Preview {
-    TemplateCardView(template: BookTemplate.templates[0])
+    HStack {
+        TemplateCardView(template: BookTemplate.templates[0])
+            .frame(width: 140)
+        TemplateCardView(template: BookTemplate.templates[1])
+            .frame(width: 140)
+    }
+    .padding()
 }
-#endif 
+#endif

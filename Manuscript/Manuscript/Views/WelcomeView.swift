@@ -25,32 +25,75 @@ struct WelcomeView: View {
                         Text("Welcome to Manuscript")
                             .font(.largeTitle)
                             .bold()
-                        
+
                         Text("Your writing companion")
                             .font(.title3)
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.bottom, 8)
-                    
+
                     // Quick actions
                     quickActionsSection
-                    
+
                     // Recent documents
                     if !recentDocumentsManager.recentDocuments.isEmpty {
                         recentDocumentsSection
                     }
-                    
+
                     // Templates
                     templatesSection
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 20)
             }
+            #if os(macOS)
+            .scrollContentBackground(.hidden)
+            #endif
             .navigationTitle("")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            #if os(macOS)
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    Spacer()
+                }
+                ToolbarItem(placement: .automatic) {
+                    Menu {
+                        Button {
+                            // Placeholder
+                        } label: {
+                            Label("About Manuscript", systemImage: "info.circle")
+                        }
+
+                        Divider()
+
+                        Button {
+                            // Placeholder
+                        } label: {
+                            Label("Check for Updates", systemImage: "arrow.clockwise")
+                        }
+
+                        Button {
+                            // Placeholder
+                        } label: {
+                            Label("Send Feedback", systemImage: "envelope")
+                        }
+
+                        Divider()
+
+                        Button {
+                            // Placeholder
+                        } label: {
+                            Label("Settings", systemImage: "gear")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
+            #else
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -60,6 +103,7 @@ struct WelcomeView: View {
                     }
                 }
             }
+            #endif
             .sheet(isPresented: $isShowingNewProjectSheet) {
                 NewBookSheet { document in
                     // Create a new document and open it
@@ -104,7 +148,7 @@ struct WelcomeView: View {
     
     private var quickActionsSection: some View {
         #if os(macOS)
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             quickActionButton(
                 title: "New Project",
                 systemImage: "doc.badge.plus",
@@ -123,6 +167,7 @@ struct WelcomeView: View {
                 action: { isShowingScrivenerImporter = true }
             )
         }
+        .fixedSize(horizontal: false, vertical: true)
         .padding(.bottom, 8)
         #else
         VStack(alignment: .leading, spacing: 8) {
@@ -156,41 +201,43 @@ struct WelcomeView: View {
     }
     
     private var recentDocumentsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
                 Text("Recent Projects")
                     .font(.title3)
                     .bold()
-                
-                Spacer()
-                
-                Button("Clear All") {
-                    recentDocumentsManager.clearRecentDocuments()
-                }
-                .font(.caption)
-                .foregroundColor(.secondary)
-            }
-            
-            #if os(macOS)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(recentDocumentsManager.recentDocuments) { document in
-                        RecentDocumentCard(document: document) {
-                            openRecentDocument(document)
-                        }
-                        .frame(width: 180)
-                        .contextMenu {
-                            Button(action: {
-                                recentDocumentsManager.removeDocument(at: document.url)
-                            }) {
-                                Label("Remove from Recent", systemImage: "trash")
-                            }
 
-                            Button(action: {
-                                NSWorkspace.shared.selectFile(document.url.path, inFileViewerRootedAtPath: document.url.deletingLastPathComponent().path)
-                            }) {
-                                Label("Show in Finder", systemImage: "folder")
-                            }
+                Spacer()
+
+                Button {
+                    recentDocumentsManager.clearRecentDocuments()
+                } label: {
+                    Text("Clear All")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            #if os(macOS)
+            let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 4)
+
+            LazyVGrid(columns: columns, spacing: 12) {
+                ForEach(recentDocumentsManager.recentDocuments) { document in
+                    RecentDocumentCard(document: document) {
+                        openRecentDocument(document)
+                    }
+                    .contextMenu {
+                        Button(action: {
+                            recentDocumentsManager.removeDocument(at: document.url)
+                        }) {
+                            Label("Remove from Recent", systemImage: "trash")
+                        }
+
+                        Button(action: {
+                            NSWorkspace.shared.selectFile(document.url.path, inFileViewerRootedAtPath: document.url.deletingLastPathComponent().path)
+                        }) {
+                            Label("Show in Finder", systemImage: "folder")
                         }
                     }
                 }
@@ -224,25 +271,23 @@ struct WelcomeView: View {
                 .bold()
 
             #if os(macOS)
-            let columns = Array(repeating: GridItem(.flexible(), spacing: 16), count: 4)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    BlankTemplateCard {
+                        isShowingNewProjectSheet = true
+                    }
+                    .frame(width: 100)
 
-            LazyVGrid(columns: columns, spacing: 16) {
-                BlankTemplateCard {
-                    isShowingNewProjectSheet = true
+                    ForEach(BookTemplate.templates, id: \.id) { template in
+                        TemplateCardView(template: template)
+                            .frame(width: 100)
+                            .onTapGesture {
+                                templateToShow = template
+                            }
+                    }
                 }
-
-                ForEach(BookTemplate.templates, id: \.id) { template in
-                    TemplateCardView(template: template)
-                        .onTapGesture {
-                            templateToShow = template
-                        }
-                }
+                .padding(.vertical, 4)
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
-            )
             #else
             let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 2)
 
@@ -263,34 +308,29 @@ struct WelcomeView: View {
     }
     
     // MARK: - Helper Views
-    
+
     private func quickActionButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            HStack(spacing: 12) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 24))
-                    .foregroundColor(.accentColor)
-                
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(.tint)
+                    .frame(width: 26, height: 26)
+
                 Text(title)
-                    .font(.headline)
-                    .lineLimit(1)
+                    .font(.system(size: 14, weight: .medium))
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: 26, alignment: .leading)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.secondary.opacity(0.1))
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.primary.opacity(0.06))
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
         }
         .buttonStyle(.plain)
     }
-    
+
     // MARK: - Helper Methods
 
     private func createNewDocument() {
@@ -363,50 +403,73 @@ struct WelcomeView: View {
 struct RecentDocumentCard: View {
     let document: RecentDocument
     let action: () -> Void
-    
-    private var gradient: LinearGradient {
-        LinearGradient(
-            colors: [.blue.opacity(0.7), .teal.opacity(0.6)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+
+    private var isCloudDocument: Bool {
+        let path = document.url.path
+        return path.contains("Mobile Documents") ||
+               path.contains("com~apple~CloudDocs") ||
+               path.contains("iCloud")
     }
-    
+
+    private var relativeDate: String {
+        let now = Date()
+        let date = document.lastOpenedDate
+        let interval = now.timeIntervalSince(date)
+
+        let minutes = Int(interval / 60)
+        let hours = Int(interval / 3600)
+        let days = Int(interval / 86400)
+
+        if minutes < 1 {
+            return "Just now"
+        } else if minutes < 60 {
+            return "\(minutes) min ago"
+        } else if hours < 24 {
+            return hours == 1 ? "1 hour ago" : "\(hours) hours ago"
+        } else if days < 7 {
+            return days == 1 ? "Yesterday" : "\(days) days ago"
+        } else if days < 30 {
+            let weeks = days / 7
+            return weeks == 1 ? "1 week ago" : "\(weeks) weeks ago"
+        } else {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            return formatter.string(from: date)
+        }
+    }
+
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .top, spacing: 4) {
-                    Image(systemName: "doc.text.fill")
-                        .font(.headline)
-                        .foregroundColor(.accentColor)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(document.title)
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .lineLimit(1)
-                        
-                        Text(document.url.lastPathComponent)
+            HStack(spacing: 10) {
+                Image(systemName: "doc.text.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.tint)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(document.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+
+                    HStack(spacing: 4) {
+                        Image(systemName: isCloudDocument ? "icloud" : "folder")
+                            .font(.system(size: 9))
+                            .foregroundStyle(isCloudDocument ? .blue : .secondary)
+
+                        Text(relativeDate)
                             .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
+                            .foregroundStyle(.secondary)
                     }
-                    
-                    Spacer()
                 }
-                
-                Text(document.lastOpenedDate, style: .date)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+
+                Spacer()
             }
-            .padding(8)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.secondary.opacity(0.1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.primary.opacity(0.06))
             )
         }
         .buttonStyle(.plain)
@@ -415,43 +478,47 @@ struct RecentDocumentCard: View {
 
 struct BlankTemplateCard: View {
     let action: () -> Void
-    
+
+    private let bookColor = Color(red: 0.5, green: 0.5, blue: 0.53)
+
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(LinearGradient(
-                            colors: [.gray.opacity(0.6), .gray.opacity(0.4)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
-                        .frame(height: 120)
-                    
-                    VStack(spacing: 4) {
-                        Image(systemName: "plus.square.fill")
-                            .font(.system(size: 24))
-                            .foregroundStyle(.white)
-                        
-                        Text("Start Fresh")
-                            .font(.caption2)
-                            .foregroundStyle(.white)
-                    }
+            ZStack(alignment: .bottomLeading) {
+                // Main cover
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(bookColor)
+
+                // Spine edge effect
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(.black.opacity(0.15))
+                        .frame(width: 6)
+                    Spacer()
                 }
-                
-                Text("Blank Book")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .padding(.horizontal, 4)
+
+                // Content on cover
+                VStack(alignment: .leading, spacing: 6) {
+                    Spacer()
+
+                    Image(systemName: "plus")
+                        .font(.system(size: 18, weight: .light))
+                        .foregroundStyle(.white.opacity(0.6))
+
+                    Text("Blank Book")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
+
+                    Text("Start fresh")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+                .padding(.leading, 12)
+                .padding(.trailing, 10)
+                .padding(.vertical, 10)
             }
-            .padding(8)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.background)
-                    .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
-            )
+            .aspectRatio(0.7, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 3))
+            .shadow(color: .black.opacity(0.25), radius: 2, x: 1, y: 2)
         }
         .buttonStyle(.plain)
     }
