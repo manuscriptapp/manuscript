@@ -732,7 +732,7 @@ struct DocumentInspectorView: View {
     private func commentRow(_ comment: ManuscriptDocument.DocumentComment) -> some View {
         let isActive = detailViewModel.tappedComment?.id == comment.id
 
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             // Linked text preview
             if let commentedText = detailViewModel.getCommentedText(for: comment) {
                 HStack(spacing: 8) {
@@ -756,33 +756,9 @@ struct DocumentInspectorView: View {
                 .cornerRadius(8)
             }
 
-            // Comment content
-            HStack(alignment: .top, spacing: 12) {
-                // Comment text bubble
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(comment.text)
-                        .font(.body)
-                        .foregroundStyle(.primary)
-
-                    // Timestamp
-                    Text(comment.creationDate, format: .dateTime.month(.abbreviated).day().hour().minute())
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                #if os(macOS)
-                .background(isActive ? Color.accentColor.opacity(0.15) : Color(nsColor: .windowBackgroundColor))
-                #else
-                .background(isActive ? Color.accentColor.opacity(0.15) : Color(uiColor: .tertiarySystemBackground))
-                #endif
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(isActive ? Color.accentColor : Color.secondary.opacity(0.2), lineWidth: isActive ? 2 : 1)
-                )
-
-                // Menu button
+            // Menu button row
+            HStack {
+                Spacer()
                 Menu {
                     Button {
                         editingComment = comment
@@ -797,11 +773,35 @@ struct DocumentInspectorView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
-                        .font(.title3)
+                        .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
                 .menuStyle(.borderlessButton)
             }
+
+            // Comment text bubble - full width
+            VStack(alignment: .leading, spacing: 6) {
+                Text(comment.text)
+                    .font(.body)
+                    .foregroundStyle(.primary)
+
+                // Timestamp
+                Text(comment.creationDate, format: .dateTime.month(.abbreviated).day().hour().minute())
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            #if os(macOS)
+            .background(isActive ? Color.accentColor.opacity(0.15) : Color(nsColor: .windowBackgroundColor))
+            #else
+            .background(isActive ? Color.accentColor.opacity(0.15) : Color(uiColor: .tertiarySystemBackground))
+            #endif
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isActive ? Color.accentColor : Color.secondary.opacity(0.2), lineWidth: isActive ? 2 : 1)
+            )
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 6)
