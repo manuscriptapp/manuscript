@@ -8,6 +8,7 @@ enum DetailSelection: Hashable, Identifiable {
         case .projectInfo: return "projectInfo"
         case .characters: return "characters"
         case .locations: return "locations"
+        case .worldMap: return "worldMap"
         case .writingHistory: return "writingHistory"
         case .folder(let folder): return "folder-\(folder.id)"
         case .document(let document): return "document-\(document.id)"
@@ -19,6 +20,7 @@ enum DetailSelection: Hashable, Identifiable {
     case projectInfo
     case characters
     case locations
+    case worldMap
     case writingHistory
     case folder(ManuscriptFolder)
     case document(ManuscriptDocument.Document)
@@ -34,19 +36,21 @@ enum DetailSelection: Hashable, Identifiable {
             hasher.combine(1)
         case .locations:
             hasher.combine(2)
-        case .writingHistory:
+        case .worldMap:
             hasher.combine(3)
-        case .folder(let folder):
+        case .writingHistory:
             hasher.combine(4)
+        case .folder(let folder):
+            hasher.combine(5)
             hasher.combine(folder.id)
         case .document(let document):
-            hasher.combine(5)
+            hasher.combine(6)
             hasher.combine(document.id)
         case .character(let character):
-            hasher.combine(6)
+            hasher.combine(7)
             hasher.combine(character.id)
         case .location(let location):
-            hasher.combine(7)
+            hasher.combine(8)
             hasher.combine(location.id)
         }
     }
@@ -59,6 +63,8 @@ enum DetailSelection: Hashable, Identifiable {
         case (.characters, .characters):
             return true
         case (.locations, .locations):
+            return true
+        case (.worldMap, .worldMap):
             return true
         case (.writingHistory, .writingHistory):
             return true

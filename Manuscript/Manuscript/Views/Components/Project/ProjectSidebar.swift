@@ -13,7 +13,6 @@ struct ProjectSidebar: View {
     @State private var isProgressExpanded: Bool = true
     @State private var isCharactersExpanded: Bool = false
     @State private var isLocationsExpanded: Bool = false
-    @State private var isWorldMapSheetPresented: Bool = false
 
     init(
         viewModel: DocumentViewModel,
@@ -107,9 +106,7 @@ struct ProjectSidebar: View {
                     .padding(.leading, 4)
                     .padding(.top, 4)
 
-                    Button {
-                        isWorldMapSheetPresented = true
-                    } label: {
+                    NavigationLink(value: DetailSelection.worldMap) {
                         Label("World Map", systemImage: "map")
                             .font(.callout)
                             .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.2)) // Brown
@@ -311,9 +308,6 @@ struct ProjectSidebar: View {
             Button("OK", role: .cancel) { }
         } message: {
             Text("A snapshot of \"\(viewModel.lastSnapshotDocumentTitle)\" has been saved. View it in the Snapshots tab of the document inspector.")
-        }
-        .fullScreenCover(isPresented: $isWorldMapSheetPresented) {
-            WorldMapSheet(viewModel: viewModel)
         }
     }
 

@@ -22,6 +22,8 @@ struct DetailContentView: View {
             CharactersView(viewModel: viewModel)
         case .locations:
             LocationsView(viewModel: viewModel)
+        case .worldMap:
+            WorldMapView(viewModel: viewModel)
         case .writingHistory:
             WritingHistoryView(writingHistory: viewModel.document.writingHistory)
         case .folder(let folder):

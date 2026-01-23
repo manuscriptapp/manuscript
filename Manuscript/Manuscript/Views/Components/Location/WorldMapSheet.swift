@@ -2,9 +2,8 @@ import SwiftUI
 import MapKit
 
 /// A fullscreen map showing all project locations with pins and a bottom sheet listing locations
-struct WorldMapSheet: View {
+struct WorldMapView: View {
     @ObservedObject var viewModel: DocumentViewModel
-    @Environment(\.dismiss) private var dismiss
     @State private var mapCameraPosition: MapCameraPosition
     @State private var selectedLocation: ManuscriptLocation?
     @State private var showLocationsList: Bool = true
@@ -145,22 +144,11 @@ struct WorldMapSheet: View {
                 .ignoresSafeArea()
 
                 // Top toolbar overlay - only show when NOT in streetview
-                VStack {
-                    HStack {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.title)
-                                .foregroundStyle(.white, .black.opacity(0.5))
-                        }
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-
-                        Spacer()
-
-                        // Look Around toggle - visible when location selected with scene available
-                        if selectedLocation != nil && lookAroundScene != nil {
+                // Look Around toggle - visible when location selected with scene available
+                if selectedLocation != nil && lookAroundScene != nil {
+                    VStack {
+                        HStack {
+                            Spacer()
                             Button {
                                 showLookAround = true
                                 sheetDetent = .fraction(0.25) // Minimize sheet when entering streetview
@@ -177,11 +165,11 @@ struct WorldMapSheet: View {
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                         }
-                    }
-                    .padding()
-                    .padding(.top, 44) // Safe area
+                        .padding()
+                        .padding(.top, 44) // Safe area
 
-                    Spacer()
+                        Spacer()
+                    }
                 }
             }
         }
@@ -208,6 +196,10 @@ struct WorldMapSheet: View {
                 }
             }
         }
+        .navigationTitle("World Map")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
     private func selectLocation(_ location: ManuscriptLocation) {

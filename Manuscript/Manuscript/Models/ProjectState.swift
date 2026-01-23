@@ -8,6 +8,7 @@ struct ProjectState: Codable, Equatable {
         case projectInfo
         case characters
         case locations
+        case worldMap
         case writingHistory
         case folder
         case document
@@ -75,6 +76,8 @@ struct ProjectState: Codable, Equatable {
             state.selectionType = .characters
         case .locations:
             state.selectionType = .locations
+        case .worldMap:
+            state.selectionType = .worldMap
         case .writingHistory:
             state.selectionType = .writingHistory
         case .folder(let folder):
@@ -108,6 +111,8 @@ struct ProjectState: Codable, Equatable {
             return .characters
         case .locations:
             return .locations
+        case .worldMap:
+            return .worldMap
         case .writingHistory:
             return .writingHistory
         case .folder:
