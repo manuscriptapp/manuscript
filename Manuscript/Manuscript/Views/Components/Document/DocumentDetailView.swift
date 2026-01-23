@@ -426,24 +426,61 @@ struct DocumentDetailView: View {
         #endif
     }
 
+    // Maximum width for comfortable prose reading (similar to A4 page)
+    private let maxProseWidth: CGFloat = 700
+
     private var readModeView: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text(detailViewModel.editedTitle)
-                    .font(.system(size: 28, weight: .light, design: .serif))
+        GeometryReader { geometry in
+            let availableWidth = geometry.size.width
+            let horizontalPadding = max(32, (availableWidth - maxProseWidth) / 2)
 
-                Divider()
-                    .padding(.trailing, 60)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Title
+                    Text(detailViewModel.editedTitle)
+                        .font(.system(size: 32, weight: .light, design: .serif))
+                        .foregroundStyle(.primary)
 
-                Text(detailViewModel.editedContent)
+                    // Subtle divider
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.15))
+                        .frame(width: 120, height: 1)
+                        .padding(.vertical, 8)
+
+                    // Content with paragraph indentation
+                    readModeContent
+                }
+                .frame(maxWidth: maxProseWidth, alignment: .leading)
+                .padding(.horizontal, horizontalPadding)
+                .padding(.vertical, 48)
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+            #if os(macOS)
+            .background(Color(nsColor: .textBackgroundColor))
+            #else
+            .background(Color(uiColor: .systemBackground))
+            #endif
+        }
+    }
+
+    /// Formats the content with proper paragraph indentation for reading mode
+    private var readModeContent: some View {
+        // Split by newlines (single or double) and filter empty lines
+        let paragraphs = detailViewModel.editedContent
+            .components(separatedBy: .newlines)
+            .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+
+        return VStack(alignment: .leading, spacing: 12) {
+            ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
+                let trimmedParagraph = paragraph.trimmingCharacters(in: .whitespaces)
+
+                Text("\u{2003}\u{2003}" + trimmedParagraph)  // Em-space for consistent indent
                     .font(.system(size: 17, weight: .regular, design: .serif))
                     .lineSpacing(8)
                     .kerning(0.3)
                     .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 32)
         }
     }
 }
