@@ -29,6 +29,7 @@ Think Scrivener or Ulysses, but free and open source.
 | Document customization | ✅ | Custom icons (20+) and colors for folders and documents |
 | Characters & Locations | ✅ | World-building with character/location tracking |
 | Writing statistics | ✅ | Word counts, daily history, streaks, session tracking |
+| Writing targets | ✅ | Word count goals for draft and daily sessions |
 | Comments system | ✅ | Inline comments with chat bubble UI and inspector |
 | Templates | ✅ | Hero's Journey and other project templates |
 | Scrivener import | ✅ | Full .scriv import with RTF conversion and comments |
@@ -38,12 +39,11 @@ Think Scrivener or Ulysses, but free and open source.
 | Paragraph formatting | ✅ | First-line indentation, line spacing |
 | Find & replace | ✅ | Search, highlight matches, navigate, replace single/all |
 | iCloud Drive sync | ✅ | Sync across devices via iCloud Drive |
-| Snapshots | ✅ | Version history with manual snapshots |
+| Snapshots | ✅ | Version history with manual and auto snapshots |
 | Corkboard view | ✅ | Index card view for visual organization |
+| Split editor | ✅ | View two documents side-by-side (macOS) |
 | Outliner view | 🔜 | Hierarchical outline with metadata columns |
-| Split editor | 🔜 | View two documents side-by-side |
 | Composition mode | 🔜 | Distraction-free full-screen writing |
-| Writing targets | 🔜 | Word count goals per document/project/session |
 | Compile presets | 🔜 | Save and reuse export configurations |
 | More export formats | 🔜 | DOCX, EPUB, HTML, LaTeX |
 | Trash folder | 🔜 | Recoverable deleted items |
@@ -86,7 +86,8 @@ MyNovel.manuscript/
 ├── trash/                    # Recoverable deleted items
 ├── snapshots/                # Version history by document
 │   └── {document-id}/
-│       └── {snapshot-id}.json
+│       ├── {snapshot-id}.json      # Snapshot metadata
+│       └── {snapshot-id}.content   # Full document content at snapshot time
 └── assets/                   # Media files (images, PDFs)
 ```
 
@@ -97,6 +98,22 @@ MyNovel.manuscript/
 - **\*.md** — Document content in Markdown with optional YAML frontmatter for synopsis
 - **\*.notes.md** — Document notes stored separately from content
 - **\*.comments.json** — Inline comments with text ranges and timestamps
+
+**Snapshots:**
+
+Snapshots provide version history for each document. They can be created manually or automatically before major changes.
+
+```json
+// snapshots/{document-id}/{snapshot-id}.json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Before restructure",
+  "creationDate": "2024-01-15T10:30:00Z",
+  "wordCount": 2547
+}
+```
+
+The corresponding `.content` file stores the full document text at the time of the snapshot. Snapshots can be viewed, restored, or deleted from the inspector's Snapshots tab.
 
 Documents support YAML frontmatter:
 
@@ -164,12 +181,12 @@ It was a dark and stormy night...
 - [x] Snapshots (version history)
 - [x] Corkboard view
 - [x] iCloud Drive sync
-- [ ] Writing targets UI
-- [ ] Split editor (side-by-side documents)
+- [x] Writing targets (draft and session goals)
+- [x] Split editor (side-by-side documents on macOS)
 - [ ] Composition mode (distraction-free)
 - [ ] Outliner view
 - [ ] DOCX, EPUB, HTML, LaTeX export
-- [ ] Version comparison for snapshots
+- [ ] Snapshot comparison/diff view
 
 ## Contributing
 
