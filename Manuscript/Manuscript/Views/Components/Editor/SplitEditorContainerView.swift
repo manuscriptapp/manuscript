@@ -75,7 +75,14 @@ struct SplitEditorContainerView: View {
         VStack(spacing: 0) {
             // Unified formatting toolbar at the top
             if showFormattingToolbar {
-                FormattingToolbar(context: activeContext)
+                HStack(spacing: 0) {
+                    FormattingToolbar(context: activeContext)
+                    Spacer()
+                    if let vm = activeDetailViewModel {
+                        DocumentIndicatorsView(detailViewModel: vm)
+                            .padding(.trailing, 12)
+                    }
+                }
                 Divider()
             }
 
@@ -149,9 +156,9 @@ struct SplitEditorContainerView: View {
                     get: { detailVM.editedTitle },
                     set: { detailVM.editedTitle = $0 }
                 ),
-                editedOutline: Binding(
-                    get: { detailVM.editedOutline },
-                    set: { detailVM.editedOutline = $0 }
+                editedSynopsis: Binding(
+                    get: { detailVM.editedSynopsis },
+                    set: { detailVM.editedSynopsis = $0 }
                 ),
                 isPromptExpanded: Binding(
                     get: { detailVM.isPromptExpanded },

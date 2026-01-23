@@ -119,7 +119,7 @@ struct SnapshotRow: View {
                 snapshotType: .manual,
                 content: "Sample content here with some words",
                 notes: "Notes",
-                outline: "Outline"
+                synopsis: "Outline"
             ),
             currentWordCount: 150
         )
@@ -130,7 +130,7 @@ struct SnapshotRow: View {
                 snapshotType: .auto,
                 content: "Auto saved content",
                 notes: "",
-                outline: ""
+                synopsis: ""
             ),
             currentWordCount: 100
         )
@@ -142,7 +142,7 @@ struct SnapshotRow: View {
                 snapshotType: .milestone,
                 content: "Milestone content that is longer than the current",
                 notes: "Notes",
-                outline: "Outline"
+                synopsis: "Outline"
             ),
             currentWordCount: 50
         )

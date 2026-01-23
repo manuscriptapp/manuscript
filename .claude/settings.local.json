@@ -114,7 +114,16 @@
       "Bash(awk:*)",
       "Bash(git status:*)",
       "WebFetch(domain:trycatchdebug.net)",
-      "WebFetch(domain:dev.to)"
+      "WebFetch(domain:dev.to)",
+      "Bash(xcrun simctl io:*)",
+      "Bash(screencapture:*)",
+      "Bash(osascript:*)",
+      "Bash(xxd:*)",
+      "Bash(python3:*)",
+      "WebFetch(domain:kindlepreneur.com)",
+      "Bash(pgrep:*)",
+      "Bash(open:*)",
+      "Bash(killall:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"

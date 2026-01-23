@@ -220,7 +220,7 @@ struct FolderDocumentCard: View {
 
                 Divider()
 
-                Text(document.outline.isEmpty ? "No outline" : document.outline)
+                Text(document.synopsis.isEmpty ? "No synopsis" : document.synopsis)
                     .font(.caption)
                     .lineLimit(5)
                     .foregroundColor(.secondary)

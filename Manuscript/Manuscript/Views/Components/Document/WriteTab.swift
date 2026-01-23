@@ -56,7 +56,12 @@ struct WriteTab: View {
         VStack(spacing: 0) {
             #if os(macOS)
             if showFormattingToolbar && !hideToolbar {
-                FormattingToolbar(context: richTextContext)
+                HStack(spacing: 0) {
+                    FormattingToolbar(context: richTextContext)
+                    Spacer()
+                    DocumentIndicatorsView(detailViewModel: viewModel)
+                        .padding(.trailing, 12)
+                }
                 Divider()
             }
             #endif

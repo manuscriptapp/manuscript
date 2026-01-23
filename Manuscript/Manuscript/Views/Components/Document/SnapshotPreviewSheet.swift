@@ -6,7 +6,7 @@ struct SnapshotPreviewSheet: View {
     @ObservedObject var documentViewModel: DocumentViewModel
     @Binding var isPresented: Bool
 
-    @State private var selectedSegment = 0 // 0 = Content, 1 = Notes, 2 = Outline
+    @State private var selectedSegment = 0 // 0 = Content, 1 = Notes, 2 = Synopsis
     @State private var showRestoreConfirmation = false
     @State private var showDeleteConfirmation = false
 
@@ -39,7 +39,7 @@ struct SnapshotPreviewSheet: View {
         case 1:
             return snapshot.notes.isEmpty ? "No notes" : snapshot.notes
         case 2:
-            return snapshot.outline.isEmpty ? "No outline" : snapshot.outline
+            return snapshot.synopsis.isEmpty ? "No synopsis" : snapshot.synopsis
         default:
             return ""
         }
@@ -99,7 +99,7 @@ struct SnapshotPreviewSheet: View {
                 Picker("Content Type", selection: $selectedSegment) {
                     Text("Content").tag(0)
                     Text("Notes").tag(1)
-                    Text("Outline").tag(2)
+                    Text("Synopsis").tag(2)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
@@ -204,7 +204,7 @@ struct SnapshotPreviewSheet: View {
             snapshotType: .manual,
             content: "This is the original content of the document before the major revision was made. It contains several paragraphs of text that explain the main concepts and ideas.",
             notes: "Some notes about the document",
-            outline: "Chapter 1 outline"
+            synopsis: "Chapter 1 outline"
         ),
         document: ManuscriptDocument.Document(
             title: "Sample",

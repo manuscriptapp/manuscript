@@ -40,13 +40,13 @@ struct CorkboardCardView: View {
 
                 // Synopsis body
                 VStack(alignment: .leading, spacing: 0) {
-                    if document.outline.isEmpty {
+                    if document.synopsis.isEmpty {
                         Text("No synopsis")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .italic()
                     } else {
-                        Text(document.outline)
+                        Text(document.synopsis)
                             .font(.subheadline)
                             .foregroundColor(.primary)
                             .lineLimit(6)

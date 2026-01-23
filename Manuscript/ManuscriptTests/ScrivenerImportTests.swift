@@ -489,7 +489,7 @@ struct ScrivenerImportTests {
         #expect(result.document.rootFolder.folderType == .draft)
         #expect(result.document.rootFolder.documents.count == 2)
         #expect(result.document.rootFolder.documents[0].title == "Chapter One")
-        #expect(result.document.rootFolder.documents[0].outline == "The story begins.")
+        #expect(result.document.rootFolder.documents[0].synopsis == "The story begins.")
         #expect(result.document.rootFolder.documents[0].content.contains("chapter one content"))
 
         // Check that labels were imported

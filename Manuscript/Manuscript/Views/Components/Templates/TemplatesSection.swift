@@ -10,7 +10,7 @@ struct TemplatesSection: View {
                 Button {
                     onSelectTemplate(template)
                 } label: {
-                    Label(template.name, systemImage: template.name == "Hero's Journey" ? "figure.walk.motion" : "heart.fill")
+                    Label(template.name, systemImage: template.name == "Heros Journey" ? "figure.walk.motion" : "heart.fill")
                         .foregroundStyle(.primary)
                 }
                 .buttonStyle(.plain)

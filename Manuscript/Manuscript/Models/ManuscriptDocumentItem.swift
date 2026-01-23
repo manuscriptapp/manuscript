@@ -6,8 +6,7 @@ extension ManuscriptDocument {
     struct Document: Identifiable, Codable, Equatable {
         var id: UUID
         var title: String
-        var outlinePrompt: String
-        var outline: String  // synopsis
+        var synopsis: String
         var notes: String
         var content: String
         var creationDate: Date
@@ -32,8 +31,7 @@ extension ManuscriptDocument {
         init(
             id: UUID = UUID(),
             title: String,
-            outlinePrompt: String = "",
-            outline: String = "",
+            synopsis: String = "",
             notes: String = "",
             content: String = "",
             creationDate: Date = Date(),
@@ -51,8 +49,7 @@ extension ManuscriptDocument {
         ) {
             self.id = id
             self.title = title
-            self.outlinePrompt = outlinePrompt
-            self.outline = outline
+            self.synopsis = synopsis
             self.notes = notes
             self.content = content
             self.creationDate = creationDate

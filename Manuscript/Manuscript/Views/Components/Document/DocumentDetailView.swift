@@ -108,8 +108,8 @@ struct DocumentDetailView: View {
                     }
                 }
             }
-            .onChange(of: detailViewModel.editedOutline) { _, newValue in
-                viewModel.updateDocument(document, outline: newValue)
+            .onChange(of: detailViewModel.editedSynopsis) { _, newValue in
+                viewModel.updateDocument(document, synopsis: newValue)
             }
             .onChange(of: detailViewModel.editedNotes) { _, newValue in
                 viewModel.updateDocument(document, notes: newValue)
@@ -173,7 +173,7 @@ struct DocumentDetailView: View {
             documentViewModel: viewModel,
             detailViewModel: vm,
             editedTitle: Binding(get: { vm.editedTitle }, set: { vm.editedTitle = $0 }),
-            editedOutline: Binding(get: { vm.editedOutline }, set: { vm.editedOutline = $0 }),
+            editedSynopsis: Binding(get: { vm.editedSynopsis }, set: { vm.editedSynopsis = $0 }),
             isPromptExpanded: Binding(get: { vm.isPromptExpanded }, set: { vm.isPromptExpanded = $0 }),
             selectedCharacters: selectedCharactersBinding,
             selectedLocations: selectedLocationsBinding,

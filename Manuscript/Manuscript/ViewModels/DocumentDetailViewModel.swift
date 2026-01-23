@@ -12,7 +12,7 @@ class DocumentDetailViewModel: ObservableObject {
     let document: ManuscriptDocument.Document
     let documentViewModel: DocumentViewModel
     @Published var editedTitle: String
-    @Published var editedOutline: String
+    @Published var editedSynopsis: String
     @Published var editedNotes: String
     @Published var editedContent: String
     @Published var isGenerating: Bool = false
@@ -81,7 +81,7 @@ class DocumentDetailViewModel: ObservableObject {
         self.document = document
         self.documentViewModel = documentViewModel
         self.editedTitle = document.title
-        self.editedOutline = document.outline
+        self.editedSynopsis = document.synopsis
         self.editedNotes = document.notes
         self.editedContent = document.content
         self.selectedCharacters = document.characterIds
@@ -173,7 +173,7 @@ class DocumentDetailViewModel: ObservableObject {
         documentViewModel.updateDocument(
             document,
             title: titleToSave,
-            outline: editedOutline,
+            synopsis: editedSynopsis,
             notes: editedNotes,
             content: editedContent,
             characterIds: selectedCharacters,
@@ -241,7 +241,7 @@ class DocumentDetailViewModel: ObservableObject {
                 editedContent += "\n\n" + text
             }
         case .outline:
-            editedOutline += "\n\n" + text
+            editedSynopsis += "\n\n" + text
         case .notes:
             editedNotes += "\n\n" + text
         }

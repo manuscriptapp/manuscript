@@ -140,7 +140,7 @@ struct WorldMapView: View {
     private var macOSLayout: some View {
         HStack(spacing: 0) {
             // Main map view
-            mapView
+            mapView 
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Inspector sidebar

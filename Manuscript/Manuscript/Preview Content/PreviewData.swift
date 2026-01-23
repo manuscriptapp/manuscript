@@ -8,13 +8,13 @@ struct PreviewData {
         var doc = ManuscriptDocument()
         doc.title = "The Dragon's Path"
         doc.author = "Sarah Stormborn"
-        doc.metaDescription = "A young dragon rider discovers her destiny as the last hope for peace between humans and dragons."
+        doc.description = "A young dragon rider discovers her destiny as the last hope for peace between humans and dragons."
         doc.genre = "Fantasy"
 
         // Add sample documents to draft folder
         let chapter1 = ManuscriptDocument.Document(
             title: "Chapter 1: The Beginning",
-            outline: "Our hero discovers their powers",
+            synopsis: "Our hero discovers their powers",
             notes: "Set the scene in the mountain village",
             content: "The morning mist clung to the peaks like a shroud...",
             order: 0
@@ -22,7 +22,7 @@ struct PreviewData {
 
         let chapter2 = ManuscriptDocument.Document(
             title: "Chapter 2: The Call",
-            outline: "The mentor appears",
+            synopsis: "The mentor appears",
             notes: "Introduce Master Chen",
             content: "Three days after the incident, the stranger arrived...",
             order: 1
@@ -80,7 +80,7 @@ struct PreviewData {
     static var sampleDocument: ManuscriptDocument.Document {
         ManuscriptDocument.Document(
             title: "Sample Chapter",
-            outline: "A brief synopsis of the chapter",
+            synopsis: "A brief synopsis of the chapter",
             notes: "Notes for the author",
             content: "The story begins here with compelling prose that draws the reader in...",
             order: 0

@@ -11,7 +11,7 @@ struct DocumentSnapshot: Identifiable, Codable, Equatable {
     // Captured content
     var content: String
     var notes: String
-    var outline: String
+    var synopsis: String
 
     // Stats for display
     var wordCount: Int
@@ -31,7 +31,7 @@ struct DocumentSnapshot: Identifiable, Codable, Equatable {
         snapshotType: SnapshotType = .manual,
         content: String,
         notes: String,
-        outline: String
+        synopsis: String
     ) {
         self.id = id
         self.documentId = documentId
@@ -40,7 +40,7 @@ struct DocumentSnapshot: Identifiable, Codable, Equatable {
         self.snapshotType = snapshotType
         self.content = content
         self.notes = notes
-        self.outline = outline
+        self.synopsis = synopsis
 
         // Calculate stats
         self.wordCount = content.split { $0.isWhitespace || $0.isNewline }.count

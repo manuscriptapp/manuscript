@@ -79,7 +79,12 @@ struct NewBookSheet: View {
             ) { result in
                 switch result {
                 case .success(let url):
-                    // Document was saved successfully
+                    // Document was saved successfully - open it
+                    NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { document, wasAlreadyOpen, error in
+                        if let error = error {
+                            print("Error opening saved document: \(error.localizedDescription)")
+                        }
+                    }
                     if let doc = document {
                         onComplete(doc)
                     }
@@ -204,11 +209,18 @@ struct NewBookSheet: View {
         // Update the document properties
         newDocument.title = title
         newDocument.author = author
-        newDocument.metaDescription = metaInfo
 
-        // Apply template if selected
+        // Build description with template info if applicable
         if let template = selectedTemplate {
+            let templateInfo = "Created with \(template.name) template."
+            if metaInfo.isEmpty {
+                newDocument.description = templateInfo
+            } else {
+                newDocument.description = metaInfo + "\n\n" + templateInfo
+            }
             applyTemplate(template, to: &newDocument)
+        } else {
+            newDocument.description = metaInfo
         }
 
         // Save default author name
@@ -236,7 +248,7 @@ struct NewBookSheet: View {
         for docTemplate in folderTemplate.documents {
             let doc = ManuscriptDocument.Document(
                 title: docTemplate.title,
-                outline: docTemplate.outline,
+                synopsis: docTemplate.synopsis,
                 notes: docTemplate.notes,
                 content: docTemplate.content,
                 order: docTemplate.order
@@ -285,7 +297,7 @@ struct NewBookSheet: View {
         for docTemplate in template.documents {
             let document = ManuscriptDocument.Document(
                 title: docTemplate.title,
-                outline: docTemplate.outline,
+                synopsis: docTemplate.synopsis,
                 notes: docTemplate.notes,
                 content: docTemplate.content,
                 order: docTemplate.order

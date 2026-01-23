@@ -83,8 +83,8 @@ struct OutlineRowView: View {
                     .font(.body)
                     .lineLimit(1)
 
-                if !document.outline.isEmpty {
-                    Text(document.outline)
+                if !document.synopsis.isEmpty {
+                    Text(document.synopsis)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
@@ -131,7 +131,7 @@ struct OutlineRowView: View {
     OutlineRowView(
         document: ManuscriptDocument.Document(
             title: "Chapter 1",
-            outline: "The hero begins their journey through the mysterious forest.",
+            synopsis: "The hero begins their journey through the mysterious forest.",
             content: "Once upon a time..."
         ),
         viewModel: DocumentViewModel(),

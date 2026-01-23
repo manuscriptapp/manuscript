@@ -14,7 +14,7 @@ struct DocumentInspectorView: View {
     let documentViewModel: DocumentViewModel
     @ObservedObject var detailViewModel: DocumentDetailViewModel
     @Binding var editedTitle: String
-    @Binding var editedOutline: String
+    @Binding var editedSynopsis: String
     @Binding var isPromptExpanded: Bool
     @Binding var selectedCharacters: Set<UUID>
     @Binding var selectedLocations: Set<UUID>
@@ -904,30 +904,14 @@ struct DocumentInspectorView: View {
                 .font(.body)
                 .padding(.horizontal)
 
-                // Outline Section
+                // Synopsis Section
                 VStack(alignment: .leading, spacing: 8) {
-                    if !document.outlinePrompt.isEmpty {
-                        DisclosureGroup(
-                            isExpanded: $isPromptExpanded,
-                            content: {
-                                Text(document.outlinePrompt)
-                                    .font(.subheadline)
-                            },
-                            label: {
-                                HStack {
-                                    Image(systemName: "list.clipboard")
-                                        .foregroundStyle(.accent)
-                                    Text("Chapter Guidelines")
-                                }
-                            }
-                        )
-                    }
 
-                    Text("Outline")
+                    Text("Synopsis")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     #if os(iOS)
-                    TextEditor(text: $editedOutline)
+                    TextEditor(text: $editedSynopsis)
                         .plainTextEditor()
                         .frame(minHeight: 100)
                         .toolbar {
@@ -939,7 +923,7 @@ struct DocumentInspectorView: View {
                             }
                         }
                     #else
-                    TextEditor(text: $editedOutline)
+                    TextEditor(text: $editedSynopsis)
                         .plainTextEditor()
                         .frame(minHeight: 100)
                     #endif
@@ -1030,7 +1014,7 @@ struct DocumentInspectorView: View {
         documentViewModel: viewModel,
         detailViewModel: detailVM,
         editedTitle: .constant("Sample Title"),
-        editedOutline: .constant("Sample Outline"),
+        editedSynopsis: .constant("Sample Outline"),
         isPromptExpanded: .constant(false),
         selectedCharacters: .constant(Set<UUID>()),
         selectedLocations: .constant(Set<UUID>()),

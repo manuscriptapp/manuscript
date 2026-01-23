@@ -675,8 +675,7 @@ final class ScrivenerImporter {
         return ManuscriptDocument.Document(
             id: UUID(),
             title: item.title,
-            outlinePrompt: "",
-            outline: synopsis,
+            synopsis: synopsis,
             notes: notes,
             content: markdownContent,
             creationDate: item.created ?? Date(),

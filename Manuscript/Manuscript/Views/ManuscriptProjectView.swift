@@ -290,7 +290,7 @@ extension ManuscriptDocument {
         var document = ManuscriptDocument()
         document.title = "Sample Project"
         document.author = "Sample Author"
-        document.metaDescription = "This is a sample project for previews"
+        document.description = "This is a sample project for previews"
         document.genre = "Fiction"
         document.style = "Modern"
         document.synopsis = "A sample synopsis for preview purposes."
@@ -317,13 +317,13 @@ extension ManuscriptDocument {
         // Add some documents
         let doc1 = ManuscriptDocument.Document(
             title: "Chapter 1",
-            outline: "Introduction to the main character",
+            synopsis: "Introduction to the main character",
             content: "It was a dark and stormy night..."
         )
 
         let doc2 = ManuscriptDocument.Document(
             title: "Chapter 2",
-            outline: "The journey begins",
+            synopsis: "The journey begins",
             content: "The morning sun revealed the aftermath..."
         )
 

@@ -19,7 +19,7 @@ struct AddDocumentSheet: View {
                 viewModel.addDocument(
                     to: selectedFolder,
                     title: title,
-                    outline: "",
+                    synopsis: "",
                     notes: "",
                     content: ""
                 )

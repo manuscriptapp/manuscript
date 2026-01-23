@@ -164,12 +164,12 @@ class DocumentManager: ObservableObject {
     
     // MARK: - Document Management
     
-    func addDocument(to folder: ManuscriptFolder, title: String, outline: String = "", notes: String = "", content: String = "") {
+    func addDocument(to folder: ManuscriptFolder, title: String, synopsis: String = "", notes: String = "", content: String = "") {
         let nextOrder = folder.documents.count
         
         let document = ManuscriptDocument.Document(
             title: title,
-            outline: outline,
+            synopsis: synopsis,
             notes: notes,
             content: content,
             order: nextOrder,
@@ -192,9 +192,9 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    func updateDocument(_ doc: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil) {
+    func updateDocument(_ doc: ManuscriptDocument.Document, title: String? = nil, synopsis: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil) {
         // Find the document in the folder structure
-        let updatedDoc = updateDocumentProperties(doc, title: title, outline: outline, notes: notes, content: content, characterIds: characterIds, locationIds: locationIds)
+        let updatedDoc = updateDocumentProperties(doc, title: title, synopsis: synopsis, notes: notes, content: content, characterIds: characterIds, locationIds: locationIds)
         
         // Update document in the folder structure
         updateDocumentInFolders(docId: doc.id, updatedDoc: updatedDoc)
@@ -205,15 +205,15 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    private func updateDocumentProperties(_ doc: ManuscriptDocument.Document, title: String?, outline: String?, notes: String?, content: String?, characterIds: [UUID]?, locationIds: [UUID]?) -> ManuscriptDocument.Document {
+    private func updateDocumentProperties(_ doc: ManuscriptDocument.Document, title: String?, synopsis: String?, notes: String?, content: String?, characterIds: [UUID]?, locationIds: [UUID]?) -> ManuscriptDocument.Document {
         var updatedDoc = doc
-        
+
         if let title = title {
             updatedDoc.title = title
         }
-        
-        if let outline = outline {
-            updatedDoc.outline = outline
+
+        if let synopsis = synopsis {
+            updatedDoc.synopsis = synopsis
         }
         
         if let notes = notes {

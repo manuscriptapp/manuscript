@@ -307,7 +307,7 @@ class DocumentViewModel: ObservableObject {
         var doc = document
         doc.title = title
         doc.author = author
-        doc.metaDescription = metaInfo
+        doc.description = metaInfo
         document = doc
     }
 
@@ -539,7 +539,7 @@ class DocumentViewModel: ObservableObject {
         let nextOrder = folder.documents.count
         let newDoc = ManuscriptDocument.Document(
             title: "",
-            outline: "",
+            synopsis: "",
             notes: "",
             content: "",
             order: nextOrder,
@@ -590,11 +590,11 @@ class DocumentViewModel: ObservableObject {
         }
     }
 
-    func addDocument(to folder: ManuscriptFolder, title: String, outline: String = "", notes: String = "", content: String = "") {
+    func addDocument(to folder: ManuscriptFolder, title: String, synopsis: String = "", notes: String = "", content: String = "") {
         let nextOrder = folder.documents.count
         let newDoc = ManuscriptDocument.Document(
             title: title,
-            outline: outline,
+            synopsis: synopsis,
             notes: notes,
             content: content,
             order: nextOrder,
@@ -640,13 +640,13 @@ class DocumentViewModel: ObservableObject {
         detailSelection = .document(newDoc)
     }
 
-    func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, outline: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil, comments: [ManuscriptDocument.DocumentComment]? = nil) {
+    func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, synopsis: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil, comments: [ManuscriptDocument.DocumentComment]? = nil) {
         // Track word count change for writing history
         let oldWordCount = docToUpdate.wordCount
 
         var updatedDoc = docToUpdate
         if let title = title { updatedDoc.title = title }
-        if let outline = outline { updatedDoc.outline = outline }
+        if let synopsis = synopsis { updatedDoc.synopsis = synopsis }
         if let notes = notes { updatedDoc.notes = notes }
         if let content = content { updatedDoc.content = content }
         if let characterIds = characterIds { updatedDoc.characterIds = characterIds }
@@ -1073,7 +1073,7 @@ class DocumentViewModel: ObservableObject {
             snapshotType: type,
             content: doc.content,
             notes: doc.notes,
-            outline: doc.outline
+            synopsis: doc.synopsis
         )
         addSnapshot(snapshot)
 
@@ -1115,7 +1115,7 @@ class DocumentViewModel: ObservableObject {
 
         updateDocument(
             doc,
-            outline: snapshot.outline,
+            synopsis: snapshot.synopsis,
             notes: snapshot.notes,
             content: snapshot.content
         )
