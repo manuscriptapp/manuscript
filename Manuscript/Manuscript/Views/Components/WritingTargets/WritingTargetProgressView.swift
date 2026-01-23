@@ -111,10 +111,7 @@ struct WritingTargetProgressView: View {
                 }
             }
             .frame(height: 8)
-
-            Text(wordCountText + " words")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            .help(wordCountText + " words")
         }
     }
 }

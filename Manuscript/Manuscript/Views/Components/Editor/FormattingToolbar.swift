@@ -82,11 +82,36 @@ struct FormattingToolbar: View {
     #if os(macOS)
     private let fontSizesMac = [10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72]
 
+    /// Classic literary fonts ideal for prose writing
+    private let literaryFonts = [
+        "Palatino",
+        "Garamond",
+        "Baskerville",
+        "Georgia",
+        "Times New Roman",
+        "Hoefler Text",
+        "Charter",
+        "Cochin",
+        "Didot",
+        "Bookman Old Style",
+        "Cambria"
+    ]
+
     private var macOSToolbar: some View {
         HStack(spacing: 10) {
             // Font family picker
             Menu {
-                ForEach(availableFontsMac, id: \.self) { fontName in
+                // Literary fonts section
+                ForEach(availableLiteraryFonts, id: \.self) { fontName in
+                    Button(fontName) {
+                        context.fontName = fontName
+                    }
+                }
+
+                Divider()
+
+                // All other fonts
+                ForEach(availableOtherFonts, id: \.self) { fontName in
                     Button(fontName) {
                         context.fontName = fontName
                     }
@@ -200,22 +225,16 @@ struct FormattingToolbar: View {
         .padding(.vertical, 8)
     }
 
-    private var availableFontsMac: [String] {
-        let commonFonts = ["Palatino", "Georgia", "Times New Roman", "Helvetica", "Arial", "Courier New", "Menlo", "Monaco"]
-        let allFonts = NSFontManager.shared.availableFontFamilies.sorted()
+    /// Literary fonts that are available on this system
+    private var availableLiteraryFonts: [String] {
+        let allFonts = NSFontManager.shared.availableFontFamilies
+        return literaryFonts.filter { allFonts.contains($0) }
+    }
 
-        var result: [String] = []
-        for font in commonFonts {
-            if allFonts.contains(font) {
-                result.append(font)
-            }
-        }
-        for font in allFonts {
-            if !result.contains(font) {
-                result.append(font)
-            }
-        }
-        return result
+    /// All other fonts (excluding literary fonts)
+    private var availableOtherFonts: [String] {
+        let allFonts = NSFontManager.shared.availableFontFamilies.sorted()
+        return allFonts.filter { !literaryFonts.contains($0) }
     }
 
     private func applyLineSpacing(_ multiplier: CGFloat) {

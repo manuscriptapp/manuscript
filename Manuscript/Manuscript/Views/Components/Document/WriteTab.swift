@@ -15,6 +15,8 @@ struct WriteTab: View {
     var onFocusChange: ((Bool) -> Void)?
     /// Whether to hide the formatting toolbar (used in split view where container shows unified toolbar)
     var hideToolbar: Bool = false
+    /// External binding for find bar visibility (for split view unified control)
+    var externalShowFindBar: Binding<Bool>?
 
     @StateObject private var localRichTextContext = RichTextContext()
     @StateObject private var findReplaceViewModel = FindReplaceViewModel()
@@ -193,6 +195,22 @@ struct WriteTab: View {
             if showFindReplace {
                 findReplaceViewModel.show(replaceMode: true)
                 viewModel.showFindReplaceBar = false  // Reset trigger
+            }
+        }
+        .onChange(of: externalShowFindBar?.wrappedValue) { _, newValue in
+            // Sync external find bar binding with local findReplaceViewModel
+            if let showFind = newValue {
+                if showFind && !findReplaceViewModel.isVisible {
+                    findReplaceViewModel.show(replaceMode: false)
+                } else if !showFind && findReplaceViewModel.isVisible {
+                    findReplaceViewModel.hide()
+                }
+            }
+        }
+        .onChange(of: findReplaceViewModel.isVisible) { _, isVisible in
+            // Sync local state back to external binding
+            if let binding = externalShowFindBar, binding.wrappedValue != isVisible {
+                binding.wrappedValue = isVisible
             }
         }
         // Expose find actions for menu commands

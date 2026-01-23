@@ -34,7 +34,12 @@ struct DocumentInspectorView: View {
     @State private var isCustomPromptExpanded: Bool = false
     @State private var chatMessages: [ChatMessage] = []
     @State private var scrollProxy: ScrollViewProxy? = nil
-    
+
+    /// Warm brown color for chat UI elements
+    private var warmBrown: Color {
+        Color(red: 0.55, green: 0.4, blue: 0.3)
+    }
+
     let generateAction: (DocumentDetailViewModel.GenerationType, String?) async -> Void
     let applyAction: () -> Void
     let applyToSelectionAction: (String) -> Void
@@ -310,36 +315,31 @@ struct DocumentInspectorView: View {
     }
     
     var body: some View {
-        TabView(selection: $detailViewModel.inspectorSelectedTab) {
-            // Chat Tab
-            chatTab
-                .tabItem {
-                    Label("Chat", systemImage: "message")
-                }
-                .tag(0)
+        VStack(spacing: 0) {
+            // Icon-based tab picker
+            inspectorTabPicker
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
 
-            // Comments Tab
-            commentsTab
-                .tabItem {
-                    Label("Comments", systemImage: "text.bubble")
-                }
-                .tag(1)
+            Divider()
 
-            // Snapshots Tab
-            SnapshotsTabView(document: document, documentViewModel: documentViewModel)
-                .tabItem {
-                    Label("Snapshots", systemImage: "clock.arrow.circlepath")
+            // Tab content
+            Group {
+                switch detailViewModel.inspectorSelectedTab {
+                case 0:
+                    chatTab
+                case 1:
+                    commentsTab
+                case 2:
+                    SnapshotsTabView(document: document, documentViewModel: documentViewModel)
+                case 3:
+                    detailsTab
+                default:
+                    chatTab
                 }
-                .tag(2)
-
-            // Details Tab (now includes Notes)
-            detailsTab
-                .tabItem {
-                    Label("Details", systemImage: "doc.text")
-                }
-                .tag(3)
+            }
         }
-        .padding(.top)
         #if os(macOS)
         .frame(minWidth: 280, maxWidth: 400)
         #else
@@ -354,6 +354,38 @@ struct DocumentInspectorView: View {
             detailViewModel.attributedNotes = newValue
         }
     }
+
+    /// Icon-based tab picker for the inspector
+    private var inspectorTabPicker: some View {
+        HStack(spacing: 2) {
+            inspectorTabButton(icon: "sparkles", tab: 0)
+            inspectorTabButton(icon: "text.bubble", tab: 1)
+            inspectorTabButton(icon: "clock", tab: 2)
+            inspectorTabButton(icon: "doc.text", tab: 3)
+        }
+        .padding(3)
+        .background(Color.primary.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func inspectorTabButton(icon: String, tab: Int) -> some View {
+        let isSelected = detailViewModel.inspectorSelectedTab == tab
+        return Button {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                detailViewModel.inspectorSelectedTab = tab
+            }
+        } label: {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(isSelected ? .white : .secondary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 28)
+                .contentShape(Rectangle())
+                .background(isSelected ? Color.accentColor : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+    }
     
     private var chatTab: some View {
         VStack(spacing: 0) {
@@ -361,32 +393,31 @@ struct DocumentInspectorView: View {
             DisclosureGroup(
                 isExpanded: $isChatExpanded,
                 content: {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 12) {
                         // Content Type Selection
-                        
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
                                 ForEach([
                                     (type: "Dialogue", icon: "bubble.left.and.bubble.right"),
                                     (type: "Environment", icon: "mountain.2"),
-                                    (type: "Character Development", icon: "person.fill.questionmark"),
-                                    (type: "Action Sequence", icon: "bolt.fill"),
+                                    (type: "Character", icon: "person.fill.questionmark"),
+                                    (type: "Action", icon: "bolt.fill"),
                                     (type: "Plot Twist", icon: "arrow.up.forward.circle")
                                 ], id: \.type) { option in
                                     Button {
-                                        generateScriptContent(option.type)
+                                        generateScriptContent(option.type == "Character" ? "Character Development" : (option.type == "Action" ? "Action Sequence" : option.type))
                                     } label: {
                                         HStack(spacing: 4) {
                                             Image(systemName: option.icon)
-                                                .font(.system(size: 12))
+                                                .font(.system(size: 11))
                                             Text(option.type)
-                                                .font(.footnote)
+                                                .font(.caption)
                                         }
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
                                     }
                                     .buttonStyle(.bordered)
-                                    .tint(.accentSecondary)
+                                    .tint(.accentColor)
                                 }
                             }
                         }
@@ -395,13 +426,14 @@ struct DocumentInspectorView: View {
                 label: {
                     HStack {
                         Image(systemName: "wand.and.stars")
-                            .foregroundStyle(.accent)
+                            .foregroundStyle(warmBrown)
                         Text("Quick Prompts")
-                            .font(.headline)
+                            .font(.subheadline.weight(.medium))
                     }
                 }
             )
-            .padding()
+            .padding(.horizontal)
+            .padding(.vertical, 12)
             
             // Chat messages
             ScrollViewReader { proxy in
@@ -452,54 +484,44 @@ struct DocumentInspectorView: View {
                         
                         // Selected Text Preview (if any) - at the bottom of the chat
                         if hasTextSelection && !selectedText.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Image(systemName: "text.cursor")
-                                        .foregroundStyle(.accent)
-                                    Text("Selected Text")
-                                        .font(.headline)
-                                        .foregroundStyle(.primary)
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack(alignment: .center) {
+                                    Image(systemName: "text.quote")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(warmBrown)
+                                    Text("Selected")
+                                        .font(.caption.weight(.medium))
+                                        .foregroundStyle(.secondary)
                                     Spacer()
-                                    
-                                    // Add a badge showing character count
-                                    Text("\(selectedText.count) chars")
-                                        .font(.caption)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Color.accentSecondary.opacity(0.2))
-                                        .cornerRadius(4)
+                                    Text("\(selectedText.count)")
+                                        .font(.caption.monospacedDigit())
+                                        .foregroundStyle(warmBrown.opacity(0.8))
                                 }
-                                
+
                                 Text(selectedTextPreview)
                                     .font(.subheadline)
-                                    .foregroundStyle(.primary)
-                                    .padding(12)
+                                    .foregroundStyle(.primary.opacity(0.9))
+                                    .lineSpacing(3)
+                                    .padding(10)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Color.accentSecondary.opacity(0.1))
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.accentSecondary, lineWidth: 1)
-                                    )
+                                    .background(warmBrown.opacity(0.08))
+                                    .cornerRadius(6)
                             }
-                            .padding()
-                            .background(Color.systemBackground)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.accentSecondary, lineWidth: 1)
-                                    .padding(.horizontal)
-                            )
+                            .padding(12)
+                            .background(Color.primary.opacity(0.03))
+                            .cornerRadius(8)
                             .id("selectedTextPreview")
                         } else {
                             // Simple message when no text is selected
-                            HStack {
-                                Image(systemName: "lightbulb")
-                                    .foregroundStyle(.yellow)
-                                Text("Tip: Select text in the editor to include it in your prompts")
+                            HStack(spacing: 8) {
+                                Image(systemName: "text.cursor")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                                Text("Select text in the editor to include it in prompts")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
-                            .padding()
+                            .padding(.vertical, 12)
                             .id("noSelectionInfo")
                         }
                         
@@ -566,7 +588,7 @@ struct DocumentInspectorView: View {
                                         .font(.headline)
                                 }
                                 .buttonStyle(.borderedProminent)
-                                .tint(.accentSecondary)
+                                .tint(.accentColor)
                                 .disabled(chatText.isEmpty || isGenerating)
                             }
                         }

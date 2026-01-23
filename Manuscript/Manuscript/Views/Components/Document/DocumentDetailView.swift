@@ -3,7 +3,11 @@ import SwiftData
 import RichTextKit
 
 struct DocumentDetailView: View {
-    @StateObject private var detailViewModel: DocumentDetailViewModel
+    /// Local view model (used when no external is provided)
+    @StateObject private var localDetailViewModel: DocumentDetailViewModel
+    /// External view model (for split view where container owns view models)
+    var externalDetailViewModel: DocumentDetailViewModel?
+
     @State private var inspectorDetent: PresentationDetent = .medium
     @State private var isReadMode = false
     @State private var showSettings = false
@@ -21,10 +25,25 @@ struct DocumentDetailView: View {
     var externalRichTextContext: RichTextContext?
     /// Callback when this editor gains focus (for split view)
     var onFocusChange: ((Bool) -> Void)?
-    /// Whether to hide the toolbar (when using external context in split view)
+    /// Whether to hide the formatting toolbar (when using external context in split view)
     var hideToolbar: Bool = false
+    /// Whether to hide toolbar items (inspector, find, read mode) - used in split view
+    var hideToolbarItems: Bool = false
+    /// Whether this view is the active pane in split view (nil = not in split mode, true = active, false = inactive)
+    var isActiveInSplitView: Bool?
+    /// External binding for inspector state (for split view unified control)
+    var externalInspectorPresented: Binding<Bool>?
+    /// External binding for find bar state (for split view unified control)
+    var externalShowFindBar: Binding<Bool>?
+    /// External binding for read mode state (for split view unified control)
+    var externalIsReadMode: Binding<Bool>?
 
-    init(document: ManuscriptDocument.Document, viewModel: DocumentViewModel, fileURL: URL? = nil, splitEditorState: Binding<SplitEditorState>? = nil, externalRichTextContext: RichTextContext? = nil, onFocusChange: ((Bool) -> Void)? = nil, hideToolbar: Bool = false) {
+    /// Returns the active detail view model (external if provided, otherwise local)
+    private var detailViewModel: DocumentDetailViewModel {
+        externalDetailViewModel ?? localDetailViewModel
+    }
+
+    init(document: ManuscriptDocument.Document, viewModel: DocumentViewModel, fileURL: URL? = nil, splitEditorState: Binding<SplitEditorState>? = nil, externalRichTextContext: RichTextContext? = nil, onFocusChange: ((Bool) -> Void)? = nil, hideToolbar: Bool = false, hideToolbarItems: Bool = false, isActiveInSplitView: Bool? = nil, externalDetailViewModel: DocumentDetailViewModel? = nil, externalInspectorPresented: Binding<Bool>? = nil, externalShowFindBar: Binding<Bool>? = nil, externalIsReadMode: Binding<Bool>? = nil) {
         self.document = document
         self.viewModel = viewModel
         self.fileURL = fileURL
@@ -32,17 +51,50 @@ struct DocumentDetailView: View {
         self.externalRichTextContext = externalRichTextContext
         self.onFocusChange = onFocusChange
         self.hideToolbar = hideToolbar
-        self._detailViewModel = StateObject(wrappedValue: DocumentDetailViewModel(document: document, documentViewModel: viewModel))
+        self.hideToolbarItems = hideToolbarItems
+        self.isActiveInSplitView = isActiveInSplitView
+        self.externalDetailViewModel = externalDetailViewModel
+        self.externalInspectorPresented = externalInspectorPresented
+        self.externalShowFindBar = externalShowFindBar
+        self.externalIsReadMode = externalIsReadMode
+        self._localDetailViewModel = StateObject(wrappedValue: DocumentDetailViewModel(document: document, documentViewModel: viewModel))
+    }
+
+    /// Computed binding for inspector - uses external if provided, else internal
+    private var inspectorPresentedBinding: Binding<Bool> {
+        externalInspectorPresented ?? Binding(
+            get: { detailViewModel.isInspectorPresented },
+            set: { detailViewModel.isInspectorPresented = $0 }
+        )
+    }
+
+    /// Computed binding for read mode - uses external if provided, else internal
+    private var readModeBinding: Binding<Bool> {
+        externalIsReadMode ?? $isReadMode
+    }
+
+    /// Whether to show the inspector on this view
+    /// Show inspector only when NOT in split mode (container handles inspector in split mode)
+    private var shouldShowInspector: Bool {
+        isActiveInSplitView == nil
     }
 
     var body: some View {
-        mainContent
-            .inspector(isPresented: $detailViewModel.isInspectorPresented) {
-                inspectorView
+        Group {
+            if shouldShowInspector {
+                // Normal mode or active split pane - include inspector
+                mainContent
+                    .inspector(isPresented: inspectorPresentedBinding) {
+                        inspectorView
+                    }
+                    #if os(macOS)
+                    .inspectorColumnWidth(min: 280, ideal: 320, max: 450)
+                    #endif
+            } else {
+                // Inactive split pane - no inspector
+                mainContent
             }
-            #if os(macOS)
-            .inspectorColumnWidth(min: 280, ideal: 320, max: 450)
-            #endif
+        }
             .onChange(of: detailViewModel.editedTitle) { oldValue, newValue in
                 // Only update if the value actually changed (prevents overwriting on view load)
                 guard oldValue != newValue else { return }
@@ -73,7 +125,9 @@ struct DocumentDetailView: View {
             }
             .navigationTitle(detailViewModel.editedTitle)
             .toolbar {
-                toolbarContent
+                if !hideToolbarItems {
+                    toolbarContent
+                }
             }
             .sheet(isPresented: $showSettings) {
                 NavigationStack {
@@ -99,42 +153,44 @@ struct DocumentDetailView: View {
 
     @ViewBuilder
     private var mainContent: some View {
-        if isReadMode {
+        if readModeBinding.wrappedValue {
             readModeView
         } else {
             WriteTab(
                 viewModel: detailViewModel,
                 externalRichTextContext: externalRichTextContext,
                 onFocusChange: onFocusChange,
-                hideToolbar: hideToolbar
+                hideToolbar: hideToolbar,
+                externalShowFindBar: externalShowFindBar
             )
         }
     }
 
     private var inspectorView: some View {
-        DocumentInspectorView(
+        let vm = detailViewModel
+        return DocumentInspectorView(
             document: document,
             documentViewModel: viewModel,
-            detailViewModel: detailViewModel,
-            editedTitle: $detailViewModel.editedTitle,
-            editedOutline: $detailViewModel.editedOutline,
-            isPromptExpanded: $detailViewModel.isPromptExpanded,
+            detailViewModel: vm,
+            editedTitle: Binding(get: { vm.editedTitle }, set: { vm.editedTitle = $0 }),
+            editedOutline: Binding(get: { vm.editedOutline }, set: { vm.editedOutline = $0 }),
+            isPromptExpanded: Binding(get: { vm.isPromptExpanded }, set: { vm.isPromptExpanded = $0 }),
             selectedCharacters: selectedCharactersBinding,
             selectedLocations: selectedLocationsBinding,
-            isGenerating: $detailViewModel.isGenerating,
-            generationType: $detailViewModel.generationType,
-            isGenerateSheetPresented: $detailViewModel.isGenerateSheetPresented,
-            generatedText: $detailViewModel.generatedText,
-            generationError: $detailViewModel.generationError,
-            isInspectorPresented: $detailViewModel.isInspectorPresented,
+            isGenerating: Binding(get: { vm.isGenerating }, set: { vm.isGenerating = $0 }),
+            generationType: Binding(get: { vm.generationType }, set: { vm.generationType = $0 }),
+            isGenerateSheetPresented: Binding(get: { vm.isGenerateSheetPresented }, set: { vm.isGenerateSheetPresented = $0 }),
+            generatedText: Binding(get: { vm.generatedText }, set: { vm.generatedText = $0 }),
+            generationError: Binding(get: { vm.generationError }, set: { vm.generationError = $0 }),
+            isInspectorPresented: Binding(get: { vm.isInspectorPresented }, set: { vm.isInspectorPresented = $0 }),
             inspectorDetent: $inspectorDetent,
-            selectedText: $detailViewModel.selectedText,
-            hasTextSelection: $detailViewModel.hasTextSelection,
+            selectedText: Binding(get: { vm.selectedText }, set: { vm.selectedText = $0 }),
+            hasTextSelection: Binding(get: { vm.hasTextSelection }, set: { vm.hasTextSelection = $0 }),
             generateAction: { type, prompt in
-                await detailViewModel.generateText(type: type, prompt: prompt ?? "")
+                await vm.generateText(type: type, prompt: prompt ?? "")
             },
             applyAction: {
-                detailViewModel.applyGeneratedText(detailViewModel.generatedText)
+                vm.applyGeneratedText(vm.generatedText)
             },
             applyToSelectionAction: { text in
                 print("Apply to selection: \(text)")

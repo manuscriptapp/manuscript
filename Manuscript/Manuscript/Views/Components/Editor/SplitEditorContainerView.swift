@@ -13,6 +13,17 @@ struct SplitEditorContainerView: View {
     /// RichTextContext for the secondary (right/bottom) pane in split view
     @StateObject private var secondaryRichTextContext = RichTextContext()
 
+    /// DocumentDetailViewModel for the primary pane (owned by container for inspector access)
+    @State private var primaryDetailViewModel: DocumentDetailViewModel?
+    /// DocumentDetailViewModel for the secondary pane (owned by container for inspector access)
+    @State private var secondaryDetailViewModel: DocumentDetailViewModel?
+
+    /// Shared state for global toggles in split view
+    @State private var isInspectorPresented = false
+    @State private var showFindBar = false
+    @State private var isReadMode = false
+    @State private var inspectorDetent: PresentationDetent = .medium
+
     #if os(macOS)
     @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
     #endif
@@ -24,6 +35,16 @@ struct SplitEditorContainerView: View {
             return primaryRichTextContext
         case .secondary:
             return secondaryRichTextContext
+        }
+    }
+
+    /// Returns the DocumentDetailViewModel for the currently focused pane
+    private var activeDetailViewModel: DocumentDetailViewModel? {
+        switch splitEditorState.focusedPane {
+        case .primary:
+            return primaryDetailViewModel
+        case .secondary:
+            return secondaryDetailViewModel
         }
     }
 
@@ -93,12 +114,191 @@ struct SplitEditorContainerView: View {
                 }
             }
         }
+        .inspector(isPresented: $isInspectorPresented) {
+            splitInspectorView(primary: primary, secondary: secondary)
+        }
+        .inspectorColumnWidth(min: 280, ideal: 320, max: 450)
+        .navigationTitle(activeDocumentTitle(primary: primary, secondary: secondary))
+        .toolbar {
+            splitViewToolbar(primary: primary, secondary: secondary)
+        }
+        .onAppear {
+            // Initialize view models for both documents
+            primaryDetailViewModel = DocumentDetailViewModel(document: primary, documentViewModel: viewModel)
+            secondaryDetailViewModel = DocumentDetailViewModel(document: secondary, documentViewModel: viewModel)
+        }
+        .onChange(of: primary.id) { _, _ in
+            primaryDetailViewModel = DocumentDetailViewModel(document: primary, documentViewModel: viewModel)
+        }
+        .onChange(of: secondary.id) { _, _ in
+            secondaryDetailViewModel = DocumentDetailViewModel(document: secondary, documentViewModel: viewModel)
+        }
+    }
+
+    /// Inspector view for split mode - shows the active document's full inspector
+    @ViewBuilder
+    private func splitInspectorView(primary: ManuscriptDocument.Document, secondary: ManuscriptDocument.Document) -> some View {
+        let activeDoc = splitEditorState.focusedPane == .primary ? primary : secondary
+
+        if let detailVM = activeDetailViewModel {
+            DocumentInspectorView(
+                document: activeDoc,
+                documentViewModel: viewModel,
+                detailViewModel: detailVM,
+                editedTitle: Binding(
+                    get: { detailVM.editedTitle },
+                    set: { detailVM.editedTitle = $0 }
+                ),
+                editedOutline: Binding(
+                    get: { detailVM.editedOutline },
+                    set: { detailVM.editedOutline = $0 }
+                ),
+                isPromptExpanded: Binding(
+                    get: { detailVM.isPromptExpanded },
+                    set: { detailVM.isPromptExpanded = $0 }
+                ),
+                selectedCharacters: Binding(
+                    get: { Set(detailVM.selectedCharacters) },
+                    set: { detailVM.selectedCharacters = Array($0) }
+                ),
+                selectedLocations: Binding(
+                    get: { Set(detailVM.selectedLocations) },
+                    set: { detailVM.selectedLocations = Array($0) }
+                ),
+                isGenerating: Binding(
+                    get: { detailVM.isGenerating },
+                    set: { detailVM.isGenerating = $0 }
+                ),
+                generationType: Binding(
+                    get: { detailVM.generationType },
+                    set: { detailVM.generationType = $0 }
+                ),
+                isGenerateSheetPresented: Binding(
+                    get: { detailVM.isGenerateSheetPresented },
+                    set: { detailVM.isGenerateSheetPresented = $0 }
+                ),
+                generatedText: Binding(
+                    get: { detailVM.generatedText },
+                    set: { detailVM.generatedText = $0 }
+                ),
+                generationError: Binding(
+                    get: { detailVM.generationError },
+                    set: { detailVM.generationError = $0 }
+                ),
+                isInspectorPresented: $isInspectorPresented,
+                inspectorDetent: $inspectorDetent,
+                selectedText: Binding(
+                    get: { detailVM.selectedText },
+                    set: { detailVM.selectedText = $0 }
+                ),
+                hasTextSelection: Binding(
+                    get: { detailVM.hasTextSelection },
+                    set: { detailVM.hasTextSelection = $0 }
+                ),
+                generateAction: { type, prompt in
+                    await detailVM.generateText(type: type, prompt: prompt ?? "")
+                },
+                applyAction: {
+                    detailVM.applyGeneratedText(detailVM.generatedText)
+                },
+                applyToSelectionAction: { text in
+                    print("Apply to selection: \(text)")
+                }
+            )
+            .frame(minWidth: 280, idealWidth: 320, maxWidth: 400)
+        } else {
+            // Fallback while view models are being created
+            VStack {
+                Text("Loading...")
+                    .foregroundStyle(.secondary)
+            }
+            .frame(minWidth: 280, idealWidth: 320, maxWidth: 400)
+        }
+    }
+
+    /// Returns the title of the active document
+    private func activeDocumentTitle(primary: ManuscriptDocument.Document, secondary: ManuscriptDocument.Document) -> String {
+        let activeDoc = splitEditorState.focusedPane == .primary ? primary : secondary
+        return activeDoc.title.isEmpty ? "Untitled" : activeDoc.title
+    }
+
+    /// Unified toolbar for split view
+    @ToolbarContentBuilder
+    private func splitViewToolbar(primary: ManuscriptDocument.Document, secondary: ManuscriptDocument.Document) -> some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            splitViewMoreMenu
+        }
+
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                showFindBar.toggle()
+            } label: {
+                Label("Find", systemImage: "magnifyingglass")
+            }
+            .help("Find (⌘F)")
+        }
+
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                isReadMode.toggle()
+            } label: {
+                Label(isReadMode ? "Edit" : "Read", systemImage: isReadMode ? "pencil" : "book")
+            }
+        }
+
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                isInspectorPresented.toggle()
+            } label: {
+                Label("Inspector", systemImage: "sidebar.right")
+            }
+        }
+    }
+
+    /// More menu for split view
+    private var splitViewMoreMenu: some View {
+        Menu {
+            // Close split view option
+            Button {
+                splitEditorState.isEnabled = false
+                splitEditorState.secondaryDocumentId = nil
+            } label: {
+                Label("Close Split View", systemImage: "rectangle")
+            }
+
+            // Orientation picker
+            Menu {
+                ForEach(SplitEditorState.SplitOrientation.allCases, id: \.self) { orientation in
+                    Button {
+                        splitEditorState.orientation = orientation
+                    } label: {
+                        HStack {
+                            Label(orientation.displayName, systemImage: orientation.systemImage)
+                            if splitEditorState.orientation == orientation {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Label("Split Orientation", systemImage: splitEditorState.orientation.systemImage)
+            }
+
+            Divider()
+
+            Toggle(isOn: $showFormattingToolbar) {
+                Label("Formatting Toolbar", systemImage: "textformat")
+            }
+        } label: {
+            Label("More", systemImage: "ellipsis.circle")
+        }
     }
 
     /// Wraps a document view with a small title label
     @ViewBuilder
     private func splitPaneWithLabel(document: ManuscriptDocument.Document, isPrimary: Bool) -> some View {
         let context = isPrimary ? primaryRichTextContext : secondaryRichTextContext
+        let detailVM = isPrimary ? primaryDetailViewModel : secondaryDetailViewModel
         let isActive = isPrimary ? (splitEditorState.focusedPane == .primary) : (splitEditorState.focusedPane == .secondary)
 
         VStack(spacing: 0) {
@@ -138,7 +338,13 @@ struct SplitEditorContainerView: View {
                         splitEditorState.focusedPane = isPrimary ? .primary : .secondary
                     }
                 },
-                hideToolbar: true
+                hideToolbar: true,
+                hideToolbarItems: true,
+                isActiveInSplitView: isActive,
+                externalDetailViewModel: detailVM,
+                externalInspectorPresented: $isInspectorPresented,
+                externalShowFindBar: $showFindBar,
+                externalIsReadMode: $isReadMode
             )
             .id(document.id) // Force view recreation when document changes
         }
