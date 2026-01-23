@@ -164,6 +164,13 @@ private struct CompositionModeContent: View {
     @State private var keyMonitor: Any? = nil
     @State private var contentOpacity: Double = 0
 
+    // Theme selection (persisted)
+    @AppStorage("compositionModeTheme") private var selectedThemeRaw: String = CompositionTheme.teal.rawValue
+
+    private var currentTheme: CompositionTheme {
+        CompositionTheme(rawValue: selectedThemeRaw) ?? .teal
+    }
+
     // Formatting defaults from settings
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
     @AppStorage("defaultFontSize") private var defaultFontSize: Double = 16
@@ -177,7 +184,8 @@ private struct CompositionModeContent: View {
     var body: some View {
         ZStack {
             // Background with vignette
-            CompositionModeBackground()
+            CompositionModeBackground(theme: currentTheme)
+                .animation(.easeInOut(duration: 0.5), value: currentTheme)
 
             // Main content area
             GeometryReader { geometry in
@@ -185,9 +193,11 @@ private struct CompositionModeContent: View {
                 let horizontalPadding = max(48, (availableWidth - maxProseWidth) / 2)
 
                 VStack(spacing: 0) {
-                    // Top spacer with close button area
+                    // Top spacer with theme and close buttons
                     HStack {
                         Spacer()
+                        themeButton
+                            .opacity(showControls ? 1 : 0)
                         closeButton
                             .opacity(showControls ? 1 : 0)
                     }
@@ -280,10 +290,70 @@ private struct CompositionModeContent: View {
                 break
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(currentTheme.isLight ? .light : .dark)
+        .onChange(of: selectedThemeRaw) { _, _ in
+            // Update text colors when theme changes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [self] in
+                if let textView = textViewRef {
+                    // Update the content with new colors
+                    let theme = getThemeFromUserDefaults()
+                    applyTextColors(to: textView, theme: theme)
+
+                    // Also update the attributed content
+                    if let textStorage = textView.textStorage, textStorage.length > 0 {
+                        let textColor: NSColor = theme.isLight
+                            ? NSColor(white: 0.15, alpha: 1.0)
+                            : NSColor(white: 0.85, alpha: 1.0)
+                        textStorage.beginEditing()
+                        textStorage.addAttribute(.foregroundColor, value: textColor, range: NSRange(location: 0, length: textStorage.length))
+                        textStorage.endEditing()
+                    }
+                }
+            }
+        }
     }
 
     // MARK: - UI Components
+
+    private var themeButton: some View {
+        Menu {
+            Section("Dark") {
+                ForEach(CompositionTheme.darkThemes) { theme in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            selectedThemeRaw = theme.rawValue
+                        }
+                    } label: {
+                        Label(theme.rawValue, systemImage: theme.iconName)
+                    }
+                }
+            }
+            Section("Light") {
+                ForEach(CompositionTheme.lightThemes) { theme in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            selectedThemeRaw = theme.rawValue
+                        }
+                    } label: {
+                        Label(theme.rawValue, systemImage: theme.iconName)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: currentTheme.iconName)
+                    .font(.system(size: 12, weight: .medium))
+                Text(currentTheme.rawValue)
+                    .font(.system(size: 12, weight: .medium))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 9, weight: .medium))
+            }
+            .foregroundStyle(currentTheme.textColor.opacity(0.5))
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .padding(.trailing, 24)
+    }
 
     private var closeButton: some View {
         Button {
@@ -291,7 +361,7 @@ private struct CompositionModeContent: View {
         } label: {
             Image(systemName: "xmark.circle.fill")
                 .font(.system(size: 32))
-                .foregroundStyle(Color.white.opacity(0.6))
+                .foregroundStyle(currentTheme.textColor.opacity(0.6))
                 .symbolRenderingMode(.hierarchical)
         }
         .buttonStyle(.plain)
@@ -306,13 +376,36 @@ private struct CompositionModeContent: View {
 
         return Text("\(wordCount) words")
             .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(Color.white.opacity(0.5))
+            .foregroundStyle(currentTheme.textColor.opacity(0.5))
     }
 
     // MARK: - Setup
 
+    /// Reads the composition theme directly from UserDefaults to avoid @AppStorage timing issues
+    private func getThemeFromUserDefaults() -> CompositionTheme {
+        let themeRaw = UserDefaults.standard.string(forKey: "compositionModeTheme") ?? CompositionTheme.teal.rawValue
+        return CompositionTheme(rawValue: themeRaw) ?? .teal
+    }
+
     private func setupContext() {
-        richTextContext.setAttributedString(to: viewModel.attributedContent)
+        var contentToSet = viewModel.attributedContent
+
+        // Apply correct text color for current theme - read directly from UserDefaults
+        let theme = getThemeFromUserDefaults()
+        if contentToSet.length > 0 {
+            let mutable = NSMutableAttributedString(attributedString: contentToSet)
+            let fullRange = NSRange(location: 0, length: mutable.length)
+            mutable.removeAttribute(.foregroundColor, range: fullRange)
+
+            let textColor: NSColor = theme.isLight
+                ? NSColor(white: 0.15, alpha: 1.0)
+                : NSColor(white: 0.85, alpha: 1.0)
+            mutable.addAttribute(.foregroundColor, value: textColor, range: fullRange)
+            contentToSet = mutable
+        }
+
+        richTextContext.setAttributedString(to: contentToSet)
+        viewModel.attributedContent = contentToSet
         configureParagraphStyle()
     }
 
@@ -334,29 +427,51 @@ private struct CompositionModeContent: View {
 
     // MARK: - Text View Configuration
 
-    private let compositionTextColor = NSColor(white: 0.85, alpha: 1.0)
+    private var compositionTextNSColor: NSColor {
+        currentTheme.isLight
+            ? NSColor(white: 0.15, alpha: 1.0)
+            : NSColor(white: 0.85, alpha: 1.0)
+    }
 
     private func configureTextView(_ textView: NSTextView) {
         textView.drawsBackground = false
         textView.enclosingScrollView?.drawsBackground = false
         textView.enclosingScrollView?.backgroundColor = .clear
 
-        // Light cursor color
-        textView.insertionPointColor = compositionTextColor
+        // Apply colors using UserDefaults to get correct theme
+        let theme = getThemeFromUserDefaults()
+        applyTextColors(to: textView, theme: theme)
+
+        // Also apply after a delay to ensure content is loaded
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [self] in
+            applyTextColors(to: textView, theme: getThemeFromUserDefaults())
+        }
+    }
+
+    private func applyTextColors(to textView: NSTextView, theme: CompositionTheme? = nil) {
+        let effectiveTheme = theme ?? getThemeFromUserDefaults()
+        let textColor: NSColor = effectiveTheme.isLight
+            ? NSColor(white: 0.15, alpha: 1.0)
+            : NSColor(white: 0.85, alpha: 1.0)
+
+        // Cursor color
+        textView.insertionPointColor = textColor
 
         // Set text color for existing content
-        textView.textColor = compositionTextColor
+        textView.textColor = textColor
 
         // Configure typing attributes so new text is visible
         let font = NSFont(name: defaultFontName, size: CGFloat(defaultFontSize)) ?? NSFont.systemFont(ofSize: CGFloat(defaultFontSize))
         textView.typingAttributes = [
-            .foregroundColor: compositionTextColor,
+            .foregroundColor: textColor,
             .font: font
         ]
 
-        // Apply light color to all existing text
+        // Apply color to all existing text
         if let textStorage = textView.textStorage, textStorage.length > 0 {
-            textStorage.addAttribute(.foregroundColor, value: compositionTextColor, range: NSRange(location: 0, length: textStorage.length))
+            textStorage.beginEditing()
+            textStorage.addAttribute(.foregroundColor, value: textColor, range: NSRange(location: 0, length: textStorage.length))
+            textStorage.endEditing()
         }
     }
 
@@ -390,7 +505,24 @@ private struct CompositionModeContent: View {
     }
 
     private func saveContent() {
-        viewModel.attributedContent = richTextContext.attributedString
+        // Ensure text view commits any pending edits
+        if let textView = textViewRef {
+            // End any current editing session
+            textView.window?.makeFirstResponder(nil)
+            textView.breakUndoCoalescing()
+
+            // Read directly from the text view's text storage
+            if let textStorage = textView.textStorage, textStorage.length > 0 {
+                let mutableCopy = NSMutableAttributedString(attributedString: textStorage)
+                // Remove composition mode text color before saving
+                mutableCopy.removeAttribute(.foregroundColor, range: NSRange(location: 0, length: mutableCopy.length))
+                viewModel.attributedContent = mutableCopy
+            }
+        } else {
+            // Fallback to richTextContext
+            viewModel.attributedContent = richTextContext.attributedString
+        }
+
         viewModel.saveChanges()
     }
 

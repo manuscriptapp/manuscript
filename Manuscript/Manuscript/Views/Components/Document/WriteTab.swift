@@ -21,6 +21,7 @@ struct WriteTab: View {
     @StateObject private var localRichTextContext = RichTextContext()
     @StateObject private var findReplaceViewModel = FindReplaceViewModel()
     @State private var hasInitialized = false
+    @Environment(\.colorScheme) private var colorScheme
 
     /// Returns the active RichTextContext (external if provided, otherwise local)
     private var richTextContext: RichTextContext {
@@ -182,6 +183,29 @@ struct WriteTab: View {
             }
         }
         #endif
+        .onChange(of: viewModel.attributedContent) { _, newValue in
+            // Sync local context when content changes from external source (e.g., composition mode)
+            // The comparison prevents infinite loops when local edits update viewModel
+            if localRichTextContext.attributedString != newValue {
+                // Apply appropriate text color for current color scheme
+                let coloredContent = applyTextColorForColorScheme(to: newValue)
+                localRichTextContext.setAttributedString(to: coloredContent)
+
+                // Also update the text view directly to ensure immediate visual update
+                #if os(macOS)
+                if let textView = textViewRef, let textStorage = textView.textStorage {
+                    let textColor = NSColor.textColor
+                    textStorage.addAttribute(.foregroundColor, value: textColor, range: NSRange(location: 0, length: textStorage.length))
+                }
+                #else
+                if let textView = textViewRef {
+                    let textStorage = textView.textStorage
+                    let textColor = UIColor.label
+                    textStorage.addAttribute(.foregroundColor, value: textColor, range: NSRange(location: 0, length: textStorage.length))
+                }
+                #endif
+            }
+        }
         .onChange(of: richTextContext.selectedRange) { _, newRange in
             updateTextSelection(range: newRange)
             // Notify parent that this editor has focus (user interacted with it)
@@ -482,6 +506,27 @@ struct WriteTab: View {
     private func saveContent() {
         viewModel.attributedContent = richTextContext.attributedString
         viewModel.saveChanges()
+    }
+
+    /// Applies the appropriate text color for the current color scheme to attributed content
+    /// This ensures text is visible after syncing from composition mode which may have different colors
+    private func applyTextColorForColorScheme(to attributedString: NSAttributedString) -> NSAttributedString {
+        guard attributedString.length > 0 else { return attributedString }
+
+        let mutable = NSMutableAttributedString(attributedString: attributedString)
+        let fullRange = NSRange(location: 0, length: mutable.length)
+
+        #if os(macOS)
+        // Use system text color which adapts to light/dark mode
+        let textColor = NSColor.textColor
+        mutable.addAttribute(.foregroundColor, value: textColor, range: fullRange)
+        #else
+        // Use label color which adapts to light/dark mode
+        let textColor = UIColor.label
+        mutable.addAttribute(.foregroundColor, value: textColor, range: fullRange)
+        #endif
+
+        return mutable
     }
 
     private func updateTextSelection(range: NSRange) {
