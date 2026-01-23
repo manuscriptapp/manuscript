@@ -97,52 +97,8 @@ struct FindMenuCommands: View {
 // MARK: - iOS Template Picker for DocumentGroupLaunchScene
 
 #if os(iOS)
-/// Name input sheet for new manuscript
-struct LaunchNameInputView: View {
-    @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
-    @Environment(\.dismiss) private var dismiss
-    @State private var manuscriptName = ""
-    @FocusState private var isNameFieldFocused: Bool
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("Manuscript Name", text: $manuscriptName)
-                        .focused($isNameFieldFocused)
-                }
-            }
-            .navigationTitle("New Manuscript")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        continuation?.resume(returning: nil)
-                        continuation = nil
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        var document = ManuscriptDocument()
-                        document.title = manuscriptName.isEmpty ? "Untitled" : manuscriptName
-                        continuation?.resume(returning: document)
-                        continuation = nil
-                        dismiss()
-                    }
-                }
-            }
-            .onAppear {
-                isNameFieldFocused = true
-            }
-        }
-        .presentationDetents([.height(200)])
-        .presentationBackground(.regularMaterial)
-    }
-}
-
-/// Template picker sheet for the document launch scene
-struct LaunchTemplatePickerView: View {
+/// Combined template picker and blank document sheet for new manuscript
+struct LaunchNewDocumentView: View {
     @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @Environment(\.dismiss) private var dismiss
 
@@ -150,6 +106,18 @@ struct LaunchTemplatePickerView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    // Blank option - styled like a template card
+                    Button {
+                        let document = ManuscriptDocument()
+                        continuation?.resume(returning: document)
+                        continuation = nil
+                        dismiss()
+                    } label: {
+                        LaunchBlankCard()
+                    }
+                    .buttonStyle(.plain)
+
+                    // Template options - reuse LaunchTemplateCard
                     ForEach(BookTemplate.templates) { template in
                         Button {
                             let document = ManuscriptDocument.fromTemplate(template)
@@ -164,7 +132,7 @@ struct LaunchTemplatePickerView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Choose a Template")
+            .navigationTitle("New Manuscript")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -496,6 +464,45 @@ struct LaunchScrivenerImportView: View {
     }
 }
 
+/// Card view for blank manuscript option in the launch picker
+struct LaunchBlankCard: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(0.2))
+                    .frame(width: 48, height: 48)
+                Image(systemName: "doc.text")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(.white)
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Blank Manuscript")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                Text("Start with an empty project")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.9))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.6))
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(LinearGradient(
+                    colors: [.gray.opacity(0.7), .gray.opacity(0.5)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+        )
+        .contentShape(Rectangle())
+    }
+}
+
 /// Card view for templates in the launch picker
 struct LaunchTemplateCard: View {
     let template: BookTemplate
@@ -678,10 +685,8 @@ struct ManuscriptApp: App {
 
     // iOS 18 DocumentGroupLaunchScene state
     #if os(iOS)
-    @State private var templateContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
-    @State private var isTemplatePickerPresented = false
-    @State private var nameContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
-    @State private var isNameInputPresented = false
+    @State private var newDocContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
+    @State private var isNewDocPresented = false
     @State private var importContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @State private var isScrivenerImportPresented = false
     #endif
@@ -784,22 +789,12 @@ struct ManuscriptApp: App {
         DocumentGroupLaunchScene("") {
             NewDocumentButton("New Manuscript", for: ManuscriptDocument.self) {
                 try await withCheckedThrowingContinuation { continuation in
-                    self.nameContinuation = continuation
-                    self.isNameInputPresented = true
+                    self.newDocContinuation = continuation
+                    self.isNewDocPresented = true
                 }
             }
-            .sheet(isPresented: $isNameInputPresented) {
-                LaunchNameInputView(continuation: $nameContinuation)
-            }
-
-            NewDocumentButton("Choose Template", for: ManuscriptDocument.self) {
-                try await withCheckedThrowingContinuation { continuation in
-                    self.templateContinuation = continuation
-                    self.isTemplatePickerPresented = true
-                }
-            }
-            .sheet(isPresented: $isTemplatePickerPresented) {
-                LaunchTemplatePickerView(continuation: $templateContinuation)
+            .sheet(isPresented: $isNewDocPresented) {
+                LaunchNewDocumentView(continuation: $newDocContinuation)
             }
 
             NewDocumentButton("Import Scrivener", for: ManuscriptDocument.self) {
