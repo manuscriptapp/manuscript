@@ -14,6 +14,7 @@ struct ProjectSidebar: View {
     @State private var isCharactersExpanded: Bool = false
     @State private var isLocationsExpanded: Bool = false
     @State private var isWorldMapSheetPresented: Bool = false
+    @State private var pendingLocationNavigation: ManuscriptLocation?
 
     init(
         viewModel: DocumentViewModel,
@@ -313,7 +314,19 @@ struct ProjectSidebar: View {
             Text("A snapshot of \"\(viewModel.lastSnapshotDocumentTitle)\" has been saved. View it in the Snapshots tab of the document inspector.")
         }
         .fullScreenCover(isPresented: $isWorldMapSheetPresented) {
-            WorldMapSheet(locations: viewModel.locations)
+            WorldMapSheet(
+                locations: viewModel.locations,
+                onLocationDetailRequested: { location in
+                    pendingLocationNavigation = location
+                }
+            )
+        }
+        .onChange(of: isWorldMapSheetPresented) { _, isPresented in
+            // Navigate to location detail after World Map dismisses
+            if !isPresented, let location = pendingLocationNavigation {
+                pendingLocationNavigation = nil
+                detailSelection = .location(location)
+            }
         }
     }
 

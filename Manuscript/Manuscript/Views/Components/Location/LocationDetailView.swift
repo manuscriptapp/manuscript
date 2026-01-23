@@ -1,5 +1,6 @@
 import SwiftUI
 
+// TODO: Add toggleable map/streetview section showing the location
 struct LocationDetailView: View {
     @ObservedObject var viewModel: DocumentViewModel
     let location: ManuscriptLocation

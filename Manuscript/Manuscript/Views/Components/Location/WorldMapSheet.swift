@@ -2,19 +2,23 @@ import SwiftUI
 import MapKit
 
 /// A fullscreen map showing all project locations with pins and a bottom sheet listing locations
+// TODO: Add streetview toggle/icon to switch between map and streetview at selected location
 struct WorldMapSheet: View {
     let locations: [ManuscriptLocation]
+    let onLocationDetailRequested: ((ManuscriptLocation) -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var mapCameraPosition: MapCameraPosition
     @State private var selectedLocation: ManuscriptLocation?
     @State private var showLocationsList: Bool = true
 
-    init(locations: [ManuscriptLocation]) {
+    init(locations: [ManuscriptLocation], onLocationDetailRequested: ((ManuscriptLocation) -> Void)? = nil) {
         self.locations = locations
-        self._mapCameraPosition = State(initialValue: Self.calculateCameraPosition(for: locations))
+        self.onLocationDetailRequested = onLocationDetailRequested
+        self._mapCameraPosition = State(initialValue: Self.calculateInitialCameraPosition(for: locations))
     }
 
-    private static func calculateCameraPosition(for locations: [ManuscriptLocation]) -> MapCameraPosition {
+    /// Calculates initial camera position focusing on the densest cluster of locations
+    private static func calculateInitialCameraPosition(for locations: [ManuscriptLocation]) -> MapCameraPosition {
         guard !locations.isEmpty else {
             return .region(MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 20, longitude: 0),
@@ -30,8 +34,11 @@ struct WorldMapSheet: View {
             ))
         }
 
-        let latitudes = locations.map { $0.latitude }
-        let longitudes = locations.map { $0.longitude }
+        // Find the densest cluster - group locations by proximity
+        let cluster = findDensestCluster(locations: locations)
+
+        let latitudes = cluster.map { $0.latitude }
+        let longitudes = cluster.map { $0.longitude }
 
         let minLat = latitudes.min() ?? 0
         let maxLat = latitudes.max() ?? 0
@@ -41,13 +48,50 @@ struct WorldMapSheet: View {
         let centerLat = (minLat + maxLat) / 2
         let centerLon = (minLon + maxLon) / 2
 
-        let latDelta = max((maxLat - minLat) * 1.5, 0.5)
-        let lonDelta = max((maxLon - minLon) * 1.5, 0.5)
+        // Keep zoom level reasonable (at least city level, at most country level)
+        let latDelta = max(min((maxLat - minLat) * 1.5, 20), 0.5)
+        let lonDelta = max(min((maxLon - minLon) * 1.5, 20), 0.5)
 
         return .region(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: centerLat, longitude: centerLon),
             span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lonDelta)
         ))
+    }
+
+    /// Finds the cluster with the most locations using simple geographic binning
+    private static func findDensestCluster(locations: [ManuscriptLocation]) -> [ManuscriptLocation] {
+        // If all locations fit within a reasonable area (10 degrees), show them all
+        let latitudes = locations.map { $0.latitude }
+        let longitudes = locations.map { $0.longitude }
+
+        let latSpan = (latitudes.max() ?? 0) - (latitudes.min() ?? 0)
+        let lonSpan = (longitudes.max() ?? 0) - (longitudes.min() ?? 0)
+
+        if latSpan <= 15 && lonSpan <= 30 {
+            return locations
+        }
+
+        // Locations are spread across continents - find the densest region
+        // Use a grid-based approach: divide world into 30-degree cells
+        let cellSize: Double = 30
+
+        var cells: [String: [ManuscriptLocation]] = [:]
+
+        for location in locations {
+            let latCell = Int(floor(location.latitude / cellSize))
+            let lonCell = Int(floor(location.longitude / cellSize))
+            let key = "\(latCell),\(lonCell)"
+
+            if cells[key] == nil {
+                cells[key] = []
+            }
+            cells[key]?.append(location)
+        }
+
+        // Find the cell with the most locations
+        let densestCell = cells.max(by: { $0.value.count < $1.value.count })
+
+        return densestCell?.value ?? locations
     }
 
     private var annotations: [LocationAnnotation] {
@@ -85,7 +129,7 @@ struct WorldMapSheet: View {
             .mapStyle(.standard(elevation: .realistic))
             .ignoresSafeArea()
 
-            // Top toolbar overlay
+            // Top toolbar overlay - just close button
             VStack {
                 HStack {
                     Button {
@@ -97,18 +141,6 @@ struct WorldMapSheet: View {
                     }
 
                     Spacer()
-
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            selectedLocation = nil
-                            mapCameraPosition = Self.calculateCameraPosition(for: locations)
-                        }
-                    } label: {
-                        Image(systemName: "arrow.up.left.and.arrow.down.right.circle.fill")
-                            .font(.title)
-                            .foregroundStyle(.white, .black.opacity(0.5))
-                    }
-                    .disabled(locations.isEmpty)
                 }
                 .padding()
                 .padding(.top, 44) // Safe area
@@ -122,7 +154,13 @@ struct WorldMapSheet: View {
                 selectedLocation: $selectedLocation,
                 onLocationSelected: { location in
                     selectLocation(location)
-                }
+                },
+                onLocationDetailRequested: onLocationDetailRequested != nil ? { location in
+                    // Store the pending navigation, then dismiss
+                    // ProjectSidebar handles navigation after dismiss via onChange
+                    onLocationDetailRequested?(location)
+                    dismiss()
+                } : nil
             )
             .presentationDetents([.medium, .large, .fraction(0.25)])
             .presentationDragIndicator(.visible)
@@ -132,7 +170,7 @@ struct WorldMapSheet: View {
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation(.easeInOut(duration: 0.5)) {
-                    mapCameraPosition = Self.calculateCameraPosition(for: locations)
+                    mapCameraPosition = Self.calculateInitialCameraPosition(for: locations)
                 }
             }
         }
@@ -161,39 +199,50 @@ struct LocationsListSheet: View {
     let locations: [ManuscriptLocation]
     @Binding var selectedLocation: ManuscriptLocation?
     let onLocationSelected: (ManuscriptLocation) -> Void
+    let onLocationDetailRequested: ((ManuscriptLocation) -> Void)?
 
     var body: some View {
         List(locations) { location in
-            Button {
-                onLocationSelected(location)
-            } label: {
-                HStack {
-                    Image(systemName: "mappin.circle.fill")
-                        .foregroundColor(selectedLocation?.id == location.id
-                            ? .blue
-                            : Color(red: 0.6, green: 0.4, blue: 0.2))
-                        .font(.title2)
+            HStack {
+                // Tap to zoom on map
+                Button {
+                    onLocationSelected(location)
+                } label: {
+                    HStack {
+                        Image(systemName: "mappin.circle.fill")
+                            .foregroundColor(selectedLocation?.id == location.id
+                                ? .blue
+                                : Color(red: 0.6, green: 0.4, blue: 0.2))
+                            .font(.title2)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(location.name)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(location.name)
+                                .font(.headline)
+                                .foregroundColor(.primary)
 
-                        Text(String(format: "%.4f, %.4f", location.latitude, location.longitude))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    Spacer()
-
-                    if selectedLocation?.id == location.id {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.blue)
+                            Text(String(format: "%.4f, %.4f", location.latitude, location.longitude))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                // Detail button
+                if onLocationDetailRequested != nil {
+                    Button {
+                        onLocationDetailRequested?(location)
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.secondary)
+                            .font(.title3)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .buttonStyle(.plain)
+            .contentShape(Rectangle())
         }
         .listStyle(.plain)
     }
@@ -201,10 +250,13 @@ struct LocationsListSheet: View {
 
 #if DEBUG
 #Preview {
-    WorldMapSheet(locations: [
-        ManuscriptLocation(name: "New York", latitude: 40.7128, longitude: -74.0060),
-        ManuscriptLocation(name: "London", latitude: 51.5074, longitude: -0.1278),
-        ManuscriptLocation(name: "Tokyo", latitude: 35.6762, longitude: 139.6503)
-    ])
+    WorldMapSheet(
+        locations: [
+            ManuscriptLocation(name: "New York", latitude: 40.7128, longitude: -74.0060),
+            ManuscriptLocation(name: "London", latitude: 51.5074, longitude: -0.1278),
+            ManuscriptLocation(name: "Tokyo", latitude: 35.6762, longitude: 139.6503)
+        ],
+        onLocationDetailRequested: nil
+    )
 }
 #endif
