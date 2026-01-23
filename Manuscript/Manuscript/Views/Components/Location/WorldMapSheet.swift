@@ -122,6 +122,27 @@ struct WorldMapView: View {
                             showLookAround = false
                         }
                     }
+
+                // Custom close button overlay for streetview
+                VStack {
+                    HStack {
+                        Button {
+                            showLookAround = false
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title)
+                                .foregroundStyle(.white, .black.opacity(0.6))
+                        }
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+
+                        Spacer()
+                    }
+                    .padding()
+                    .padding(.top, 44) // Safe area
+
+                    Spacer()
+                }
             } else {
                 // Full screen map
                 Map(position: $mapCameraPosition) {
@@ -173,7 +194,11 @@ struct WorldMapView: View {
                 }
             }
         }
-        .sheet(isPresented: $showLocationsList) {
+        .toolbar(showLookAround ? .hidden : .visible, for: .navigationBar)
+        .sheet(isPresented: Binding(
+            get: { showLocationsList && !showLookAround },
+            set: { showLocationsList = $0 }
+        )) {
             NavigationStack {
                 LocationsListSheet(
                     viewModel: viewModel,
