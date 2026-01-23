@@ -25,6 +25,7 @@ struct ProjectSidebar: View {
     @State private var isProgressExpanded: Bool = true
     @State private var isCharactersExpanded: Bool = false
     @State private var isLocationsExpanded: Bool = false
+    @State private var showCompileSheet: Bool = false
 
     init(
         viewModel: DocumentViewModel,
@@ -272,6 +273,14 @@ struct ProjectSidebar: View {
             }
 
             ToolbarItem(placement: .bottomBar) {
+                Button {
+                    showCompileSheet = true
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+            }
+
+            ToolbarItem(placement: .bottomBar) {
                 Spacer()
             }
 
@@ -320,6 +329,9 @@ struct ProjectSidebar: View {
             Button("OK", role: .cancel) { }
         } message: {
             Text("A snapshot of \"\(viewModel.lastSnapshotDocumentTitle)\" has been saved. View it in the Snapshots tab of the document inspector.")
+        }
+        .sheet(isPresented: $showCompileSheet) {
+            CompileSheet(document: viewModel.document)
         }
     }
 

@@ -12,6 +12,7 @@ struct DocumentDetailView: View {
     @State private var isReadMode = false
     @State private var showSettings = false
     @State private var isCompositionModeActive = false
+    @State private var showCompileSheet = false
     #if os(macOS)
     @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
     @StateObject private var syncService = ICloudSyncService()
@@ -91,6 +92,9 @@ struct DocumentDetailView: View {
             .navigationTitle(detailViewModel.editedTitle)
             .toolbar { toolbarContent }
             .sheet(isPresented: $showSettings) { settingsSheet }
+            .sheet(isPresented: $showCompileSheet) {
+                CompileSheet(document: viewModel.document)
+            }
             #if os(iOS)
             .fullScreenCover(isPresented: $isCompositionModeActive) {
                 CompositionModeView(viewModel: detailViewModel, isPresented: $isCompositionModeActive)
@@ -293,10 +297,11 @@ struct DocumentDetailView: View {
             }
 
             Button {
-                // TODO: Implement export functionality
+                showCompileSheet = true
             } label: {
                 Label("Export", systemImage: "arrow.up.doc")
             }
+            .keyboardShortcut("e", modifiers: [.command, .shift])
 
             Divider()
 
