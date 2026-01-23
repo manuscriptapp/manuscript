@@ -7,8 +7,8 @@ struct WorldMapView: View {
     @State private var mapCameraPosition: MapCameraPosition
     @State private var selectedLocation: ManuscriptLocation?
     @State private var showLocationsList: Bool = true
-    @State private var showLookAround: Bool = false
     @State private var lookAroundScene: MKLookAroundScene?
+    @State private var showLookAround = false
     @State private var sheetDetent: PresentationDetent = .fraction(0.25)
 
     private var locations: [ManuscriptLocation] {
@@ -111,94 +111,43 @@ struct WorldMapView: View {
     }
 
     var body: some View {
-        ZStack {
-            // Show either map or Look Around view
-            if showLookAround, lookAroundScene != nil {
-                LookAroundPreview(scene: $lookAroundScene)
-                    .ignoresSafeArea()
-                    .onChange(of: lookAroundScene) { _, newValue in
-                        // Exit streetview mode when user dismisses via built-in X button
-                        if newValue == nil {
-                            showLookAround = false
-                        }
-                    }
-
-                // Custom close button overlay for streetview
-                VStack {
-                    HStack {
-                        Button {
-                            showLookAround = false
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.title)
-                                .foregroundStyle(.white, .black.opacity(0.6))
-                        }
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-
-                        Spacer()
-                    }
-                    .padding()
-                    .padding(.top, 44) // Safe area
-
-                    Spacer()
-                }
-            } else {
-                // Full screen map
-                Map(position: $mapCameraPosition) {
-                    ForEach(annotations) { annotation in
-                        Annotation(annotation.name, coordinate: annotation.coordinate) {
-                            ZStack {
-                                Circle()
-                                    .fill(selectedLocation?.id == annotation.id
-                                        ? Color.blue
-                                        : Color(red: 0.6, green: 0.4, blue: 0.2))
-                                    .frame(width: 30, height: 30)
-                                Image(systemName: "mappin")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 16, weight: .bold))
-                            }
-                        }
-                    }
-                }
-                .mapStyle(.standard(elevation: .realistic))
-                .ignoresSafeArea()
-
-                // Top toolbar overlay - only show when NOT in streetview
-                // Look Around toggle - visible when location selected with scene available
-                if selectedLocation != nil && lookAroundScene != nil {
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Button {
-                                showLookAround = true
-                                sheetDetent = .fraction(0.25) // Minimize sheet when entering streetview
-                            } label: {
-                                ZStack {
-                                    Circle()
-                                        .fill(.black.opacity(0.5))
-                                        .frame(width: 34, height: 34)
-                                    Image(systemName: "binoculars.fill")
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundColor(.white)
-                                }
-                            }
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                        }
-                        .padding()
-                        .padding(.top, 44) // Safe area
-
-                        Spacer()
+        // Full screen map
+        Map(position: $mapCameraPosition) {
+            ForEach(annotations) { annotation in
+                Annotation(annotation.name, coordinate: annotation.coordinate) {
+                    ZStack {
+                        Circle()
+                            .fill(selectedLocation?.id == annotation.id
+                                ? Color.blue
+                                : Color(red: 0.6, green: 0.4, blue: 0.2))
+                            .frame(width: 30, height: 30)
+                        Image(systemName: "mappin")
+                            .foregroundColor(.white)
+                            .font(.system(size: 16, weight: .bold))
                     }
                 }
             }
         }
-        .toolbar(showLookAround ? .hidden : .visible, for: .navigationBar)
-        .sheet(isPresented: Binding(
-            get: { showLocationsList && !showLookAround },
-            set: { showLocationsList = $0 }
-        )) {
+        .mapStyle(.standard(elevation: .realistic))
+        .ignoresSafeArea()
+        .toolbar {
+            #if os(iOS)
+            if selectedLocation != nil, lookAroundScene != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        sheetDetent = .fraction(0.25)
+                        showLookAround = true
+                    } label: {
+                        Image(systemName: "binoculars.fill")
+                    }
+                }
+            }
+            #endif
+        }
+        #if os(iOS)
+        .lookAroundViewer(isPresented: $showLookAround, scene: $lookAroundScene)
+        #endif
+        .sheet(isPresented: $showLocationsList) {
             NavigationStack {
                 LocationsListSheet(
                     viewModel: viewModel,
@@ -206,6 +155,9 @@ struct WorldMapView: View {
                     selectedLocation: $selectedLocation,
                     onLocationSelected: { location in
                         selectLocation(location)
+                    },
+                    onEnterStreetview: {
+                        sheetDetent = .fraction(0.25)
                     }
                 )
             }
@@ -229,7 +181,6 @@ struct WorldMapView: View {
 
     private func selectLocation(_ location: ManuscriptLocation) {
         selectedLocation = location
-        showLookAround = false // Reset to map view when selecting new location
         // Only expand sheet to medium if it's at the smallest detent
         if sheetDetent == .fraction(0.25) {
             sheetDetent = .medium
@@ -277,6 +228,7 @@ struct LocationsListSheet: View {
     let locations: [ManuscriptLocation]
     @Binding var selectedLocation: ManuscriptLocation?
     let onLocationSelected: (ManuscriptLocation) -> Void
+    var onEnterStreetview: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -291,11 +243,15 @@ struct LocationsListSheet: View {
 
             List(locations) { location in
                 NavigationLink {
-                    LocationDetailView(viewModel: viewModel, location: location)
-                        .onAppear {
-                            // Select location when navigating to detail view
-                            onLocationSelected(location)
-                        }
+                    LocationDetailView(
+                        viewModel: viewModel,
+                        location: location,
+                        onEnterStreetview: onEnterStreetview
+                    )
+                    .onAppear {
+                        // Select location when navigating to detail view
+                        onLocationSelected(location)
+                    }
                 } label: {
                     HStack {
                         Image(systemName: "mappin.circle.fill")
@@ -330,7 +286,9 @@ struct LocationsListSheet: View {
             }
             .listStyle(.plain)
         }
+        #if os(iOS)
         .navigationBarHidden(true)
+        #endif
     }
 }
 

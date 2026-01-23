@@ -114,7 +114,9 @@ struct AddLocationSheet: View {
                 }
             }
             .navigationTitle("Add Location")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {

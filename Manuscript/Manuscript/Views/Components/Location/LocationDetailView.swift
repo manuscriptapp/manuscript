@@ -4,16 +4,18 @@ import MapKit
 struct LocationDetailView: View {
     @ObservedObject var viewModel: DocumentViewModel
     let location: ManuscriptLocation
+    var onEnterStreetview: (() -> Void)?
     @State private var editedName: String
     @State private var editedLatitude: Double
     @State private var editedLongitude: Double
-    @State private var showLookAround: Bool = false
     @State private var lookAroundScene: MKLookAroundScene?
+    @State private var showLookAround = false
     @State private var mapCameraPosition: MapCameraPosition
 
-    init(viewModel: DocumentViewModel, location: ManuscriptLocation) {
+    init(viewModel: DocumentViewModel, location: ManuscriptLocation, onEnterStreetview: (() -> Void)? = nil) {
         self.viewModel = viewModel
         self.location = location
+        self.onEnterStreetview = onEnterStreetview
         self._editedName = State(initialValue: location.name)
         self._editedLatitude = State(initialValue: location.latitude)
         self._editedLongitude = State(initialValue: location.longitude)
@@ -25,46 +27,44 @@ struct LocationDetailView: View {
 
     var body: some View {
         Form {
-            // Map/Look Around section
+            // Map section with Look Around button
             Section {
                 ZStack {
-                    if showLookAround, let scene = lookAroundScene {
-                        LookAroundPreview(scene: .constant(scene))
-                            .frame(height: 200)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    } else {
-                        Map(position: $mapCameraPosition) {
-                            Marker(location.name, coordinate: CLLocationCoordinate2D(
-                                latitude: editedLatitude,
-                                longitude: editedLongitude
-                            ))
-                        }
-                        .mapStyle(.standard(elevation: .realistic))
-                        .frame(height: 200)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    Map(position: $mapCameraPosition) {
+                        Marker(location.name, coordinate: CLLocationCoordinate2D(
+                            latitude: editedLatitude,
+                            longitude: editedLongitude
+                        ))
                     }
+                    .mapStyle(.standard(elevation: .realistic))
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                    // Toggle button overlay
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Button {
-                                showLookAround.toggle()
-                            } label: {
-                                Image(systemName: showLookAround ? "map.fill" : "binoculars.fill")
-                                    .font(.body)
-                                    .foregroundStyle(.white)
-                                    .padding(8)
-                                    .background(
-                                        Circle()
-                                            .fill(lookAroundScene != nil ? Color.black.opacity(0.6) : Color.gray.opacity(0.6))
-                                    )
+                    // Look Around button overlay (iOS only)
+                    #if os(iOS)
+                    if lookAroundScene != nil {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Button {
+                                    onEnterStreetview?()
+                                    showLookAround = true
+                                } label: {
+                                    Image(systemName: "binoculars.fill")
+                                        .font(.body)
+                                        .foregroundStyle(.white)
+                                        .padding(8)
+                                        .background(
+                                            Circle()
+                                                .fill(Color.black.opacity(0.6))
+                                        )
+                                }
+                                .padding(8)
                             }
-                            .disabled(lookAroundScene == nil && !showLookAround)
-                            .padding(8)
+                            Spacer()
                         }
-                        Spacer()
                     }
+                    #endif
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
@@ -130,6 +130,9 @@ struct LocationDetailView: View {
             }
         }
         .navigationTitle(location.name)
+        #if os(iOS)
+        .lookAroundViewer(isPresented: $showLookAround, scene: $lookAroundScene)
+        #endif
         .onAppear {
             fetchLookAroundScene()
         }
@@ -171,7 +174,6 @@ struct LocationDetailView: View {
             } catch {
                 await MainActor.run {
                     lookAroundScene = nil
-                    showLookAround = false
                 }
             }
         }
