@@ -22,13 +22,13 @@ struct WelcomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Header
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text("Welcome to Manuscript")
-                            .font(.largeTitle)
-                            .bold()
+                            .font(.system(size: 28, weight: .bold, design: .default))
+                            .tracking(-0.5)
 
-                        Text("Your writing companion")
-                            .font(.title3)
+                        Text("For writers, by writers")
+                            .font(.system(size: 15, weight: .regular))
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -44,6 +44,9 @@ struct WelcomeView: View {
 
                     // Templates
                     templatesSection
+
+                    // Footer
+                    footerSection
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 20)
@@ -206,7 +209,7 @@ struct WelcomeView: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("Recent Projects")
                     .font(.title3)
-                    .bold()
+                    .fontWeight(.semibold)
 
                 Spacer()
 
@@ -267,9 +270,31 @@ struct WelcomeView: View {
     
     private var templatesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Templates")
-                .font(.title3)
-                .bold()
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Templates")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+
+                Text("Start with a proven story structure. Each template provides acts, chapters, and scenes based on classic storytelling frameworks.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    if let url = URL(string: "https://manuscriptapp.github.io/manuscript/#features") {
+                        #if os(macOS)
+                        NSWorkspace.shared.open(url)
+                        #else
+                        UIApplication.shared.open(url)
+                        #endif
+                    }
+                } label: {
+                    Text("How it works")
+                        .font(.subheadline)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.tint)
+            }
 
             #if os(macOS)
             ScrollView(.horizontal, showsIndicators: false) {
@@ -307,7 +332,61 @@ struct WelcomeView: View {
             #endif
         }
     }
-    
+
+    private var footerSection: some View {
+        VStack(spacing: 16) {
+            Divider()
+                .padding(.top, 12)
+
+            HStack(spacing: 24) {
+                Button {
+                    if let url = URL(string: "https://github.com/manuscriptapp/manuscript") {
+                        #if os(macOS)
+                        NSWorkspace.shared.open(url)
+                        #else
+                        UIApplication.shared.open(url)
+                        #endif
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.left.forwardslash.chevron.right")
+                            .font(.system(size: 12))
+                        Text("View on GitHub")
+                            .font(.footnote)
+                    }
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+
+                Button {
+                    if let url = URL(string: "https://manuscriptapp.github.io/manuscript") {
+                        #if os(macOS)
+                        NSWorkspace.shared.open(url)
+                        #else
+                        UIApplication.shared.open(url)
+                        #endif
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "globe")
+                            .font(.system(size: 12))
+                        Text("Website")
+                            .font(.footnote)
+                    }
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Text("Open source · MPL-2.0")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.bottom, 8)
+        }
+    }
+
     // MARK: - Helper Views
 
     private func quickActionButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
