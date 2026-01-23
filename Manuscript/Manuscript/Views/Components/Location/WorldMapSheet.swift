@@ -151,7 +151,16 @@ struct WorldMapView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                if selectedLocation != nil, lookAroundScene != nil {
+                    Button {
+                        showLookAround = true
+                    } label: {
+                        Image(systemName: "binoculars.fill")
+                    }
+                    .help("Look Around")
+                }
+
                 Button {
                     withAnimation {
                         showLocationsList.toggle()
@@ -160,6 +169,30 @@ struct WorldMapView: View {
                     Image(systemName: "sidebar.trailing")
                 }
                 .help("Toggle Locations Panel")
+            }
+        }
+        .sheet(isPresented: $showLookAround) {
+            if let scene = lookAroundScene {
+                VStack(spacing: 0) {
+                    // Header with close button
+                    HStack {
+                        Text("Look Around")
+                            .font(.headline)
+                        Spacer()
+                        Text("Static preview")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Button("Done") {
+                            showLookAround = false
+                        }
+                        .keyboardShortcut(.escape, modifiers: [])
+                    }
+                    .padding()
+                    .background(.bar)
+
+                    LookAroundPreview(initialScene: scene)
+                }
+                .frame(minWidth: 600, minHeight: 400)
             }
         }
     }
@@ -256,15 +289,17 @@ struct WorldMapView: View {
     private func fetchLookAroundScene(for location: ManuscriptLocation) {
         lookAroundScene = nil
         let coordinate = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+        print("🗺️ WorldMap: Fetching Look Around for: \(location.name) at \(coordinate.latitude), \(coordinate.longitude)")
         Task {
             let request = MKLookAroundSceneRequest(coordinate: coordinate)
             do {
                 let scene = try await request.scene
+                print("🗺️ WorldMap: Look Around scene found: \(scene != nil)")
                 await MainActor.run {
                     lookAroundScene = scene
                 }
             } catch {
-                // Look Around not available for this location
+                print("🗺️ WorldMap: Look Around error: \(error)")
                 await MainActor.run {
                     lookAroundScene = nil
                 }

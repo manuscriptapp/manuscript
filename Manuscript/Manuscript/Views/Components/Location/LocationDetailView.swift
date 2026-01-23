@@ -45,6 +45,30 @@ struct LocationDetailView: View {
             updateMapPosition()
             fetchLookAroundScene()
         }
+        .sheet(isPresented: $showLookAround) {
+            if let scene = lookAroundScene {
+                VStack(spacing: 0) {
+                    // Header with close button
+                    HStack {
+                        Text("Look Around")
+                            .font(.headline)
+                        Spacer()
+                        Text("Static preview")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Button("Done") {
+                            showLookAround = false
+                        }
+                        .keyboardShortcut(.escape, modifiers: [])
+                    }
+                    .padding()
+                    .background(.bar)
+
+                    LookAroundPreview(initialScene: scene)
+                }
+                .frame(minWidth: 600, minHeight: 400)
+            }
+        }
         #else
         Form {
             formContent
@@ -75,7 +99,15 @@ struct LocationDetailView: View {
                     Text("Map")
                         .font(.headline)
                     Spacer()
-                    if lookAroundScene == nil {
+                    if lookAroundScene != nil {
+                        Button {
+                            showLookAround = true
+                        } label: {
+                            Label("Look Around", systemImage: "binoculars.fill")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                    } else {
                         Text("Look Around unavailable")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -265,14 +297,17 @@ struct LocationDetailView: View {
 
     private func fetchLookAroundScene() {
         let coordinate = CLLocationCoordinate2D(latitude: editedLatitude, longitude: editedLongitude)
+        print("🔍 Fetching Look Around for: \(coordinate.latitude), \(coordinate.longitude)")
         Task {
             let request = MKLookAroundSceneRequest(coordinate: coordinate)
             do {
                 let scene = try await request.scene
+                print("✅ Look Around scene found: \(scene != nil)")
                 await MainActor.run {
                     lookAroundScene = scene
                 }
             } catch {
+                print("❌ Look Around error: \(error)")
                 await MainActor.run {
                     lookAroundScene = nil
                 }
