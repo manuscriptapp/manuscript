@@ -254,12 +254,13 @@
         }
 
         /* Screenshots */
-        .screenshots {
-            display: flex;
-            gap: 2rem;
-            justify-content: center;
-            align-items: flex-end;
-            flex-wrap: wrap;
+        .screenshot-section {
+            padding: 3rem 0;
+            background: var(--paper-dark);
+        }
+
+        .screenshot-figure {
+            text-align: center;
         }
 
         .screenshot {
@@ -268,29 +269,33 @@
             max-width: 100%;
             height: auto;
             filter: blur(8px);
-            opacity: 0.8;
+            opacity: 0.7;
         }
 
         .screenshot-macos {
-            width: 600px;
+            width: 700px;
             border-radius: 8px;
         }
 
         .screenshot-ios {
-            width: 180px;
-            border-radius: 24px;
+            width: 220px;
+            border-radius: 32px;
+        }
+
+        .screenshot-caption {
+            margin-top: 1.25rem;
+            font-family: var(--serif);
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--ink-muted);
         }
 
         @media (max-width: 768px) {
-            .screenshots {
-                flex-direction: column;
-                align-items: center;
-            }
             .screenshot-macos {
                 width: 100%;
             }
             .screenshot-ios {
-                width: 200px;
+                width: 180px;
             }
         }
 
@@ -409,12 +414,12 @@
             </div>
         </section>
 
-        <section>
+        <section class="screenshot-section">
             <div class="container">
-                <div class="screenshots">
-                    <img src="images/macos-app.png" alt="Manuscript on macOS" class="screenshot screenshot-macos">
-                    <img src="images/ios-launch.png" alt="Manuscript on iOS" class="screenshot screenshot-ios">
-                </div>
+                <figure class="screenshot-figure">
+                    <img src="images/screenshot-welcome.png" alt="Manuscript welcome screen" class="screenshot screenshot-macos">
+                    <figcaption class="screenshot-caption">Start with templates or open recent projects</figcaption>
+                </figure>
             </div>
         </section>
 
@@ -445,6 +450,15 @@
                         <p>Works across Mac, iPhone, iPad. No extra cost.</p>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="screenshot-section">
+            <div class="container">
+                <figure class="screenshot-figure">
+                    <img src="images/screenshot-binder.png" alt="Project binder sidebar" class="screenshot screenshot-macos">
+                    <figcaption class="screenshot-caption">Organize chapters, scenes, and research in a familiar binder</figcaption>
+                </figure>
             </div>
         </section>
 
@@ -479,6 +493,15 @@
                         <span>Full .scriv import with comments</span>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="screenshot-section">
+            <div class="container">
+                <figure class="screenshot-figure">
+                    <img src="images/screenshot-editor.png" alt="Manuscript editor" class="screenshot screenshot-macos">
+                    <figcaption class="screenshot-caption">Distraction-free writing with rich formatting</figcaption>
+                </figure>
             </div>
         </section>
 
@@ -523,6 +546,15 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </section>
+
+        <section class="screenshot-section">
+            <div class="container">
+                <figure class="screenshot-figure">
+                    <img src="images/screenshot-ios.png" alt="Manuscript on iOS" class="screenshot screenshot-ios">
+                    <figcaption class="screenshot-caption">Write anywhere on iPhone and iPad</figcaption>
+                </figure>
             </div>
         </section>
 
