@@ -42,6 +42,7 @@ Think Scrivener or Ulysses, but free and open source.
 | Snapshots | ✅ | Version history with manual and auto snapshots |
 | Corkboard view | ✅ | Index card view for visual organization |
 | Split editor | ✅ | View two documents side-by-side (macOS) |
+| Read mode | ✅ | Distraction-free reading with prose typography |
 | Outliner view | 🔜 | Hierarchical outline with metadata columns |
 | Composition mode | 🔜 | Distraction-free full-screen writing |
 | Compile presets | 🔜 | Save and reuse export configurations |
@@ -132,7 +133,6 @@ It was a dark and stormy night...
 |---|---|---|---|
 | Price | Free | $49+ | $50/year |
 | Open source | Yes | No | No |
-| Native app | SwiftUI | AppKit | AppKit |
 | File format | Markdown | Proprietary | Markdown |
 | Scrivener import | Yes | — | No |
 | AI assistance | BYOK | No | Paid |
