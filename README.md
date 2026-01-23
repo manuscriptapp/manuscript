@@ -32,7 +32,7 @@ Think Scrivener or Ulysses, but free and open source.
 | Writing statistics | ✅ | Word counts, daily history, streaks, session tracking |
 | Writing targets | ✅ | Word count goals for draft and daily sessions |
 | Comments system | ✅ | Inline comments with chat bubble UI and inspector |
-| Templates | ✅ | Hero's Journey and other project templates |
+| Templates | ✅ | 9 story structure templates (Hero's Journey, Save the Cat, Three-Act, etc.) |
 | Scrivener import | ✅ | Full .scriv import with RTF conversion and comments |
 | Export | ✅ | PDF and Markdown export |
 | AI assistance | ✅ | Text generation with custom API keys (OpenAI, Anthropic) |
@@ -149,7 +149,7 @@ It was a dark and stormy night...
 **Phase 2: Writing Experience** ✅
 - [x] Document and folder customization (icons, colors)
 - [x] Writing statistics and history tracking
-- [x] Project templates (Hero's Journey)
+- [x] Project templates (9 story structures)
 
 **Phase 3: World-Building** ✅
 - [x] Character management with profiles

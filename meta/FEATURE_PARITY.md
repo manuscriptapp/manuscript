@@ -28,8 +28,8 @@ Manuscript vs Scrivener vs Ulysses.
 | Formatting toolbar | ✅ | ✅ | ✅ |
 | Paragraph indentation | ✅ | ✅ | ✅ |
 | Line spacing | ✅ | ✅ | ✅ |
-| Distraction-free mode | ✅ | ✅ | 🔜 |
-| Split editor | ✅ | ✅ | 🔜 |
+| Distraction-free mode | ✅ | ✅ | ✅ Read mode |
+| Split editor | ✅ | ✅ | ✅ macOS |
 | Typewriter scrolling | ✅ | ✅ | 🔜 |
 | Auto-save | ✅ | ✅ | ✅ |
 | Find & replace | ✅ | ✅ | ✅ |
@@ -63,7 +63,7 @@ Manuscript vs Scrivener vs Ulysses.
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
 | Corkboard/cards | ✅ | ❌ | ✅ |
-| Outliner | ✅ | ❌ | 🔜 |
+| Outliner | ✅ | ❌ | ✅ |
 | Quick preview | ✅ | ✅ | 🔜 |
 | Multiple windows | ✅ | ✅ | 🔜 |
 
@@ -90,7 +90,7 @@ Manuscript vs Scrivener vs Ulysses.
 |---|:-:|:-:|:-:|
 | Manual snapshots | ✅ | ✅ | ✅ |
 | Compare versions | ✅ | ✅ | 🔜 |
-| Rollback | ✅ | ✅ | 🔜 |
+| Rollback | ✅ | ✅ | ✅ |
 | Version history | ✅ | ✅ | ✅ |
 
 ---
