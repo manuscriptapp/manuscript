@@ -27,7 +27,8 @@ Think Scrivener or Ulysses, but free and open source.
 | Formatting toolbar | ✅ | Compact toolbar with font, size, color, and style controls |
 | Drag & drop reorder | ✅ | Reorder and move documents/folders between locations |
 | Document customization | ✅ | Custom icons (20+) and colors for folders and documents |
-| Characters & Locations | ✅ | World-building with character/location tracking |
+| Characters | ✅ | Character profiles with appearance, personality, and document linking |
+| Locations | ✅ | Interactive maps with search, Look Around (Street View), and coordinates |
 | Writing statistics | ✅ | Word counts, daily history, streaks, session tracking |
 | Writing targets | ✅ | Word count goals for draft and daily sessions |
 | Comments system | ✅ | Inline comments with chat bubble UI and inspector |
@@ -43,7 +44,7 @@ Think Scrivener or Ulysses, but free and open source.
 | Corkboard view | ✅ | Index card view for visual organization |
 | Split editor | ✅ | View two documents side-by-side (macOS) |
 | Read mode | ✅ | Distraction-free reading with prose typography |
-| Outliner view | 🔜 | Hierarchical outline with metadata columns |
+| Outliner view | ✅ | Hierarchical outline with sortable metadata columns |
 | Composition mode | 🔜 | Distraction-free full-screen writing |
 | Compile presets | 🔜 | Save and reuse export configurations |
 | More export formats | 🔜 | DOCX, EPUB, HTML, LaTeX |
@@ -151,8 +152,9 @@ It was a dark and stormy night...
 - [x] Project templates (Hero's Journey)
 
 **Phase 3: World-Building** ✅
-- [x] Character management
-- [x] Location tracking
+- [x] Character management with profiles
+- [x] Location tracking with interactive maps
+- [x] Map search and Look Around (Street View)
 - [x] Document-to-character/location linking
 
 **Phase 4: Import & Export** ✅
@@ -183,8 +185,9 @@ It was a dark and stormy night...
 - [x] iCloud Drive sync
 - [x] Writing targets (draft and session goals)
 - [x] Split editor (side-by-side documents on macOS)
-- [ ] Composition mode (distraction-free)
-- [ ] Outliner view
+- [x] Outliner view with sortable columns
+- [x] Read mode (distraction-free reading)
+- [ ] Composition mode (distraction-free writing)
 - [ ] DOCX, EPUB, HTML, LaTeX export
 - [ ] Snapshot comparison/diff view
 

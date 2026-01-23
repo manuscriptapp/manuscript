@@ -111,7 +111,8 @@
       "Bash(grep:*)",
       "Bash(tree:*)",
       "WebFetch(domain:exploreswiftui.com)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(git status:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"
