@@ -93,6 +93,21 @@ struct FindMenuCommands: View {
         .disabled(findActions == nil)
     }
 }
+
+/// Menu commands for Composition Mode
+struct CompositionModeMenuCommands: View {
+    @FocusedValue(\.compositionModeBinding) var compositionModeBinding
+
+    var body: some View {
+        Button("Enter Composition Mode") {
+            withAnimation(.spring(duration: 0.4)) {
+                compositionModeBinding?.wrappedValue = true
+            }
+        }
+        .keyboardShortcut(.return, modifiers: [.command, .shift])
+        .disabled(compositionModeBinding == nil)
+    }
+}
 #endif
 
 // MARK: - iOS Launch Scene Components
@@ -882,6 +897,11 @@ struct ManuscriptApp: App {
             // Find menu commands
             CommandGroup(after: .textEditing) {
                 FindMenuCommands()
+            }
+
+            // View menu commands - Composition Mode
+            CommandGroup(after: .toolbar) {
+                CompositionModeMenuCommands()
             }
         }
         #endif

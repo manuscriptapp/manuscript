@@ -11,6 +11,7 @@ struct DocumentDetailView: View {
     @State private var inspectorDetent: PresentationDetent = .medium
     @State private var isReadMode = false
     @State private var showSettings = false
+    @State private var isCompositionModeActive = false
     #if os(macOS)
     @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
     @StateObject private var syncService = ICloudSyncService()
@@ -79,76 +80,67 @@ struct DocumentDetailView: View {
         isActiveInSplitView == nil
     }
 
+
     var body: some View {
-        Group {
-            if shouldShowInspector {
-                // Normal mode or active split pane - include inspector
-                mainContent
-                    .inspector(isPresented: inspectorPresentedBinding) {
-                        inspectorView
-                    }
-                    #if os(macOS)
-                    .inspectorColumnWidth(min: 280, ideal: 320, max: 450)
-                    #endif
-            } else {
-                // Inactive split pane - no inspector
-                mainContent
-            }
-        }
-            .onChange(of: detailViewModel.editedTitle) { oldValue, newValue in
-                // Only update if the value actually changed (prevents overwriting on view load)
-                guard oldValue != newValue else { return }
-                // Don't overwrite a non-empty title with an empty one (prevents stale state overwriting)
-                if let currentDoc = viewModel.findDocument(withId: document.id) {
-                    if newValue.isEmpty && !currentDoc.title.isEmpty {
-                        return  // Don't overwrite existing title with empty
-                    }
-                    if currentDoc.title != newValue {
-                        viewModel.updateDocument(document, title: newValue)
-                    }
-                }
-            }
-            .onChange(of: detailViewModel.editedSynopsis) { _, newValue in
-                viewModel.updateDocument(document, synopsis: newValue)
-            }
-            .onChange(of: detailViewModel.editedNotes) { _, newValue in
-                viewModel.updateDocument(document, notes: newValue)
-            }
-            .onChange(of: detailViewModel.editedContent) { _, newValue in
-                viewModel.updateDocument(document, content: newValue)
-            }
-            .onChange(of: detailViewModel.selectedCharacters) { _, newValue in
-                viewModel.updateDocument(document, characterIds: newValue)
-            }
-            .onChange(of: detailViewModel.selectedLocations) { _, newValue in
-                viewModel.updateDocument(document, locationIds: newValue)
-            }
+        contentWithInspector
+            .modifier(DocumentChangeObservers(
+                detailViewModel: detailViewModel,
+                viewModel: viewModel,
+                document: document
+            ))
             .navigationTitle(detailViewModel.editedTitle)
-            .toolbar {
-                if !hideToolbarItems {
-                    toolbarContent
-                }
-            }
-            .sheet(isPresented: $showSettings) {
-                NavigationStack {
-                    SettingsView()
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Done") {
-                                    showSettings = false
-                                }
-                            }
-                        }
-                }
-            }
-            #if os(macOS)
-            .onAppear {
-                syncService.startMonitoring(url: fileURL)
-            }
-            .onDisappear {
-                syncService.stopMonitoring()
+            .toolbar { toolbarContent }
+            .sheet(isPresented: $showSettings) { settingsSheet }
+            #if os(iOS)
+            .fullScreenCover(isPresented: $isCompositionModeActive) {
+                CompositionModeView(viewModel: detailViewModel, isPresented: $isCompositionModeActive)
             }
             #endif
+            #if os(macOS)
+            .onAppear { syncService.startMonitoring(url: fileURL) }
+            .onDisappear { syncService.stopMonitoring() }
+            .focusedValue(\.compositionModeBinding, $isCompositionModeActive)
+            .onChange(of: isCompositionModeActive) { _, isActive in
+                if isActive {
+                    CompositionModeWindowController.shared.show(viewModel: detailViewModel) {
+                        isCompositionModeActive = false
+                    }
+                }
+            }
+            #endif
+    }
+
+    @ViewBuilder
+    private var contentWithInspector: some View {
+        if shouldShowInspector {
+            mainContent
+                .inspector(isPresented: inspectorPresentedBinding) {
+                    inspectorView
+                }
+                #if os(macOS)
+                .inspectorColumnWidth(min: 280, ideal: 320, max: 450)
+                #endif
+        } else {
+            mainContent
+        }
+    }
+
+    private var settingsSheet: some View {
+        NavigationStack {
+            SettingsView()
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") { showSettings = false }
+                    }
+                }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if !hideToolbarItems {
+            toolbarItems
+        }
     }
 
     @ViewBuilder
@@ -218,7 +210,7 @@ struct DocumentDetailView: View {
     }
 
     @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
+    private var toolbarItems: some ToolbarContent {
         #if os(macOS)
         if #available(macOS 26.0, *) {
             ToolbarItem(placement: .navigation) {
@@ -278,6 +270,17 @@ struct DocumentDetailView: View {
 
     private var moreMenu: some View {
         Menu {
+            // Composition Mode
+            Button {
+                withAnimation(.spring(duration: 0.4)) {
+                    isCompositionModeActive = true
+                }
+            } label: {
+                Label("Composition Mode", systemImage: "rectangle.expand.vertical")
+            }
+
+            Divider()
+
             // Split View section
             splitViewMenuSection
 
@@ -482,6 +485,47 @@ struct DocumentDetailView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+}
+
+// MARK: - Document Change Observers ViewModifier
+
+/// ViewModifier to handle document property change observations
+/// Extracted to reduce type-checker complexity in the main body
+private struct DocumentChangeObservers: ViewModifier {
+    @ObservedObject var detailViewModel: DocumentDetailViewModel
+    @ObservedObject var viewModel: DocumentViewModel
+    let document: ManuscriptDocument.Document
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: detailViewModel.editedTitle) { oldValue, newValue in
+                guard oldValue != newValue else { return }
+                if let currentDoc = viewModel.findDocument(withId: document.id) {
+                    if newValue.isEmpty && !currentDoc.title.isEmpty {
+                        return
+                    }
+                    if currentDoc.title != newValue {
+                        viewModel.updateDocument(document, title: newValue)
+                    }
+                }
+            }
+            .onChange(of: detailViewModel.editedSynopsis) { _, newValue in
+                viewModel.updateDocument(document, synopsis: newValue)
+            }
+            .onChange(of: detailViewModel.editedNotes) { _, newValue in
+                viewModel.updateDocument(document, notes: newValue)
+            }
+            .onChange(of: detailViewModel.editedContent) { _, newValue in
+                viewModel.updateDocument(document, content: newValue)
+            }
+            .onChange(of: detailViewModel.selectedCharacters) { _, newValue in
+                viewModel.updateDocument(document, characterIds: newValue)
+            }
+            .onChange(of: detailViewModel.selectedLocations) { _, newValue in
+                viewModel.updateDocument(document, locationIds: newValue)
+            }
     }
 }
 
