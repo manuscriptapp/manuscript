@@ -2341,8 +2341,6 @@ extension BookTemplate {
         .threeActStructure,
         .storyCircle,
         .sevenPoint,
-        .freytagsPyramid,
-        .fichteanCurve,
-        .kishotenketsu
+        .freytagsPyramid
     ]
 } 

@@ -10,8 +10,7 @@ struct WelcomeView: View {
     @State private var isShowingNewProjectSheet = false
     @State private var isShowingFileImporter = false
     @State private var isShowingScrivenerImporter = false
-    @State private var selectedTemplate: BookTemplate?
-    @State private var isShowingTemplateDetail = false
+    @State private var templateToShow: BookTemplate?
 
     var onOpenDocument: (URL) -> Void
     var onCreateNewDocument: () -> Void
@@ -73,12 +72,10 @@ struct WelcomeView: View {
                     #endif
                 }
             }
-            .sheet(isPresented: $isShowingTemplateDetail) {
-                if let template = selectedTemplate {
-                    TemplateDetailSheet(template: template) {
-                        // Create a new document with the template
-                        onCreateNewDocument()
-                    }
+            .sheet(item: $templateToShow) { template in
+                TemplateDetailSheet(template: template) {
+                    // Document is saved and opened by NewBookSheet
+                    // No need to create another document here
                 }
             }
             .fileImporter(
@@ -221,45 +218,43 @@ struct WelcomeView: View {
     }
     
     private var templatesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Templates")
                 .font(.title3)
                 .bold()
-            
+
             #if os(macOS)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    BlankTemplateCard {
-                        selectedTemplate = nil
-                        isShowingTemplateDetail = true
-                    }
-                    .frame(width: 140)
-                    
-                    ForEach(BookTemplate.templates, id: \.id) { template in
-                        TemplateCardView(template: template)
-                            .frame(width: 140)
-                            .onTapGesture {
-                                selectedTemplate = template
-                                isShowingTemplateDetail = true
-                            }
-                    }
-                }
-                .padding(.bottom)
-            }
-            #else
-            let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 2)
-            
-            LazyVGrid(columns: columns, spacing: 12) {
+            let columns = Array(repeating: GridItem(.flexible(), spacing: 16), count: 4)
+
+            LazyVGrid(columns: columns, spacing: 16) {
                 BlankTemplateCard {
-                    selectedTemplate = nil
-                    isShowingTemplateDetail = true
+                    isShowingNewProjectSheet = true
                 }
-                
+
                 ForEach(BookTemplate.templates, id: \.id) { template in
                     TemplateCardView(template: template)
                         .onTapGesture {
-                            selectedTemplate = template
-                            isShowingTemplateDetail = true
+                            templateToShow = template
+                        }
+                }
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.ultraThinMaterial)
+            )
+            #else
+            let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 2)
+
+            LazyVGrid(columns: columns, spacing: 12) {
+                BlankTemplateCard {
+                    isShowingNewProjectSheet = true
+                }
+
+                ForEach(BookTemplate.templates, id: \.id) { template in
+                    TemplateCardView(template: template)
+                        .onTapGesture {
+                            templateToShow = template
                         }
                 }
             }
@@ -455,7 +450,7 @@ struct BlankTemplateCard: View {
             .background(
                 RoundedRectangle(cornerRadius: 16)
                     .fill(.background)
-                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                    .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
             )
         }
         .buttonStyle(.plain)
