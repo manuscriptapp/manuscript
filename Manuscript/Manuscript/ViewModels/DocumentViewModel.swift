@@ -17,7 +17,7 @@ class DocumentViewModel: ObservableObject {
     @Published private(set) var rootFolder: ManuscriptFolder = ManuscriptFolder(title: "Draft")
 
     // Published special folders for sidebar display
-    @Published private(set) var researchFolder: ManuscriptFolder = ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+    @Published private(set) var researchFolder: ManuscriptFolder = ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#A2845E")
     @Published private(set) var trashFolder: ManuscriptFolder = ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
 
     // Published document title for sidebar display
@@ -53,7 +53,7 @@ class DocumentViewModel: ObservableObject {
             // Update the published rootFolder for immediate UI updates
             rootFolder = newValue.rootFolder
             // Update the published special folders
-            researchFolder = newValue.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+            researchFolder = newValue.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#A2845E")
             trashFolder = newValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
             // Update the published title for sidebar display
             documentTitle = newValue.title
@@ -73,7 +73,7 @@ class DocumentViewModel: ObservableObject {
         self.rootFolder = document.wrappedValue.rootFolder
         self.currentFolder = document.wrappedValue.rootFolder
         self.documentTitle = document.wrappedValue.title
-        self.researchFolder = document.wrappedValue.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+        self.researchFolder = document.wrappedValue.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#A2845E")
         self.trashFolder = document.wrappedValue.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
         self.characters = document.wrappedValue.characters
         self.locations = document.wrappedValue.locations
@@ -211,7 +211,7 @@ class DocumentViewModel: ObservableObject {
         // Update the published rootFolder for sidebar display
         rootFolder = newDocument.rootFolder
         // Update the published special folders
-        researchFolder = newDocument.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+        researchFolder = newDocument.researchFolder ?? ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#A2845E")
         trashFolder = newDocument.trashFolder ?? ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
         // Update the published title
         documentTitle = newDocument.title

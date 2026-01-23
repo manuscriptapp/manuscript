@@ -123,7 +123,10 @@
       "WebFetch(domain:kindlepreneur.com)",
       "Bash(pgrep:*)",
       "Bash(open:*)",
-      "Bash(killall:*)"
+      "Bash(killall:*)",
+      "mcp__XcodeBuildMCP__set_sim_appearance",
+      "mcp__XcodeBuildMCP__record_sim_video",
+      "mcp__XcodeBuildMCP__get_sim_app_path"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"

@@ -213,7 +213,10 @@ struct LaunchNewDocumentView: View {
                 VStack(spacing: 16) {
                     // Blank option - styled like a template card
                     Button {
+                        print("📝 [LaunchNewDocumentView] Creating blank document")
                         let document = ManuscriptDocument()
+                        print("   - Document created with title: '\(document.title)'")
+                        print("   - Continuation available: \(continuation != nil)")
                         continuation?.resume(returning: document)
                         continuation = nil
                         dismiss()
@@ -225,7 +228,10 @@ struct LaunchNewDocumentView: View {
                     // Template options - reuse LaunchTemplateCard
                     ForEach(BookTemplate.templates) { template in
                         Button {
+                            print("📝 [LaunchNewDocumentView] Creating document from template: \(template.name)")
                             let document = ManuscriptDocument.fromTemplate(template)
+                            print("   - Document created with title: '\(document.title)'")
+                            print("   - Continuation available: \(continuation != nil)")
                             continuation?.resume(returning: document)
                             continuation = nil
                             dismiss()
@@ -242,12 +248,18 @@ struct LaunchNewDocumentView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
+                        print("📝 [LaunchNewDocumentView] User cancelled")
+                        print("   - Continuation available: \(continuation != nil)")
                         continuation?.resume(returning: nil)
                         continuation = nil
                         dismiss()
                     }
                 }
             }
+        }
+        .onAppear {
+            print("📝 [LaunchNewDocumentView] Sheet appeared")
+            print("   - Continuation available: \(continuation != nil)")
         }
     }
 }
@@ -812,29 +824,58 @@ struct ManuscriptApp: App {
     private func printICloudDebugInfo() {
         print("=== iCloud Debug Info ===")
         #if os(iOS)
-        print("Platform: iOS")
+        print("Platform: iOS Simulator/Device")
         #else
         print("Platform: macOS")
         #endif
         print("Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")")
 
+        // Check iCloud account status
+        let fileManager = FileManager.default
+        print("ubiquityIdentityToken: \(fileManager.ubiquityIdentityToken != nil ? "present" : "nil (not logged in or iCloud disabled)")")
+
         // Check default container (nil) - should be generic iCloud Drive
-        if let defaultURL = FileManager.default.url(forUbiquityContainerIdentifier: nil) {
+        if let defaultURL = fileManager.url(forUbiquityContainerIdentifier: nil) {
             print("✅ iCloud container accessible at:")
             print("   \(defaultURL.path)")
 
             let documentsURL = defaultURL.appendingPathComponent("Documents")
-            if FileManager.default.fileExists(atPath: documentsURL.path) {
-                if let files = try? FileManager.default.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil) {
+            print("   Documents path: \(documentsURL.path)")
+            print("   Documents exists: \(fileManager.fileExists(atPath: documentsURL.path))")
+
+            if fileManager.fileExists(atPath: documentsURL.path) {
+                do {
+                    let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: [.isDirectoryKey, .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey])
                     print("   Found \(files.count) file(s) in Documents/:")
                     for file in files.prefix(10) {
-                        print("   - \(file.lastPathComponent)")
+                        let resourceValues = try? file.resourceValues(forKeys: [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey])
+                        let downloadStatus = resourceValues?.ubiquitousItemDownloadingStatus?.rawValue ?? "unknown"
+                        print("   - \(file.lastPathComponent) (iCloud status: \(downloadStatus))")
                     }
+                } catch {
+                    print("   ❌ Error reading Documents: \(error.localizedDescription)")
                 }
             }
         } else {
-            print("❌ Cannot access iCloud container")
+            print("❌ Cannot access iCloud container (url(forUbiquityContainerIdentifier:) returned nil)")
+            print("   This usually means:")
+            print("   - iCloud is not enabled for this app")
+            print("   - User is not signed into iCloud")
+            print("   - Running on Simulator without iCloud configured")
         }
+
+        // Check local documents directory as fallback
+        let localDocs = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
+        print("Local Documents: \(localDocs?.path ?? "nil")")
+        if let localDocs = localDocs {
+            do {
+                let localFiles = try fileManager.contentsOfDirectory(at: localDocs, includingPropertiesForKeys: nil)
+                print("   Found \(localFiles.count) local file(s)")
+            } catch {
+                print("   ❌ Error reading local docs: \(error.localizedDescription)")
+            }
+        }
+
         print("========================\n")
     }
 
@@ -860,10 +901,18 @@ struct ManuscriptApp: App {
             ManuscriptProjectView(document: file.$document, fileURL: file.fileURL)
                 .environmentObject(notificationManager)
                 .environmentObject(recentDocumentsManager)
+                .withErrorAlert()
                 #if os(macOS)
                 .frame(minWidth: 900, minHeight: 600)
                 #endif
                 .onAppear {
+                    print("📂 [DocumentGroup] Document opened")
+                    print("   - fileURL: \(file.fileURL?.path ?? "nil (new document)")")
+                    print("   - title: \(file.document.title.isEmpty ? "(empty)" : file.document.title)")
+                    print("   - rootFolder documents: \(file.document.rootFolder.documents.count)")
+                    print("   - characters: \(file.document.characters.count)")
+                    print("   - locations: \(file.document.locations.count)")
+
                     // Add to recent documents when opened
                     if let url = file.fileURL {
                         recentDocumentsManager.addDocument(url: url, title: file.document.title.isEmpty ? "Untitled" : file.document.title)
@@ -910,9 +959,18 @@ struct ManuscriptApp: App {
         #if os(iOS)
         DocumentGroupLaunchScene("") {
             NewDocumentButton("New Manuscript", for: ManuscriptDocument.self) {
-                try await withCheckedThrowingContinuation { continuation in
-                    self.newDocContinuation = continuation
-                    self.isNewDocPresented = true
+                print("🆕 [DocumentGroupLaunchScene] 'New Manuscript' button tapped")
+                do {
+                    let result = try await withCheckedThrowingContinuation { continuation in
+                        print("   - Setting up continuation for new document")
+                        self.newDocContinuation = continuation
+                        self.isNewDocPresented = true
+                    }
+                    print("   - Continuation resolved with document: \(result?.title ?? "nil")")
+                    return result
+                } catch {
+                    print("❌ [DocumentGroupLaunchScene] Error creating new document: \(error)")
+                    throw error
                 }
             }
             .sheet(isPresented: $isNewDocPresented) {
@@ -920,9 +978,18 @@ struct ManuscriptApp: App {
             }
 
             NewDocumentButton("Import Scrivener Project", for: ManuscriptDocument.self) {
-                try await withCheckedThrowingContinuation { continuation in
-                    self.importContinuation = continuation
-                    self.isScrivenerImportPresented = true
+                print("📥 [DocumentGroupLaunchScene] 'Import Scrivener Project' button tapped")
+                do {
+                    let result = try await withCheckedThrowingContinuation { continuation in
+                        print("   - Setting up continuation for Scrivener import")
+                        self.importContinuation = continuation
+                        self.isScrivenerImportPresented = true
+                    }
+                    print("   - Import continuation resolved with document: \(result?.title ?? "nil")")
+                    return result
+                } catch {
+                    print("❌ [DocumentGroupLaunchScene] Error importing Scrivener project: \(error)")
+                    throw error
                 }
             }
             .sheet(isPresented: $isScrivenerImportPresented) {
@@ -930,6 +997,9 @@ struct ManuscriptApp: App {
             }
         } background: {
             LaunchSceneBackground()
+                .onAppear {
+                    print("📱 [DocumentGroupLaunchScene] Launch scene background appeared")
+                }
         } overlayAccessoryView: { geometry in
             // Title with extra margin above buttons
             LaunchSceneTitle()

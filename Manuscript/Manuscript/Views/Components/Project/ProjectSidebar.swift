@@ -46,7 +46,7 @@ struct ProjectSidebar: View {
         self._showReadingMode = showReadingMode
     }
 
-    private let brownColor = Color(red: 0.6, green: 0.4, blue: 0.2)
+    private let brownColor: Color = .brown
 
     var body: some View {
         // Create a typed binding to help with type inference
@@ -90,7 +90,7 @@ struct ProjectSidebar: View {
                         Text("Characters")
                     } icon: {
                         Image(systemName: "person.2")
-                            .foregroundStyle(Color(red: 0.7, green: 0.2, blue: 0.3)) // Rose/maroon
+                            .foregroundStyle(brownColor)
                     }
                     .badge(viewModel.characters.count)
                 }
@@ -131,7 +131,7 @@ struct ProjectSidebar: View {
                         Text("Locations")
                     } icon: {
                         Image(systemName: "mappin.and.ellipse")
-                            .foregroundStyle(Color(red: 0.2, green: 0.55, blue: 0.35))
+                            .foregroundStyle(brownColor)
                     }
                     .badge(viewModel.locations.count)
                 }

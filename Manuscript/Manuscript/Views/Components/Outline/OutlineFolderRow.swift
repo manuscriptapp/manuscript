@@ -99,7 +99,7 @@ struct OutlineFolderRow: View {
         if let hexColor = folder.iconColor, let color = Color(hex: hexColor) {
             return color
         }
-        return .cyan
+        return .blue
     }
 
     private var backgroundColor: Color {

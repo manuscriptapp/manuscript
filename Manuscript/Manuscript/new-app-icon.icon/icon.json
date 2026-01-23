@@ -1,13 +1,13 @@
 {
   "fill" : {
-    "automatic-gradient" : "srgb:0.00000,0.00000,0.00000,1.00000"
+    "automatic-gradient" : "extended-gray:0.25000,1.00000"
   },
   "groups" : [
     {
       "layers" : [
         {
-          "image-name" : "App icon 3.png",
-          "name" : "App icon 3"
+          "image-name" : "app-icon-simpler.png",
+          "name" : "app-icon-simpler"
         }
       ],
       "shadow" : {

@@ -69,7 +69,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         self.modifiedDate = Date()
         self.rootFolder = ManuscriptFolder(title: "Draft", folderType: .draft, iconName: "text.book.closed")
         self.notesFolder = ManuscriptFolder(title: "Notes", folderType: .notes)
-        self.researchFolder = ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#FF9500")
+        self.researchFolder = ManuscriptFolder(title: "Research", folderType: .research, iconName: "books.vertical", iconColor: "#A2845E")
         self.trashFolder = ManuscriptFolder(title: "Trash", folderType: .trash, iconName: "trash", iconColor: "#8E8E93")
         self.characters = []
         self.locations = []
@@ -85,35 +85,102 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // MARK: - FileDocument Implementation
 
     init(configuration: ReadConfiguration) throws {
+        print("📄 [ManuscriptDocument] init(configuration:) called")
+        print("   - isDirectory: \(configuration.file.isDirectory)")
+        print("   - filename: \(configuration.file.filename ?? "nil")")
+        print("   - preferredFilename: \(configuration.file.preferredFilename ?? "nil")")
+
         // Only support package (directory) format
         guard configuration.file.isDirectory else {
+            print("❌ [ManuscriptDocument] Error: File is not a directory (package)")
             throw CocoaError(.fileReadUnsupportedScheme)
         }
-        try self.init(fromPackage: configuration.file)
+
+        do {
+            try self.init(fromPackage: configuration.file)
+            print("✅ [ManuscriptDocument] Successfully loaded document: \(self.title)")
+        } catch {
+            print("❌ [ManuscriptDocument] Error loading document: \(error)")
+            print("   - Error type: \(type(of: error))")
+            print("   - Localized description: \(error.localizedDescription)")
+            if let cocoaError = error as? CocoaError {
+                print("   - CocoaError code: \(cocoaError.code)")
+            }
+
+            // Report error to UI
+            let filename = configuration.file.filename ?? configuration.file.preferredFilename
+            Task { @MainActor in
+                ErrorManager.shared.showDocumentLoadError(error, filename: filename)
+            }
+
+            throw error
+        }
     }
 
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        // Always write in the new package format
-        return try createPackageFileWrapper()
+        print("💾 [ManuscriptDocument] fileWrapper(configuration:) called")
+        print("   - existingFile: \(configuration.existingFile != nil)")
+
+        do {
+            let wrapper = try createPackageFileWrapper()
+            print("✅ [ManuscriptDocument] Successfully created file wrapper for: \(self.title)")
+            return wrapper
+        } catch {
+            print("❌ [ManuscriptDocument] Error creating file wrapper: \(error)")
+            print("   - Error type: \(type(of: error))")
+            print("   - Localized description: \(error.localizedDescription)")
+            throw error
+        }
     }
 
     // MARK: - Package Format Reading
 
     private init(fromPackage fileWrapper: FileWrapper) throws {
+        print("📦 [ManuscriptDocument] Reading package...")
+        print("   - fileWrapper.filename: \(fileWrapper.filename ?? "nil")")
+
         guard let children = fileWrapper.fileWrappers else {
+            print("❌ [ManuscriptDocument] Package has no children (not a directory)")
             throw CocoaError(.fileReadCorruptFile)
         }
+
+        print("   - Package contents: \(children.keys.sorted().joined(separator: ", "))")
 
         // Read project.json
         guard let projectJsonWrapper = children["project.json"],
               let projectJsonData = projectJsonWrapper.regularFileContents else {
+            print("❌ [ManuscriptDocument] Missing or unreadable project.json")
+            print("   - project.json exists: \(children["project.json"] != nil)")
             throw CocoaError(.fileReadCorruptFile)
         }
+
+        print("   - project.json size: \(projectJsonData.count) bytes")
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
-        let projectData = try decoder.decode(ProjectJSON.self, from: projectJsonData)
+        let projectData: ProjectJSON
+        do {
+            projectData = try decoder.decode(ProjectJSON.self, from: projectJsonData)
+            print("   - Decoded project: \(projectData.title)")
+        } catch {
+            print("❌ [ManuscriptDocument] Failed to decode project.json: \(error)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    print("   - Missing key: \(key.stringValue) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                case .typeMismatch(let type, let context):
+                    print("   - Type mismatch: expected \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                case .valueNotFound(let type, let context):
+                    print("   - Value not found: \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                case .dataCorrupted(let context):
+                    print("   - Data corrupted at \(context.codingPath.map { $0.stringValue }.joined(separator: ".")): \(context.debugDescription)")
+                @unknown default:
+                    print("   - Unknown decoding error")
+                }
+            }
+            throw error
+        }
 
         self.formatVersion = ManuscriptFormatVersion(rawValue: projectData.version) ?? .current
         self.title = projectData.title
@@ -198,7 +265,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             defaultColor = ManuscriptFolder.defaultIconColor
         case .research:
             defaultIcon = "books.vertical"
-            defaultColor = "#FF9500"  // Orange
+            defaultColor = "#A2845E"  // Brown
         case .trash:
             defaultIcon = "trash"
             defaultColor = "#8E8E93"  // Gray

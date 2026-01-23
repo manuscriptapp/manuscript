@@ -10,6 +10,7 @@ struct WelcomeView: View {
     @State private var isShowingNewProjectSheet = false
     @State private var isShowingFileImporter = false
     @State private var isShowingScrivenerImporter = false
+    @State private var isShowingHowItWorks = false
     @State private var templateToShow: BookTemplate?
     @State private var shuffledTemplates: [BookTemplate] = BookTemplate.templates.shuffled()
 
@@ -143,6 +144,21 @@ struct WelcomeView: View {
             .sheet(isPresented: $isShowingScrivenerImporter) {
                 ScrivenerImportView { importedDocument in
                     onImportDocument?(importedDocument)
+                }
+            }
+            .sheet(isPresented: $isShowingHowItWorks) {
+                NavigationStack {
+                    HowItWorksView()
+                        #if os(iOS)
+                        .navigationBarTitleDisplayMode(.inline)
+                        #endif
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") {
+                                    isShowingHowItWorks = false
+                                }
+                            }
+                        }
                 }
             }
         }
@@ -281,13 +297,7 @@ struct WelcomeView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 Button {
-                    if let url = URL(string: "https://manuscriptapp.github.io/manuscript/#features") {
-                        #if os(macOS)
-                        NSWorkspace.shared.open(url)
-                        #else
-                        UIApplication.shared.open(url)
-                        #endif
-                    }
+                    isShowingHowItWorks = true
                 } label: {
                     Text("How it works")
                         .font(.subheadline)

@@ -109,6 +109,19 @@ struct ManuscriptTargets: Codable, Equatable {
         self.sessionResetTime = sessionResetTime
         self.sessionAllowNegatives = sessionAllowNegatives
     }
+
+    // Custom decoder for backward compatibility with older documents
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        draftWordCount = try container.decodeIfPresent(Int.self, forKey: .draftWordCount)
+        draftDeadline = try container.decodeIfPresent(Date.self, forKey: .draftDeadline)
+        draftDeadlineIgnored = try container.decodeIfPresent(Bool.self, forKey: .draftDeadlineIgnored) ?? false
+        draftCountIncludedOnly = try container.decodeIfPresent(Bool.self, forKey: .draftCountIncludedOnly) ?? true
+        sessionWordCount = try container.decodeIfPresent(Int.self, forKey: .sessionWordCount)
+        sessionResetType = try container.decodeIfPresent(SessionResetType.self, forKey: .sessionResetType) ?? .midnight
+        sessionResetTime = try container.decodeIfPresent(String.self, forKey: .sessionResetTime)
+        sessionAllowNegatives = try container.decodeIfPresent(Bool.self, forKey: .sessionAllowNegatives) ?? false
+    }
 }
 
 // MARK: - Project Settings
