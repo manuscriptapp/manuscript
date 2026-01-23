@@ -49,9 +49,15 @@ struct SplitEditorContainerView: View {
     }
 
     var body: some View {
-        if splitEditorState.isEnabled, let secondaryDocId = splitEditorState.secondaryDocumentId,
-           let secondaryDocument = viewModel.findDocument(withId: secondaryDocId) {
-            splitView(primary: primaryDocument, secondary: secondaryDocument)
+        if splitEditorState.isEnabled {
+            if let secondaryDocId = splitEditorState.secondaryDocumentId,
+               let secondaryDocument = viewModel.findDocument(withId: secondaryDocId) {
+                // Split view with both documents
+                splitView(primary: primaryDocument, secondary: secondaryDocument)
+            } else {
+                // Split view with placeholder for secondary pane
+                splitViewWithPlaceholder(primary: primaryDocument)
+            }
         } else {
             // Single document view - uses its own local context
             DocumentDetailView(document: primaryDocument, viewModel: viewModel, fileURL: fileURL, splitEditorState: $splitEditorState)
@@ -64,6 +70,15 @@ struct SplitEditorContainerView: View {
         macOSSplitView(primary: primary, secondary: secondary)
         #else
         iOSSplitView(primary: primary, secondary: secondary)
+        #endif
+    }
+
+    @ViewBuilder
+    private func splitViewWithPlaceholder(primary: ManuscriptDocument.Document) -> some View {
+        #if os(macOS)
+        macOSSplitViewWithPlaceholder(primary: primary)
+        #else
+        iOSSplitViewWithPlaceholder(primary: primary)
         #endif
     }
 
@@ -232,10 +247,32 @@ struct SplitEditorContainerView: View {
     /// Unified toolbar for split view
     @ToolbarContentBuilder
     private func splitViewToolbar(primary: ManuscriptDocument.Document, secondary: ManuscriptDocument.Document) -> some ToolbarContent {
+        // Center: View modes (Composition, Read)
+        ToolbarItemGroup(placement: .principal) {
+            Button {
+                // Open composition mode with focused document's view model
+                if let vm = splitEditorState.focusedPane == .primary ? primaryDetailViewModel : secondaryDetailViewModel {
+                    CompositionModeWindowController.shared.show(viewModel: vm) { }
+                }
+            } label: {
+                Label("Composition Mode", systemImage: "rectangle.expand.vertical")
+            }
+            .help("Enter Composition Mode")
+
+            Button {
+                isReadMode.toggle()
+            } label: {
+                Label(isReadMode ? "Edit" : "Read", systemImage: isReadMode ? "pencil" : "book")
+            }
+            .help(isReadMode ? "Switch to Edit Mode" : "Switch to Read Mode")
+        }
+
+        // Right: Split View menu
         ToolbarItem(placement: .primaryAction) {
             splitViewMoreMenu
         }
 
+        // Right: Find & Replace
         ToolbarItem(placement: .primaryAction) {
             Button {
                 showFindBar.toggle()
@@ -245,20 +282,14 @@ struct SplitEditorContainerView: View {
             .help("Find (⌘F)")
         }
 
-        ToolbarItem(placement: .primaryAction) {
-            Button {
-                isReadMode.toggle()
-            } label: {
-                Label(isReadMode ? "Edit" : "Read", systemImage: isReadMode ? "pencil" : "book")
-            }
-        }
-
+        // Right: Inspector toggle
         ToolbarItem(placement: .primaryAction) {
             Button {
                 isInspectorPresented.toggle()
             } label: {
                 Label("Inspector", systemImage: "sidebar.right")
             }
+            .help("Toggle Inspector")
         }
     }
 
@@ -290,14 +321,8 @@ struct SplitEditorContainerView: View {
             } label: {
                 Label("Split Orientation", systemImage: splitEditorState.orientation.systemImage)
             }
-
-            Divider()
-
-            Toggle(isOn: $showFormattingToolbar) {
-                Label("Formatting Toolbar", systemImage: "textformat")
-            }
         } label: {
-            Label("More", systemImage: "ellipsis.circle")
+            Label("Split View", systemImage: "rectangle.split.2x1.fill")
         }
     }
 
@@ -402,6 +427,167 @@ struct SplitEditorContainerView: View {
                 )
         }
     }
+
+    @ViewBuilder
+    private func macOSSplitViewWithPlaceholder(primary: ManuscriptDocument.Document) -> some View {
+        VStack(spacing: 0) {
+            // Unified formatting toolbar at the top
+            if showFormattingToolbar {
+                HStack(spacing: 0) {
+                    FormattingToolbar(context: primaryRichTextContext)
+                    Spacer()
+                    if let vm = primaryDetailViewModel {
+                        DocumentIndicatorsView(detailViewModel: vm)
+                            .padding(.trailing, 12)
+                    }
+                }
+                Divider()
+            }
+
+            // Split editor panes
+            GeometryReader { geometry in
+                if splitEditorState.orientation == .horizontal {
+                    // Side by side
+                    HStack(spacing: 0) {
+                        splitPaneWithLabel(document: primary, isPrimary: true)
+                            .frame(width: geometry.size.width * splitEditorState.splitRatio)
+
+                        MacOSSplitDivider(
+                            isVertical: true,
+                            splitRatio: $splitEditorState.splitRatio,
+                            totalSize: geometry.size.width
+                        )
+
+                        placeholderPane
+                            .frame(maxWidth: .infinity)
+                    }
+                } else {
+                    // Top and bottom
+                    VStack(spacing: 0) {
+                        splitPaneWithLabel(document: primary, isPrimary: true)
+                            .frame(height: geometry.size.height * splitEditorState.splitRatio)
+
+                        MacOSSplitDivider(
+                            isVertical: false,
+                            splitRatio: $splitEditorState.splitRatio,
+                            totalSize: geometry.size.height
+                        )
+
+                        placeholderPane
+                            .frame(maxHeight: .infinity)
+                    }
+                }
+            }
+        }
+        .navigationTitle(primary.title.isEmpty ? "Untitled" : primary.title)
+        .toolbar {
+            placeholderToolbar(primary: primary)
+        }
+        .onAppear {
+            primaryDetailViewModel = DocumentDetailViewModel(document: primary, documentViewModel: viewModel)
+        }
+    }
+
+    /// Placeholder pane shown when no document is selected for split view
+    private var placeholderPane: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "doc.text")
+                .font(.system(size: 48))
+                .foregroundStyle(.tertiary)
+
+            Text("Select a document")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+
+            Text("Choose a document from the binder to view it here")
+                .font(.subheadline)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(nsColor: .textBackgroundColor).opacity(0.5))
+    }
+
+    @ToolbarContentBuilder
+    private func placeholderToolbar(primary: ManuscriptDocument.Document) -> some ToolbarContent {
+        // Center: View modes (Composition, Read)
+        ToolbarItemGroup(placement: .principal) {
+            Button {
+                // Open composition mode with primary document
+                if let vm = primaryDetailViewModel {
+                    CompositionModeWindowController.shared.show(viewModel: vm) { }
+                }
+            } label: {
+                Label("Composition Mode", systemImage: "rectangle.expand.vertical")
+            }
+            .help("Enter Composition Mode")
+
+            Button {
+                isReadMode.toggle()
+            } label: {
+                Label(isReadMode ? "Edit" : "Read", systemImage: isReadMode ? "pencil" : "book")
+            }
+            .help(isReadMode ? "Switch to Edit Mode" : "Switch to Read Mode")
+        }
+
+        // Right: Split View menu
+        ToolbarItem(placement: .primaryAction) {
+            Menu {
+                Button {
+                    splitEditorState.orientation = .horizontal
+                } label: {
+                    HStack {
+                        Label("Split Horizontal", systemImage: "rectangle.split.2x1")
+                        if splitEditorState.orientation == .horizontal {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+
+                Button {
+                    splitEditorState.orientation = .vertical
+                } label: {
+                    HStack {
+                        Label("Split Vertical", systemImage: "rectangle.split.1x2")
+                        if splitEditorState.orientation == .vertical {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+
+                Divider()
+
+                Button {
+                    splitEditorState.isEnabled = false
+                    splitEditorState.secondaryDocumentId = nil
+                } label: {
+                    Label("Close Split View", systemImage: "rectangle")
+                }
+            } label: {
+                Label("Split View", systemImage: "rectangle.split.2x1.fill")
+            }
+        }
+
+        // Right: Find & Replace
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                showFindBar.toggle()
+            } label: {
+                Label("Find", systemImage: "magnifyingglass")
+            }
+            .help("Find (⌘F)")
+        }
+
+        // Right: Inspector toggle
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                isInspectorPresented.toggle()
+            } label: {
+                Label("Inspector", systemImage: "sidebar.right")
+            }
+            .help("Toggle Inspector")
+        }
+    }
     #endif
 
     // MARK: - iOS Split View
@@ -424,6 +610,45 @@ struct SplitEditorContainerView: View {
                     .frame(maxHeight: .infinity)
             }
         }
+    }
+
+    @ViewBuilder
+    private func iOSSplitViewWithPlaceholder(primary: ManuscriptDocument.Document) -> some View {
+        GeometryReader { geometry in
+            // iOS always uses vertical split (top/bottom)
+            VStack(spacing: 0) {
+                DocumentDetailView(document: primary, viewModel: viewModel, fileURL: fileURL, splitEditorState: $splitEditorState)
+                    .frame(height: geometry.size.height * splitEditorState.splitRatio)
+
+                SplitDividerView(
+                    splitRatio: $splitEditorState.splitRatio,
+                    totalHeight: geometry.size.height
+                )
+
+                iOSPlaceholderPane
+                    .frame(maxHeight: .infinity)
+            }
+        }
+    }
+
+    /// Placeholder pane shown when no document is selected for split view (iOS)
+    private var iOSPlaceholderPane: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "doc.text")
+                .font(.system(size: 48))
+                .foregroundStyle(.tertiary)
+
+            Text("Select a document")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+
+            Text("Choose a document from the binder to view it here")
+                .font(.subheadline)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(uiColor: .systemBackground).opacity(0.5))
     }
     #endif
 }

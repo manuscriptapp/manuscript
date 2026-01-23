@@ -158,7 +158,20 @@ struct ManuscriptProjectView: View {
             .onChange(of: document) { _, newDocument in
                 viewModel.syncWithDocument(newDocument)
             }
-            .onChange(of: detailSelection) { _, newSelection in
+            .onChange(of: detailSelection) { oldSelection, newSelection in
+                // When split view is active with placeholder, intercept document selection
+                // to populate the secondary pane instead of changing primary
+                if splitEditorState.isEnabled,
+                   splitEditorState.secondaryDocumentId == nil,
+                   case .document(let selectedDoc) = newSelection,
+                   case .document(_) = oldSelection {
+                    // Fill the placeholder with the selected document
+                    splitEditorState.secondaryDocumentId = selectedDoc.id
+                    // Restore the previous selection (keep primary document)
+                    detailSelection = oldSelection
+                    return
+                }
+
                 // Save state when selection changes (debounced to avoid interfering with selection)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     // Only save if selection is still the same after the delay

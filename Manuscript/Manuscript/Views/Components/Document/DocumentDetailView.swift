@@ -212,6 +212,7 @@ struct DocumentDetailView: View {
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
         #if os(macOS)
+        // iCloud sync status (near title)
         if #available(macOS 26.0, *) {
             ToolbarItem(placement: .navigation) {
                 ICloudSyncStatusView(syncService: syncService)
@@ -223,20 +224,8 @@ struct DocumentDetailView: View {
             }
         }
 
-        // Find & Replace
-        ToolbarItem(placement: .primaryAction) {
-            Button {
-                detailViewModel.showFindBar = true
-            } label: {
-                Label("Find", systemImage: "magnifyingglass")
-            }
-            .help("Find (⌘F)")
-        }
-
-        // Split View, Composition Mode, Read Mode
-        ToolbarItemGroup(placement: .primaryAction) {
-            splitViewToolbarMenu
-
+        // Center: View modes (Composition, Read)
+        ToolbarItemGroup(placement: .principal) {
             Button {
                 withAnimation(.spring(duration: 0.4)) {
                     isCompositionModeActive = true
@@ -254,7 +243,22 @@ struct DocumentDetailView: View {
             .help(isReadMode ? "Switch to Edit Mode" : "Switch to Read Mode")
         }
 
-        // Inspector toggle (rightmost)
+        // Right: Split View
+        ToolbarItem(placement: .primaryAction) {
+            splitViewToolbarMenu
+        }
+
+        // Right: Find & Replace
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                detailViewModel.showFindBar = true
+            } label: {
+                Label("Find", systemImage: "magnifyingglass")
+            }
+            .help("Find (⌘F)")
+        }
+
+        // Right: Inspector toggle (rightmost)
         ToolbarItem(placement: .primaryAction) {
             Button {
                 detailViewModel.isInspectorPresented.toggle()
@@ -302,97 +306,69 @@ struct DocumentDetailView: View {
 
     @ViewBuilder
     private var splitViewToolbarMenu: some View {
-        if splitEditorState.isEnabled {
-            Menu {
+        Menu {
+            #if os(macOS)
+            // Horizontal split option
+            Button {
+                splitEditorState.orientation = .horizontal
+                splitEditorState.isEnabled = true
+            } label: {
+                HStack {
+                    Label("Split Horizontal", systemImage: "rectangle.split.2x1")
+                    if splitEditorState.isEnabled && splitEditorState.orientation == .horizontal {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+
+            // Vertical split option
+            Button {
+                splitEditorState.orientation = .vertical
+                splitEditorState.isEnabled = true
+            } label: {
+                HStack {
+                    Label("Split Vertical", systemImage: "rectangle.split.1x2")
+                    if splitEditorState.isEnabled && splitEditorState.orientation == .vertical {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+            #else
+            // iOS: Only vertical split
+            Button {
+                splitEditorState.orientation = .vertical
+                splitEditorState.isEnabled = true
+            } label: {
+                HStack {
+                    Label("Split View", systemImage: "rectangle.split.1x2")
+                    if splitEditorState.isEnabled {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+            #endif
+
+            // Close split view (only when active)
+            if splitEditorState.isEnabled {
+                Divider()
+
                 Button {
                     splitEditorState.isEnabled = false
                     splitEditorState.secondaryDocumentId = nil
                 } label: {
                     Label("Close Split View", systemImage: "rectangle")
                 }
-
-                #if os(macOS)
-                Divider()
-
-                ForEach(SplitEditorState.SplitOrientation.allCases, id: \.self) { orientation in
-                    Button {
-                        splitEditorState.orientation = orientation
-                    } label: {
-                        HStack {
-                            Label(orientation.displayName, systemImage: orientation.systemImage)
-                            if splitEditorState.orientation == orientation {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
-                #endif
-
-                Divider()
-
-                Menu {
-                    ForEach(availableDocumentsForSplit, id: \.id) { doc in
-                        Button {
-                            splitEditorState.secondaryDocumentId = doc.id
-                        } label: {
-                            HStack {
-                                Text(doc.title.isEmpty ? "Untitled" : doc.title)
-                                if splitEditorState.secondaryDocumentId == doc.id {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    Label("Change Document", systemImage: "doc.on.doc")
-                }
-            } label: {
-                #if os(iOS)
-                Label("Split View", systemImage: "rectangle.split.1x2.fill")
-                #else
-                Label("Split View", systemImage: "rectangle.split.2x1.fill")
-                #endif
             }
-        } else {
-            Menu {
-                ForEach(availableDocumentsForSplit, id: \.id) { doc in
-                    Button {
-                        openInSplitView(doc)
-                    } label: {
-                        Text(doc.title.isEmpty ? "Untitled" : doc.title)
-                    }
-                }
-
-                if availableDocumentsForSplit.isEmpty {
-                    Text("No other documents available")
-                        .foregroundStyle(.secondary)
-                }
-            } label: {
-                #if os(iOS)
-                Label("Split View", systemImage: "rectangle.split.1x2")
-                #else
-                Label("Split View", systemImage: "rectangle.split.2x1")
-                #endif
-            }
-            .disabled(availableDocumentsForSplit.isEmpty)
+        } label: {
+            #if os(iOS)
+            Label("Split View", systemImage: splitEditorState.isEnabled ? "rectangle.split.1x2.fill" : "rectangle.split.1x2")
+            #else
+            Label("Split View", systemImage: splitEditorState.isEnabled ? "rectangle.split.2x1.fill" : "rectangle.split.2x1")
+            #endif
         }
     }
 
 
-    /// Documents available for split view (excludes current document)
-    private var availableDocumentsForSplit: [ManuscriptDocument.Document] {
-        viewModel.getAllDocuments().filter { $0.id != document.id }
-    }
-
-    /// Opens the specified document in split view
-    private func openInSplitView(_ targetDocument: ManuscriptDocument.Document) {
-        splitEditorState.secondaryDocumentId = targetDocument.id
-        splitEditorState.isEnabled = true
-        #if os(iOS)
-        // iOS always uses vertical split
-        splitEditorState.orientation = .vertical
-        #endif
-    }
 
     // Maximum width for comfortable prose reading (similar to A4 page)
     private let maxProseWidth: CGFloat = 700

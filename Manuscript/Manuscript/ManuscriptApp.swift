@@ -108,6 +108,29 @@ struct CompositionModeMenuCommands: View {
         .disabled(compositionModeBinding == nil)
     }
 }
+
+/// Menu commands for Export functionality in the File menu
+struct ExportMenuCommands: View {
+    @FocusedValue(\.exportSheetBinding) var exportSheetBinding
+
+    var body: some View {
+        Button("Export…") {
+            exportSheetBinding?.wrappedValue = true
+        }
+        .keyboardShortcut("e", modifiers: [.command, .shift])
+        .disabled(exportSheetBinding == nil)
+    }
+}
+
+/// Menu commands for Formatting Toolbar toggle in View menu
+struct FormattingToolbarMenuCommands: View {
+    @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
+
+    var body: some View {
+        Toggle("Show Formatting Toolbar", isOn: $showFormattingToolbar)
+            .keyboardShortcut("t", modifiers: [.command, .option])
+    }
+}
 #endif
 
 // MARK: - iOS Launch Scene Components
@@ -948,9 +971,16 @@ struct ManuscriptApp: App {
                 FindMenuCommands()
             }
 
-            // View menu commands - Composition Mode
+            // View menu commands - Composition Mode, Formatting Toolbar
             CommandGroup(after: .toolbar) {
                 CompositionModeMenuCommands()
+                Divider()
+                FormattingToolbarMenuCommands()
+            }
+
+            // File menu commands - Export
+            CommandGroup(after: .importExport) {
+                ExportMenuCommands()
             }
         }
         #endif

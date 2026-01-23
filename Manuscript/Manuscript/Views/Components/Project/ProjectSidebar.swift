@@ -227,71 +227,15 @@ struct ProjectSidebar: View {
         // On macOS with NavigationSplitView, use selection binding for sidebar selection
         sidebarList(content: listContent, selection: typedSelection)
         .toolbar {
-            #if os(macOS)
-            ToolbarItem(placement: .navigation) {
-                Menu {
-                    Button(action: { isAddFolderSheetPresented.toggle() }) {
-                        Label("Add Folder", systemImage: "folder.badge.plus")
-                    }
-
-                    Button(action: { addDocumentToSelectedFolder() }) {
-                        Label("Add Document", systemImage: "doc.badge.plus")
-                    }
-
-                    Divider()
-
-                    Button(action: { isAddCharacterSheetPresented.toggle() }) {
-                        Label("Add Character", systemImage: "person.badge.plus")
-                    }
-
-                    Button(action: { isAddLocationSheetPresented.toggle() }) {
-                        Label("Add Location", systemImage: "mappin.and.ellipse")
-                    }
-
-                    Divider()
-
-                    Button(action: { detailSelection = .projectInfo }) {
-                        Label("Project Info", systemImage: "info.circle")
-                    }
-                } label: {
-                    Label("Add", systemImage: "plus")
-                }
-            }
-            #else
+            #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) {
                 EditButton()
             }
 
-            ToolbarItem(placement: .bottomBar) {
+            // iOS: Quick actions in bottom bar
+            ToolbarItemGroup(placement: .bottomBar) {
                 Spacer()
-            }
-
-            ToolbarItem(placement: .bottomBar) {
-                Button {
-                    showReadingMode = true
-                } label: {
-                    Label("Read", systemImage: "book")
-                }
-            }
-
-            ToolbarItem(placement: .bottomBar) {
-                Button {
-                    showCompileSheet = true
-                } label: {
-                    Label("Export", systemImage: "square.and.arrow.up")
-                }
-            }
-
-            ToolbarItem(placement: .bottomBar) {
-                Button {
-                    openCompositionMode()
-                } label: {
-                    Label("Compose", systemImage: "rectangle.expand.vertical")
-                }
-                .disabled(mostRecentDocument == nil)
-            }
-
-            ToolbarItem(placement: .bottomBar) {
+                quickActionButtons
                 Spacer()
             }
 
@@ -344,6 +288,9 @@ struct ProjectSidebar: View {
         .sheet(isPresented: $showCompileSheet) {
             CompileSheet(document: viewModel.document)
         }
+        #if os(macOS)
+        .focusedValue(\.exportSheetBinding, $showCompileSheet)
+        #endif
         #if os(iOS)
         .fullScreenCover(item: $compositionDocument) { doc in
             CompositionModeView(
@@ -367,10 +314,40 @@ struct ProjectSidebar: View {
         return viewModel.getAllDocuments().first
     }
 
+    /// Shared quick action buttons for both iOS bottomBar and macOS toolbar
+    @ViewBuilder
+    private var quickActionButtons: some View {
+        Button {
+            openCompositionMode()
+        } label: {
+            Label("Compose", systemImage: "rectangle.expand.vertical")
+        }
+        .disabled(mostRecentDocument == nil)
+
+        Button {
+            showReadingMode = true
+        } label: {
+            Label("Read", systemImage: "book")
+        }
+
+        Button {
+            showCompileSheet = true
+        } label: {
+            Label("Export", systemImage: "square.and.arrow.up")
+        }
+    }
+
     /// Opens composition mode with the most recent document
     private func openCompositionMode() {
         guard let doc = mostRecentDocument else { return }
+        #if os(iOS)
         compositionDocument = doc
+        #else
+        let detailVM = DocumentDetailViewModel(document: doc, documentViewModel: viewModel)
+        CompositionModeWindowController.shared.show(viewModel: detailVM) {
+            // onDismiss callback - nothing needed here
+        }
+        #endif
     }
 
     /// Creates a new untitled document in the currently selected folder, or root folder if none selected
@@ -401,6 +378,37 @@ struct ProjectSidebar: View {
         }
         .listStyle(.sidebar)
         .navigationTitle(viewModel.documentTitle.isEmpty ? "Untitled" : viewModel.documentTitle)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button(action: { isAddFolderSheetPresented.toggle() }) {
+                        Label("Add Folder", systemImage: "folder.badge.plus")
+                    }
+
+                    Button(action: { addDocumentToSelectedFolder() }) {
+                        Label("Add Document", systemImage: "doc.badge.plus")
+                    }
+
+                    Divider()
+
+                    Button(action: { isAddCharacterSheetPresented.toggle() }) {
+                        Label("Add Character", systemImage: "person.badge.plus")
+                    }
+
+                    Button(action: { isAddLocationSheetPresented.toggle() }) {
+                        Label("Add Location", systemImage: "mappin.and.ellipse")
+                    }
+
+                    Divider()
+
+                    Button(action: { detailSelection = .projectInfo }) {
+                        Label("Project Info", systemImage: "info.circle")
+                    }
+                } label: {
+                    Label("Add", systemImage: "plus")
+                }
+            }
+        }
         #endif
     }
 }
