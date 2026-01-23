@@ -170,36 +170,30 @@
 
         .section-title {
             font-size: clamp(1.6rem, 4vw, 2rem);
-            margin-bottom: 1rem;
-        }
-
-        .section-intro {
-            color: var(--ink-light);
-            max-width: 600px;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
         }
 
         /* Key points grid */
         .points-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem 3rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
         }
 
         .point-icon {
-            width: 32px;
-            height: 32px;
-            margin-bottom: 1rem;
+            width: 28px;
+            height: 28px;
+            margin-bottom: 0.75rem;
             color: var(--accent);
         }
 
         .point h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+            margin-bottom: 0.4rem;
         }
 
         .point p {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--ink-muted);
         }
 
@@ -256,36 +250,6 @@
         }
 
         .comparison-table .no {
-            color: var(--ink-muted);
-        }
-
-        /* AI section */
-        .ai-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-        }
-
-        .ai-card {
-            padding: 1.5rem;
-            background: var(--paper-dark);
-            border-left: 3px solid var(--accent);
-        }
-
-        .ai-card-icon {
-            width: 24px;
-            height: 24px;
-            margin-bottom: 0.75rem;
-            color: var(--accent);
-        }
-
-        .ai-card h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .ai-card p {
-            font-size: 0.9rem;
             color: var(--ink-muted);
         }
 
@@ -364,7 +328,6 @@
 
             .points-grid,
             .features-list,
-            .ai-grid,
             .file-format-grid {
                 grid-template-columns: 1fr;
             }
@@ -388,7 +351,6 @@
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
                 <li><a href="#compare">Compare</a></li>
-                <li><a href="#roadmap">Roadmap</a></li>
                 <li><a href="https://github.com/manuscriptapp/manuscript">GitHub</a></li>
             </ul>
         </nav>
@@ -397,8 +359,8 @@
     <main>
         <section class="hero">
             <div class="container">
-                <h1>An open-source writing app for people who care about their files</h1>
-                <p class="hero-text">Manuscript is a native iOS and macOS app for long-form writing. It's free, the source code is available under MPL-2.0, and your work stays in standard Markdown files you control.</p>
+                <h1>Open-source writing app for long-form projects</h1>
+                <p class="hero-text">Free, native iOS and macOS app. Your work stays in Markdown files you control. iCloud sync included. No subscription.</p>
                 <a href="https://github.com/manuscriptapp/manuscript" class="hero-cta">
                     <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                     View on GitHub
@@ -408,75 +370,29 @@
 
         <section>
             <div class="container">
-                <div class="section-label">Requirements</div>
-                <h2 class="section-title">What you need</h2>
-                <div class="points-grid">
-                    <div class="point">
-                        <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/>
-                        </svg>
-                        <h3>iOS 26.0 or later</h3>
-                        <p>Compatible with iPhone and iPad running the latest iOS.</p>
-                    </div>
-                    <div class="point">
-                        <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/>
-                        </svg>
-                        <h3>macOS 15.0 (Sequoia) or later</h3>
-                        <p>Native Mac app built with SwiftUI for modern macOS.</p>
-                    </div>
-                    <div class="point">
-                        <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
-                        </svg>
-                        <h3>Xcode 16.0+ (to build from source)</h3>
-                        <p>Required if you want to build and customize the app yourself.</p>
-                    </div>
-                    <div class="point">
-                        <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <h3>No account required</h3>
-                        <p>Download and use immediately. iCloud sync works with your existing Apple ID.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section>
-            <div class="container">
                 <div class="section-label">Why Manuscript</div>
-                <h2 class="section-title">Built for writers who value ownership</h2>
-                <p class="section-intro">Scrivener and Ulysses are good tools, but they're closed-source and cost money. Manuscript gives you similar capabilities without the license fees or vendor lock-in.</p>
-
+                <h2 class="section-title">Own your writing</h2>
                 <div class="points-grid">
                     <div class="point">
                         <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
                         </svg>
                         <h3>Open source</h3>
-                        <p>The entire codebase is public under MPL-2.0. Read it, modify it, contribute to it. No black boxes.</p>
-                    </div>
-                    <div class="point">
-                        <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/>
-                        </svg>
-                        <h3>Free forever</h3>
-                        <p>No purchase price, no subscription. The app is free and will stay that way.</p>
+                        <p>Full source code under MPL-2.0. No black boxes.</p>
                     </div>
                     <div class="point">
                         <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/>
                         </svg>
-                        <h3>Your files, your way</h3>
-                        <p>Projects are folders of Markdown files. Open them in any text editor, version them with Git, back them up however you want.</p>
+                        <h3>Plain Markdown</h3>
+                        <p>Projects are folders you can open anywhere.</p>
                     </div>
                     <div class="point">
                         <svg class="point-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z"/>
                         </svg>
-                        <h3>iCloud sync included</h3>
-                        <p>CloudKit keeps your projects in sync across Mac, iPhone, and iPad. No account to create, no extra cost.</p>
+                        <h3>Free iCloud sync</h3>
+                        <p>Works across Mac, iPhone, iPad. No extra cost.</p>
                     </div>
                 </div>
             </div>
@@ -484,54 +400,33 @@
 
         <section id="features">
             <div class="container">
-                <div class="section-label">Capabilities</div>
-                <h2 class="section-title">What you can do with it</h2>
-                <p class="section-intro">Manuscript handles the core workflows that matter for long-form writing: organizing, drafting, revising, and exporting.</p>
+                <div class="section-label">Features</div>
+                <h2 class="section-title">Built for long-form writing</h2>
 
                 <div class="features-list">
                     <div class="feature-item">
                         <strong>Project binder</strong>
-                        <span>Organize chapters, scenes, notes, and research in a drag-and-drop sidebar</span>
-                    </div>
-                    <div class="feature-item">
-                        <strong>Rich text editing</strong>
-                        <span>Bold, italic, underline, fonts, sizes, colors, and highlighting</span>
+                        <span>Organize chapters, scenes, and research in a sidebar</span>
                     </div>
                     <div class="feature-item">
                         <strong>Snapshots</strong>
-                        <span>Manual and automatic version history—restore any previous version</span>
+                        <span>Version history with one-click restore</span>
                     </div>
                     <div class="feature-item">
                         <strong>Split editor</strong>
-                        <span>View two documents side by side on macOS</span>
+                        <span>View two documents side by side</span>
                     </div>
                     <div class="feature-item">
                         <strong>Writing targets</strong>
-                        <span>Set word count goals for your draft and daily sessions</span>
+                        <span>Word count goals for drafts and sessions</span>
                     </div>
                     <div class="feature-item">
-                        <strong>Export</strong>
-                        <span>PDF and Markdown export with more formats coming</span>
+                        <strong>On-device AI</strong>
+                        <span>Apple Intelligence or your own API keys</span>
                     </div>
                     <div class="feature-item">
-                        <strong>Import from Scrivener</strong>
-                        <span>Full .scriv import with RTF conversion and comments</span>
-                    </div>
-                    <div class="feature-item">
-                        <strong>Comments system</strong>
-                        <span>Inline comments linked to text with chat bubble UI</span>
-                    </div>
-                    <div class="feature-item">
-                        <strong>Find & replace</strong>
-                        <span>Search, highlight matches, navigate, and replace</span>
-                    </div>
-                    <div class="feature-item">
-                        <strong>Characters & Locations</strong>
-                        <span>World-building with character and location tracking</span>
-                    </div>
-                    <div class="feature-item">
-                        <strong>Read mode</strong>
-                        <span>Distraction-free reading with prose typography</span>
+                        <strong>Scrivener import</strong>
+                        <span>Full .scriv import with comments</span>
                     </div>
                 </div>
             </div>
@@ -539,9 +434,8 @@
 
         <section id="compare">
             <div class="container">
-                <div class="section-label">Comparison</div>
+                <div class="section-label">Compare</div>
                 <h2 class="section-title">How it stacks up</h2>
-                <p class="section-intro">A straightforward look at Manuscript alongside the two apps it's designed to replace.</p>
 
                 <table class="comparison-table">
                     <thead>
@@ -561,7 +455,7 @@
                         </tr>
                         <tr>
                             <td>Source code</td>
-                            <td class="yes">Open (MPL-2.0)</td>
+                            <td class="yes">Open</td>
                             <td class="no">Closed</td>
                             <td class="no">Closed</td>
                         </tr>
@@ -573,43 +467,12 @@
                         </tr>
                         <tr>
                             <td>Cloud sync</td>
-                            <td class="yes">Free (CloudKit)</td>
-                            <td class="no">Manual (Dropbox)</td>
-                            <td class="no">Requires subscription</td>
-                        </tr>
-                        <tr>
-                            <td>On-device AI</td>
-                            <td class="yes">Yes</td>
-                            <td class="no">No</td>
-                            <td class="no">Paid add-on</td>
+                            <td class="yes">Free</td>
+                            <td class="no">Manual</td>
+                            <td class="no">Paid</td>
                         </tr>
                     </tbody>
                 </table>
-            </div>
-        </section>
-
-        <section id="ai">
-            <div class="container">
-                <div class="section-label">AI assistance</div>
-                <h2 class="section-title">Optional, private, flexible</h2>
-                <p class="section-intro">AI features are there if you want them. They're not required, and you control how they work.</p>
-
-                <div class="ai-grid">
-                    <div class="ai-card">
-                        <svg class="ai-card-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/>
-                        </svg>
-                        <h3>Apple Foundation Models</h3>
-                        <p>On-device AI through Apple Intelligence. Your text never leaves your Mac or iPhone. No API costs.</p>
-                    </div>
-                    <div class="ai-card">
-                        <svg class="ai-card-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/>
-                        </svg>
-                        <h3>Bring your own keys</h3>
-                        <p>Connect to OpenAI, Anthropic, or other providers using your own API keys. Configure per-project.</p>
-                    </div>
-                </div>
             </div>
         </section>
 
@@ -620,53 +483,16 @@
 
                 <div class="file-format-grid">
                     <div class="file-format-text">
-                        <p>A Manuscript project is just a folder. Inside are Markdown files for your writing and JSON files for metadata. Nothing proprietary.</p>
-                        <p>You can open any document in another editor, commit the whole project to Git, or write scripts to process your files. The format is documented and won't change in breaking ways.</p>
-                        <p><strong>Snapshots</strong> store version history per document—each snapshot saves metadata (title, date, word count) plus the full content, so you can restore any previous version.</p>
+                        <p>A project is just a folder with Markdown files and JSON metadata. Open it in any editor, commit to Git, write scripts against it.</p>
                     </div>
                     <div class="code-block">MyNovel.manuscript/
 ├── project.json
-├── state.json
 ├── contents/
 │   ├── draft/
-│   │   ├── folder.json
 │   │   ├── 01-chapter-one.md
-│   │   ├── 01-chapter-one.notes.md
-│   │   └── 01-chapter-one.comments.json
-│   ├── notes/
-│   └── research/
-├── snapshots/
-│   └── {document-id}/
-│       ├── {snapshot-id}.json
-│       └── {snapshot-id}.content
-└── assets/</div>
-                </div>
-            </div>
-        </section>
-
-        <section id="roadmap">
-            <div class="container">
-                <div class="section-label">Roadmap</div>
-                <h2 class="section-title">What's next</h2>
-                <p class="section-intro">Manuscript is actively developed. Here's what's being worked on and what's planned for the future.</p>
-
-                <div class="features-list">
-                    <div class="feature-item">
-                        <strong>Phase 1–6: Complete ✓</strong>
-                        <span>Core editor • Project binder • Rich text • Drag & drop • Characters & Locations • Scrivener import • AI assistance • Comments • Find & replace</span>
-                    </div>
-                    <div class="feature-item">
-                        <strong>Phase 7: Advanced (Current)</strong>
-                        <span>Snapshots ✓ • Split editor ✓ • Writing targets ✓ • Corkboard ✓ • iCloud sync ✓</span>
-                    </div>
-                    <div class="feature-item">
-                        <strong>Coming Soon</strong>
-                        <span>Composition mode • Outliner view • Snapshot diff/comparison</span>
-                    </div>
-                    <div class="feature-item">
-                        <strong>Future</strong>
-                        <span>DOCX, EPUB, HTML export • Document links • Keywords/tags • Collections</span>
-                    </div>
+│   │   └── 02-chapter-two.md
+│   └── notes/
+└── snapshots/</div>
                 </div>
             </div>
         </section>
@@ -674,7 +500,7 @@
         <section class="cta-section">
             <div class="container">
                 <h2 class="section-title">Get involved</h2>
-                <p>Manuscript is early-stage and actively developed. Star the repo, open an issue, or submit a pull request.</p>
+                <p>Star the repo, open an issue, or submit a PR.</p>
                 <a href="https://github.com/manuscriptapp/manuscript" class="hero-cta">
                     <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                     GitHub Repository
@@ -690,7 +516,6 @@
                 <ul class="footer-links">
                     <li><a href="https://github.com/manuscriptapp/manuscript">Source</a></li>
                     <li><a href="https://github.com/manuscriptapp/manuscript/issues">Issues</a></li>
-                    <li><a href="https://github.com/manuscriptapp/manuscript/discussions">Discussions</a></li>
                 </ul>
             </div>
         </div>
