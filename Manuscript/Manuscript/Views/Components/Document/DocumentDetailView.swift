@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import RichTextKit
 
 struct DocumentDetailView: View {
     @StateObject private var detailViewModel: DocumentDetailViewModel
@@ -16,11 +17,21 @@ struct DocumentDetailView: View {
     let fileURL: URL?
     @Binding var splitEditorState: SplitEditorState
 
-    init(document: ManuscriptDocument.Document, viewModel: DocumentViewModel, fileURL: URL? = nil, splitEditorState: Binding<SplitEditorState>? = nil) {
+    /// External RichTextContext for split view unified toolbar
+    var externalRichTextContext: RichTextContext?
+    /// Callback when this editor gains focus (for split view)
+    var onFocusChange: ((Bool) -> Void)?
+    /// Whether to hide the toolbar (when using external context in split view)
+    var hideToolbar: Bool = false
+
+    init(document: ManuscriptDocument.Document, viewModel: DocumentViewModel, fileURL: URL? = nil, splitEditorState: Binding<SplitEditorState>? = nil, externalRichTextContext: RichTextContext? = nil, onFocusChange: ((Bool) -> Void)? = nil, hideToolbar: Bool = false) {
         self.document = document
         self.viewModel = viewModel
         self.fileURL = fileURL
         self._splitEditorState = splitEditorState ?? .constant(SplitEditorState())
+        self.externalRichTextContext = externalRichTextContext
+        self.onFocusChange = onFocusChange
+        self.hideToolbar = hideToolbar
         self._detailViewModel = StateObject(wrappedValue: DocumentDetailViewModel(document: document, documentViewModel: viewModel))
     }
 
@@ -91,7 +102,12 @@ struct DocumentDetailView: View {
         if isReadMode {
             readModeView
         } else {
-            WriteTab(viewModel: detailViewModel)
+            WriteTab(
+                viewModel: detailViewModel,
+                externalRichTextContext: externalRichTextContext,
+                onFocusChange: onFocusChange,
+                hideToolbar: hideToolbar
+            )
         }
     }
 

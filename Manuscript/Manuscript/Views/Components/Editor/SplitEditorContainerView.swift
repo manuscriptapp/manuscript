@@ -1,4 +1,5 @@
 import SwiftUI
+import RichTextKit
 
 /// Container view that displays one or two document editors based on split state
 struct SplitEditorContainerView: View {
@@ -7,12 +8,31 @@ struct SplitEditorContainerView: View {
     let fileURL: URL?
     @Binding var splitEditorState: SplitEditorState
 
+    /// RichTextContext for the primary (left/top) pane in split view
+    @StateObject private var primaryRichTextContext = RichTextContext()
+    /// RichTextContext for the secondary (right/bottom) pane in split view
+    @StateObject private var secondaryRichTextContext = RichTextContext()
+
+    #if os(macOS)
+    @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
+    #endif
+
+    /// Returns the RichTextContext for the currently focused pane
+    private var activeContext: RichTextContext {
+        switch splitEditorState.focusedPane {
+        case .primary:
+            return primaryRichTextContext
+        case .secondary:
+            return secondaryRichTextContext
+        }
+    }
+
     var body: some View {
         if splitEditorState.isEnabled, let secondaryDocId = splitEditorState.secondaryDocumentId,
            let secondaryDocument = viewModel.findDocument(withId: secondaryDocId) {
             splitView(primary: primaryDocument, secondary: secondaryDocument)
         } else {
-            // Single document view
+            // Single document view - uses its own local context
             DocumentDetailView(document: primaryDocument, viewModel: viewModel, fileURL: fileURL, splitEditorState: $splitEditorState)
         }
     }
@@ -31,36 +51,45 @@ struct SplitEditorContainerView: View {
     #if os(macOS)
     @ViewBuilder
     private func macOSSplitView(primary: ManuscriptDocument.Document, secondary: ManuscriptDocument.Document) -> some View {
-        GeometryReader { geometry in
-            if splitEditorState.orientation == .horizontal {
-                // Side by side
-                HStack(spacing: 0) {
-                    splitPaneWithLabel(document: primary, isPrimary: true)
-                        .frame(width: geometry.size.width * splitEditorState.splitRatio)
+        VStack(spacing: 0) {
+            // Unified formatting toolbar at the top
+            if showFormattingToolbar {
+                FormattingToolbar(context: activeContext)
+                Divider()
+            }
 
-                    MacOSSplitDivider(
-                        isVertical: true,
-                        splitRatio: $splitEditorState.splitRatio,
-                        totalSize: geometry.size.width
-                    )
+            // Split editor panes
+            GeometryReader { geometry in
+                if splitEditorState.orientation == .horizontal {
+                    // Side by side
+                    HStack(spacing: 0) {
+                        splitPaneWithLabel(document: primary, isPrimary: true)
+                            .frame(width: geometry.size.width * splitEditorState.splitRatio)
 
-                    splitPaneWithLabel(document: secondary, isPrimary: false)
-                        .frame(maxWidth: .infinity)
-                }
-            } else {
-                // Top and bottom
-                VStack(spacing: 0) {
-                    splitPaneWithLabel(document: primary, isPrimary: true)
-                        .frame(height: geometry.size.height * splitEditorState.splitRatio)
+                        MacOSSplitDivider(
+                            isVertical: true,
+                            splitRatio: $splitEditorState.splitRatio,
+                            totalSize: geometry.size.width
+                        )
 
-                    MacOSSplitDivider(
-                        isVertical: false,
-                        splitRatio: $splitEditorState.splitRatio,
-                        totalSize: geometry.size.height
-                    )
+                        splitPaneWithLabel(document: secondary, isPrimary: false)
+                            .frame(maxWidth: .infinity)
+                    }
+                } else {
+                    // Top and bottom
+                    VStack(spacing: 0) {
+                        splitPaneWithLabel(document: primary, isPrimary: true)
+                            .frame(height: geometry.size.height * splitEditorState.splitRatio)
 
-                    splitPaneWithLabel(document: secondary, isPrimary: false)
-                        .frame(maxHeight: .infinity)
+                        MacOSSplitDivider(
+                            isVertical: false,
+                            splitRatio: $splitEditorState.splitRatio,
+                            totalSize: geometry.size.height
+                        )
+
+                        splitPaneWithLabel(document: secondary, isPrimary: false)
+                            .frame(maxHeight: .infinity)
+                    }
                 }
             }
         }
@@ -69,22 +98,49 @@ struct SplitEditorContainerView: View {
     /// Wraps a document view with a small title label
     @ViewBuilder
     private func splitPaneWithLabel(document: ManuscriptDocument.Document, isPrimary: Bool) -> some View {
-        VStack(spacing: 0) {
-            // Small document name header
-            HStack(spacing: 4) {
-                Image(systemName: "doc.text")
-                    .font(.system(size: 9))
-                Text(document.title.isEmpty ? "Untitled" : document.title)
-                    .font(.system(size: 11))
-                    .lineLimit(1)
-                Spacer()
-            }
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.8))
+        let context = isPrimary ? primaryRichTextContext : secondaryRichTextContext
+        let isActive = isPrimary ? (splitEditorState.focusedPane == .primary) : (splitEditorState.focusedPane == .secondary)
 
-            DocumentDetailView(document: document, viewModel: viewModel, fileURL: fileURL, splitEditorState: $splitEditorState)
+        VStack(spacing: 0) {
+            // Clickable document name header - click to make this pane active
+            Button {
+                splitEditorState.focusedPane = isPrimary ? .primary : .secondary
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "doc.text")
+                        .font(.system(size: 9))
+                    Text(document.title.isEmpty ? "Untitled" : document.title)
+                        .font(.system(size: 11, weight: isActive ? .medium : .regular))
+                        .lineLimit(1)
+                    Spacer()
+                    // Active indicator
+                    if isActive {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .frame(width: 6, height: 6)
+                    }
+                }
+                .foregroundStyle(isActive ? Color.white : Color.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(isActive ? Color.accentColor.opacity(0.3) : Color(nsColor: .windowBackgroundColor).opacity(0.8))
+            }
+            .buttonStyle(.plain)
+
+            DocumentDetailView(
+                document: document,
+                viewModel: viewModel,
+                fileURL: fileURL,
+                splitEditorState: $splitEditorState,
+                externalRichTextContext: context,
+                onFocusChange: { focused in
+                    if focused {
+                        splitEditorState.focusedPane = isPrimary ? .primary : .secondary
+                    }
+                },
+                hideToolbar: true
+            )
+            .id(document.id) // Force view recreation when document changes
         }
     }
 

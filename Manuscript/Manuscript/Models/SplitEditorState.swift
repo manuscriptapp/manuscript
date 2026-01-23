@@ -15,6 +15,15 @@ struct SplitEditorState: Codable, Equatable {
     /// Ratio of the split (0.0 to 1.0, representing the primary pane's portion)
     var splitRatio: CGFloat = 0.5
 
+    /// Which pane currently has focus (for unified toolbar)
+    var focusedPane: FocusedPane = .primary
+
+    /// Identifies which split pane has focus
+    enum FocusedPane: String, Codable {
+        case primary
+        case secondary
+    }
+
     /// Orientation options for split view
     enum SplitOrientation: String, Codable, CaseIterable {
         case horizontal  // Side by side (macOS default)

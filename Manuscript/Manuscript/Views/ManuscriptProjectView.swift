@@ -79,6 +79,28 @@ struct ManuscriptProjectView: View {
     @State private var hasRestoredState = false
     @State private var splitEditorState = SplitEditorState()
 
+    /// A binding that routes document selections to the active split pane
+    /// When split view is enabled and secondary pane is active, document selections
+    /// update the secondary document instead of changing the primary selection
+    private var smartSelectionBinding: Binding<DetailSelection?> {
+        Binding(
+            get: { detailSelection },
+            set: { newSelection in
+                // Check if we should route to secondary pane
+                if splitEditorState.isEnabled,
+                   splitEditorState.focusedPane == .secondary,
+                   case .document(let doc) = newSelection {
+                    // Update secondary document instead of primary
+                    splitEditorState.secondaryDocumentId = doc.id
+                    // Don't change the primary selection
+                    return
+                }
+                // Normal behavior - update primary selection
+                detailSelection = newSelection
+            }
+        )
+    }
+
     var body: some View {
         mainContent
             .sheet(isPresented: $isAddDocumentSheetPresented) {
@@ -182,7 +204,7 @@ struct ManuscriptProjectView: View {
         NavigationStack {
             ProjectSidebar(
                 viewModel: viewModel,
-                detailSelection: $detailSelection,
+                detailSelection: smartSelectionBinding,
                 isAddDocumentSheetPresented: $isAddDocumentSheetPresented,
                 isAddFolderSheetPresented: $isAddFolderSheetPresented,
                 isAddCharacterSheetPresented: $isAddCharacterSheetPresented,
@@ -204,7 +226,7 @@ struct ManuscriptProjectView: View {
         NavigationSplitView {
             ProjectSidebar(
                 viewModel: viewModel,
-                detailSelection: $detailSelection,
+                detailSelection: smartSelectionBinding,
                 isAddDocumentSheetPresented: $isAddDocumentSheetPresented,
                 isAddFolderSheetPresented: $isAddFolderSheetPresented,
                 isAddCharacterSheetPresented: $isAddCharacterSheetPresented,

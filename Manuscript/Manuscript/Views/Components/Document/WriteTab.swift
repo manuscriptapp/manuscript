@@ -8,9 +8,22 @@ import AppKit
 
 struct WriteTab: View {
     @ObservedObject var viewModel: DocumentDetailViewModel
-    @StateObject private var richTextContext = RichTextContext()
+
+    /// External RichTextContext (for split view) - if nil, creates local context
+    var externalRichTextContext: RichTextContext?
+    /// Callback when this editor gains focus (for split view)
+    var onFocusChange: ((Bool) -> Void)?
+    /// Whether to hide the formatting toolbar (used in split view where container shows unified toolbar)
+    var hideToolbar: Bool = false
+
+    @StateObject private var localRichTextContext = RichTextContext()
     @StateObject private var findReplaceViewModel = FindReplaceViewModel()
     @State private var hasInitialized = false
+
+    /// Returns the active RichTextContext (external if provided, otherwise local)
+    private var richTextContext: RichTextContext {
+        externalRichTextContext ?? localRichTextContext
+    }
 
     #if os(macOS)
     @State private var textViewRef: NSTextView? = nil
@@ -40,7 +53,7 @@ struct WriteTab: View {
     var body: some View {
         VStack(spacing: 0) {
             #if os(macOS)
-            if showFormattingToolbar {
+            if showFormattingToolbar && !hideToolbar {
                 FormattingToolbar(context: richTextContext)
                 Divider()
             }
@@ -164,6 +177,8 @@ struct WriteTab: View {
         #endif
         .onChange(of: richTextContext.selectedRange) { _, newRange in
             updateTextSelection(range: newRange)
+            // Notify parent that this editor has focus (user interacted with it)
+            onFocusChange?(true)
         }
         .onChange(of: viewModel.tappedComment) { _, tappedComment in
             scrollToComment(tappedComment)
@@ -431,10 +446,12 @@ struct WriteTab: View {
         #if os(macOS)
         if let textView = textViewRef {
             textView.window?.makeFirstResponder(textView)
+            onFocusChange?(true)
         }
         #else
         if let textView = textViewRef {
             textView.becomeFirstResponder()
+            onFocusChange?(true)
         }
         #endif
     }
