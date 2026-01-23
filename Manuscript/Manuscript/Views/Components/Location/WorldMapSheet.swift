@@ -10,6 +10,7 @@ struct WorldMapSheet: View {
     @State private var showLocationsList: Bool = true
     @State private var showLookAround: Bool = false
     @State private var lookAroundScene: MKLookAroundScene?
+    @State private var sheetDetent: PresentationDetent = .fraction(0.25)
 
     private var locations: [ManuscriptLocation] {
         viewModel.locations
@@ -151,16 +152,22 @@ struct WorldMapSheet: View {
 
                     Spacer()
 
-                    // Look Around toggle - always visible, enabled when location selected with scene available
-                    Button {
-                        showLookAround.toggle()
-                    } label: {
-                        Image(systemName: showLookAround ? "map.fill" : "binoculars.fill")
-                            .font(.title)
-                            .foregroundStyle(.white, .black.opacity(0.5))
+                    // Look Around toggle - visible when location selected with scene available
+                    if selectedLocation != nil && lookAroundScene != nil {
+                        Button {
+                            showLookAround.toggle()
+                            sheetDetent = .fraction(0.25) // Minimize sheet to show more view
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(.black.opacity(0.5))
+                                    .frame(width: 34, height: 34)
+                                Image(systemName: showLookAround ? "map.fill" : "binoculars.fill")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                            }
+                        }
                     }
-                    .disabled(selectedLocation == nil || (lookAroundScene == nil && !showLookAround))
-                    .opacity(selectedLocation != nil && lookAroundScene != nil ? 1.0 : 0.4)
                 }
                 .padding()
                 .padding(.top, 44) // Safe area
@@ -179,7 +186,7 @@ struct WorldMapSheet: View {
                     }
                 )
             }
-            .presentationDetents([.medium, .large, .fraction(0.25)])
+            .presentationDetents([.medium, .large, .fraction(0.25)], selection: $sheetDetent)
             .presentationDragIndicator(.visible)
             .presentationBackgroundInteraction(.enabled)
             .interactiveDismissDisabled()
@@ -196,6 +203,10 @@ struct WorldMapSheet: View {
     private func selectLocation(_ location: ManuscriptLocation) {
         selectedLocation = location
         showLookAround = false // Reset to map view when selecting new location
+        // Only expand sheet to medium if it's at the smallest detent
+        if sheetDetent == .fraction(0.25) {
+            sheetDetent = .medium
+        }
         withAnimation(.easeInOut(duration: 0.5)) {
             mapCameraPosition = .region(MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
@@ -241,11 +252,23 @@ struct LocationsListSheet: View {
     let onLocationSelected: (ManuscriptLocation) -> Void
 
     var body: some View {
-        List(locations) { location in
-            HStack {
-                // Tap to zoom on map
-                Button {
-                    onLocationSelected(location)
+        VStack(spacing: 0) {
+            // Custom header
+            Text("Locations")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+
+            Divider()
+
+            List(locations) { location in
+                NavigationLink {
+                    LocationDetailView(viewModel: viewModel, location: location)
+                        .onAppear {
+                            // Select location when navigating to detail view
+                            onLocationSelected(location)
+                        }
                 } label: {
                     HStack {
                         Image(systemName: "mappin.circle.fill")
@@ -263,27 +286,24 @@ struct LocationsListSheet: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+
+                        Spacer()
+
+                        // Map selection button
+                        Button {
+                            onLocationSelected(location)
+                        } label: {
+                            Image(systemName: "location.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-                .buttonStyle(.plain)
-
-                Spacer()
-
-                // Detail button - pushes LocationDetailView
-                NavigationLink {
-                    LocationDetailView(viewModel: viewModel, location: location)
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundColor(.secondary)
-                        .font(.title3)
-                }
-                .buttonStyle(.plain)
             }
-            .contentShape(Rectangle())
+            .listStyle(.plain)
         }
-        .listStyle(.plain)
-        .navigationTitle("Locations")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
     }
 }
 
