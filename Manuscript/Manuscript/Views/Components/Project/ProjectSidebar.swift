@@ -26,6 +26,8 @@ struct ProjectSidebar: View {
     @State private var isCharactersExpanded: Bool = false
     @State private var isLocationsExpanded: Bool = false
     @State private var showCompileSheet: Bool = false
+    @State private var isCompositionModeActive: Bool = false
+    @State private var compositionDocument: ManuscriptDocument.Document?
 
     init(
         viewModel: DocumentViewModel,
@@ -281,6 +283,15 @@ struct ProjectSidebar: View {
             }
 
             ToolbarItem(placement: .bottomBar) {
+                Button {
+                    openCompositionMode()
+                } label: {
+                    Label("Compose", systemImage: "rectangle.expand.vertical")
+                }
+                .disabled(mostRecentDocument == nil)
+            }
+
+            ToolbarItem(placement: .bottomBar) {
                 Spacer()
             }
 
@@ -333,6 +344,33 @@ struct ProjectSidebar: View {
         .sheet(isPresented: $showCompileSheet) {
             CompileSheet(document: viewModel.document)
         }
+        #if os(iOS)
+        .fullScreenCover(item: $compositionDocument) { doc in
+            CompositionModeView(
+                viewModel: DocumentDetailViewModel(document: doc, documentViewModel: viewModel),
+                isPresented: Binding(
+                    get: { compositionDocument != nil },
+                    set: { if !$0 { compositionDocument = nil } }
+                )
+            )
+        }
+        #endif
+    }
+
+    /// The most recently opened document, or the first document in the project
+    private var mostRecentDocument: ManuscriptDocument.Document? {
+        // If a document is currently selected, use that
+        if case .document(let doc) = detailSelection {
+            return doc
+        }
+        // Otherwise, return the first document in the project
+        return viewModel.getAllDocuments().first
+    }
+
+    /// Opens composition mode with the most recent document
+    private func openCompositionMode() {
+        guard let doc = mostRecentDocument else { return }
+        compositionDocument = doc
     }
 
     /// Creates a new untitled document in the currently selected folder, or root folder if none selected

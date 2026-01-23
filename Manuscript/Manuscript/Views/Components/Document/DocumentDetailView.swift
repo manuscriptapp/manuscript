@@ -12,7 +12,6 @@ struct DocumentDetailView: View {
     @State private var isReadMode = false
     @State private var showSettings = false
     @State private var isCompositionModeActive = false
-    @State private var showCompileSheet = false
     #if os(macOS)
     @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
     @StateObject private var syncService = ICloudSyncService()
@@ -92,9 +91,6 @@ struct DocumentDetailView: View {
             .navigationTitle(detailViewModel.editedTitle)
             .toolbar { toolbarContent }
             .sheet(isPresented: $showSettings) { settingsSheet }
-            .sheet(isPresented: $showCompileSheet) {
-                CompileSheet(document: viewModel.document)
-            }
             #if os(iOS)
             .fullScreenCover(isPresented: $isCompositionModeActive) {
                 CompositionModeView(viewModel: detailViewModel, isPresented: $isCompositionModeActive)
@@ -227,11 +223,7 @@ struct DocumentDetailView: View {
             }
         }
 
-        ToolbarItem(placement: .primaryAction) {
-            moreMenu
-        }
-
-        // Find button (macOS)
+        // Find & Replace
         ToolbarItem(placement: .primaryAction) {
             Button {
                 detailViewModel.showFindBar = true
@@ -240,29 +232,39 @@ struct DocumentDetailView: View {
             }
             .help("Find (⌘F)")
         }
-        #else
-        ToolbarItem(placement: .secondaryAction) {
-            moreMenu
-        }
 
-        // Find button (iOS)
-        ToolbarItem(placement: .primaryAction) {
+        // Split View, Composition Mode, Read Mode
+        ToolbarItemGroup(placement: .primaryAction) {
+            splitViewToolbarMenu
+
             Button {
-                detailViewModel.showFindBar = true
+                withAnimation(.spring(duration: 0.4)) {
+                    isCompositionModeActive = true
+                }
             } label: {
-                Label("Find", systemImage: "magnifyingglass")
+                Label("Composition Mode", systemImage: "rectangle.expand.vertical")
             }
-        }
-        #endif
+            .help("Enter Composition Mode")
 
-        ToolbarItem(placement: .primaryAction) {
             Button {
                 isReadMode.toggle()
             } label: {
                 Label(isReadMode ? "Edit" : "Read", systemImage: isReadMode ? "pencil" : "book")
             }
+            .help(isReadMode ? "Switch to Edit Mode" : "Switch to Read Mode")
         }
 
+        // Inspector toggle (rightmost)
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                detailViewModel.isInspectorPresented.toggle()
+            } label: {
+                Label("Inspector", systemImage: "sidebar.right")
+            }
+            .help("Toggle Inspector")
+        }
+        #else
+        // iOS: Inspector as primary action
         ToolbarItem(placement: .primaryAction) {
             Button {
                 detailViewModel.isInspectorPresented.toggle()
@@ -270,11 +272,17 @@ struct DocumentDetailView: View {
                 Label("Inspector", systemImage: "sidebar.right")
             }
         }
-    }
 
-    private var moreMenu: some View {
-        Menu {
-            // Composition Mode
+        // iOS: Other actions as secondary
+        ToolbarItemGroup(placement: .secondaryAction) {
+            Button {
+                detailViewModel.showFindBar = true
+            } label: {
+                Label("Find", systemImage: "magnifyingglass")
+            }
+
+            splitViewToolbarMenu
+
             Button {
                 withAnimation(.spring(duration: 0.4)) {
                     isCompositionModeActive = true
@@ -283,82 +291,29 @@ struct DocumentDetailView: View {
                 Label("Composition Mode", systemImage: "rectangle.expand.vertical")
             }
 
-            Divider()
-
-            // Split View section
-            splitViewMenuSection
-
-            Divider()
-
             Button {
-                // TODO: Implement share functionality
+                isReadMode.toggle()
             } label: {
-                Label("Share", systemImage: "square.and.arrow.up")
+                Label(isReadMode ? "Edit" : "Read", systemImage: isReadMode ? "pencil" : "book")
             }
-
-            Button {
-                showCompileSheet = true
-            } label: {
-                Label("Export", systemImage: "arrow.up.doc")
-            }
-            .keyboardShortcut("e", modifiers: [.command, .shift])
-
-            Divider()
-
-            Button {
-                // TODO: Implement print functionality
-            } label: {
-                Label("Print", systemImage: "printer")
-            }
-
-            Button {
-                // TODO: Implement duplicate functionality
-            } label: {
-                Label("Duplicate", systemImage: "plus.square.on.square")
-            }
-
-            Divider()
-
-            Button {
-                detailViewModel.isInspectorPresented = true
-            } label: {
-                Label("Document Info", systemImage: "info.circle")
-            }
-
-            #if os(macOS)
-            Divider()
-
-            Toggle(isOn: $showFormattingToolbar) {
-                Label("Formatting Toolbar", systemImage: "textformat")
-            }
-            #endif
-
-            #if os(iOS)
-            Button {
-                showSettings = true
-            } label: {
-                Label("Settings", systemImage: "gear")
-            }
-            #endif
-        } label: {
-            Label("More", systemImage: "ellipsis.circle")
         }
+        #endif
     }
 
     @ViewBuilder
-    private var splitViewMenuSection: some View {
+    private var splitViewToolbarMenu: some View {
         if splitEditorState.isEnabled {
-            // Close split view option
-            Button {
-                splitEditorState.isEnabled = false
-                splitEditorState.secondaryDocumentId = nil
-            } label: {
-                Label("Close Split View", systemImage: "rectangle")
-            }
-
-            #if os(macOS)
-            // Orientation picker (macOS only)
             Menu {
+                Button {
+                    splitEditorState.isEnabled = false
+                    splitEditorState.secondaryDocumentId = nil
+                } label: {
+                    Label("Close Split View", systemImage: "rectangle")
+                }
+
+                #if os(macOS)
+                Divider()
+
                 ForEach(SplitEditorState.SplitOrientation.allCases, id: \.self) { orientation in
                     Button {
                         splitEditorState.orientation = orientation
@@ -371,30 +326,34 @@ struct DocumentDetailView: View {
                         }
                     }
                 }
-            } label: {
-                Label("Split Orientation", systemImage: splitEditorState.orientation.systemImage)
-            }
-            #endif
+                #endif
 
-            // Change secondary document
-            Menu {
-                ForEach(availableDocumentsForSplit, id: \.id) { doc in
-                    Button {
-                        splitEditorState.secondaryDocumentId = doc.id
-                    } label: {
-                        HStack {
-                            Text(doc.title.isEmpty ? "Untitled" : doc.title)
-                            if splitEditorState.secondaryDocumentId == doc.id {
-                                Image(systemName: "checkmark")
+                Divider()
+
+                Menu {
+                    ForEach(availableDocumentsForSplit, id: \.id) { doc in
+                        Button {
+                            splitEditorState.secondaryDocumentId = doc.id
+                        } label: {
+                            HStack {
+                                Text(doc.title.isEmpty ? "Untitled" : doc.title)
+                                if splitEditorState.secondaryDocumentId == doc.id {
+                                    Image(systemName: "checkmark")
+                                }
                             }
                         }
                     }
+                } label: {
+                    Label("Change Document", systemImage: "doc.on.doc")
                 }
             } label: {
-                Label("Change Split Document", systemImage: "doc.on.doc")
+                #if os(iOS)
+                Label("Split View", systemImage: "rectangle.split.1x2.fill")
+                #else
+                Label("Split View", systemImage: "rectangle.split.2x1.fill")
+                #endif
             }
         } else {
-            // Open in split view
             Menu {
                 ForEach(availableDocumentsForSplit, id: \.id) { doc in
                     Button {
@@ -410,14 +369,15 @@ struct DocumentDetailView: View {
                 }
             } label: {
                 #if os(iOS)
-                Label("Open in Split View", systemImage: "rectangle.split.1x2")
+                Label("Split View", systemImage: "rectangle.split.1x2")
                 #else
-                Label("Open in Split View", systemImage: "rectangle.split.2x1")
+                Label("Split View", systemImage: "rectangle.split.2x1")
                 #endif
             }
             .disabled(availableDocumentsForSplit.isEmpty)
         }
     }
+
 
     /// Documents available for split view (excludes current document)
     private var availableDocumentsForSplit: [ManuscriptDocument.Document] {
