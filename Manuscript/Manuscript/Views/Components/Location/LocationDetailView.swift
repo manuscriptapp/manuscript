@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ManuscriptLocationDetailView: View {
+struct LocationDetailView: View {
     @ObservedObject var viewModel: DocumentViewModel
     let location: ManuscriptLocation
     @State private var editedName: String
@@ -79,4 +79,3 @@ struct ManuscriptLocationDetailView: View {
     }
 }
 
-// Note: There's a separate LocationDetailView in Views/Book/ for SwiftData models
