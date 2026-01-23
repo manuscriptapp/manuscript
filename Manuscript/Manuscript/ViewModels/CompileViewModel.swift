@@ -109,6 +109,10 @@ class CompileViewModel: ObservableObject {
         switch format {
         case .pdf:
             settings.includeTitlePage = true
+        case .docx:
+            settings.includeTitlePage = true
+        case .epub:
+            settings.includeTitlePage = true
         case .markdown:
             settings.includeFrontMatter = true
             settings.includeTitlePage = false

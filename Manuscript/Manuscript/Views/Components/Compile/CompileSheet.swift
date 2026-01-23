@@ -40,12 +40,6 @@ struct CompileSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         Task {
@@ -301,6 +295,8 @@ struct CompileSheet: View {
     private func contentType(for format: ExportFormat) -> UTType {
         switch format {
         case .pdf: return .pdf
+        case .docx: return UTType(filenameExtension: "docx") ?? .data
+        case .epub: return UTType(filenameExtension: "epub") ?? .data
         case .markdown: return UTType(filenameExtension: "md") ?? .plainText
         case .plainText: return .plainText
         }

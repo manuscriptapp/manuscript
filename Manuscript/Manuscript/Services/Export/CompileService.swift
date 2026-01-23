@@ -97,6 +97,26 @@ class CompileService {
             )
             fileExtension = "pdf"
 
+        case .docx:
+            data = try await DocXExporter.shared.export(
+                documents: compilableDocuments,
+                title: title,
+                author: author,
+                settings: settings,
+                progress: progress
+            )
+            fileExtension = "docx"
+
+        case .epub:
+            data = try await EPUBExporter.shared.export(
+                documents: compilableDocuments,
+                title: title,
+                author: author,
+                settings: settings,
+                progress: progress
+            )
+            fileExtension = "epub"
+
         case .markdown:
             data = try await MarkdownExporter.shared.export(
                 documents: compilableDocuments,

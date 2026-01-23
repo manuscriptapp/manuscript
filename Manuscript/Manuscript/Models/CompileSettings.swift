@@ -4,6 +4,8 @@ import Foundation
 
 enum ExportFormat: String, Codable, CaseIterable, Identifiable {
     case pdf = "PDF"
+    case docx = "Word"
+    case epub = "EPUB"
     case markdown = "Markdown"
     case plainText = "Plain Text"
 
@@ -12,6 +14,8 @@ enum ExportFormat: String, Codable, CaseIterable, Identifiable {
     var fileExtension: String {
         switch self {
         case .pdf: return "pdf"
+        case .docx: return "docx"
+        case .epub: return "epub"
         case .markdown: return "md"
         case .plainText: return "txt"
         }
@@ -20,6 +24,8 @@ enum ExportFormat: String, Codable, CaseIterable, Identifiable {
     var systemImage: String {
         switch self {
         case .pdf: return "doc.richtext"
+        case .docx: return "doc.fill"
+        case .epub: return "book.fill"
         case .markdown: return "doc.text"
         case .plainText: return "doc.plaintext"
         }
