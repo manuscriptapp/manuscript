@@ -1,5 +1,17 @@
 import SwiftUI
 
+/// Icon that turns white when background prominence is increased (focused selection)
+private struct AdaptiveFolderIcon: View {
+    let systemName: String
+    let defaultColor: Color
+    @Environment(\.backgroundProminence) private var backgroundProminence
+
+    var body: some View {
+        Image(systemName: systemName)
+            .foregroundStyle(backgroundProminence == .increased ? .white : defaultColor)
+    }
+}
+
 struct FolderItemView: View {
     let folder: ManuscriptFolder
     @ObservedObject var viewModel: DocumentViewModel
@@ -73,15 +85,14 @@ struct FolderItemView: View {
             viewModel.updateFolderIconColor(folder, hexColor: hexColor?.isEmpty == true ? nil : hexColor)
         }
 
-        /// Returns the icon color for the folder
-        private func iconColorForFolder(_ folder: ManuscriptFolder) -> Color {
+        /// Returns the base icon color for the folder
+        private func baseIconColor(for folder: ManuscriptFolder) -> Color {
             // Use icon-specific color if available
             if let hexColor = folder.iconColor, let color = Color(hex: hexColor) {
-                return isFolderSelected(folder) ? color.darker(by: 0.3) : color
+                return color
             }
             // Fallback to dominant color or accent for root
-            let baseColor = dominantColor(for: folder)
-            return isFolderSelected(folder) ? baseColor.darker(by: 0.3) : baseColor
+            return dominantColor(for: folder)
         }
 
         private func colorForDocument(_ document: ManuscriptDocument.Document) -> Color {
@@ -165,8 +176,7 @@ struct FolderItemView: View {
                 Label {
                     Text(folder.title)
                 } icon: {
-                    Image(systemName: folder.iconName)
-                        .foregroundStyle(iconColorForFolder(folder))
+                    AdaptiveFolderIcon(systemName: folder.iconName, defaultColor: baseIconColor(for: folder))
                 }
                 .id("\(folderId)-\(folder.iconName)-\(folder.iconColor ?? "")")
                 .badge(folder.totalDocumentCount)

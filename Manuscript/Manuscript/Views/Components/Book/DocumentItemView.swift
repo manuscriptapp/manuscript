@@ -1,6 +1,18 @@
 import SwiftUI
 import SwiftData
 
+/// Icon that turns white when background prominence is increased (focused selection)
+private struct AdaptiveIcon: View {
+    let systemName: String
+    let defaultColor: Color
+    @Environment(\.backgroundProminence) private var backgroundProminence
+
+    var body: some View {
+        Image(systemName: systemName)
+            .foregroundStyle(backgroundProminence == .increased ? .white : defaultColor)
+    }
+}
+
 struct DocumentItemView: View {
     let documentId: UUID
     @ObservedObject var viewModel: DocumentViewModel
@@ -57,15 +69,14 @@ struct DocumentItemView: View {
         return colorMap[document.colorName] ?? .brown
     }
 
-    /// Returns the icon color, prioritizing iconColor (from Scrivener import) over colorName
-    private func iconColorForDocument(_ document: ManuscriptDocument.Document) -> Color {
+    /// Returns the base icon color, prioritizing iconColor (from Scrivener import) over colorName
+    private func baseIconColor(for document: ManuscriptDocument.Document) -> Color {
         // Use icon-specific color if available (from Scrivener import)
         if let hexColor = document.iconColor, let color = Color(hex: hexColor) {
-            return isSelected ? color.darker(by: 0.3) : color
+            return color
         }
         // Fallback to document colorName
-        let baseColor = colorForDocument(document)
-        return isSelected && document.colorName == "Brown" ? baseColor.darker(by: 0.4) : baseColor
+        return colorForDocument(document)
     }
     
     private func updateIcon(_ iconName: String) {
@@ -104,8 +115,7 @@ struct DocumentItemView: View {
                     }
                 }
         } icon: {
-            Image(systemName: document.iconName)
-                .foregroundStyle(iconColorForDocument(document))
+            AdaptiveIcon(systemName: document.iconName, defaultColor: baseIconColor(for: document))
         }
     }
 
@@ -128,8 +138,7 @@ struct DocumentItemView: View {
         Label {
             titleText
         } icon: {
-            Image(systemName: document.iconName)
-                .foregroundStyle(iconColorForDocument(document))
+            AdaptiveIcon(systemName: document.iconName, defaultColor: baseIconColor(for: document))
         }
         .id("\(documentId)-\(document.iconName)-\(document.colorName)-\(document.title.isEmpty)")
     }

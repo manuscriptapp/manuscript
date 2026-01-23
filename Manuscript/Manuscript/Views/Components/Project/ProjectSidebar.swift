@@ -1,5 +1,17 @@
 import SwiftUI
 
+/// Icon that turns white when background prominence is increased (focused selection)
+private struct AdaptiveSidebarIcon: View {
+    let systemName: String
+    let defaultColor: Color
+    @Environment(\.backgroundProminence) private var backgroundProminence
+
+    var body: some View {
+        Image(systemName: systemName)
+            .foregroundStyle(backgroundProminence == .increased ? .white : defaultColor)
+    }
+}
+
 struct ProjectSidebar: View {
     @ObservedObject var viewModel: DocumentViewModel
     @Binding var detailSelection: DetailSelection?
@@ -33,7 +45,9 @@ struct ProjectSidebar: View {
         self._showSettings = showSettings
         self._showReadingMode = showReadingMode
     }
-    
+
+    private let brownColor = Color(red: 0.6, green: 0.4, blue: 0.2)
+
     var body: some View {
         // Create a typed binding to help with type inference
         let typedSelection: Binding<DetailSelection?> = $detailSelection
@@ -56,8 +70,7 @@ struct ProjectSidebar: View {
                             Label {
                                 Text(character.name)
                             } icon: {
-                                Image(systemName: "person")
-                                    .foregroundStyle(Color(red: 0.6, green: 0.4, blue: 0.2)) // Brown for children
+                                AdaptiveSidebarIcon(systemName: "person", defaultColor: brownColor)
                             }
                         }
                     }
@@ -89,8 +102,7 @@ struct ProjectSidebar: View {
                             Label {
                                 Text(location.name)
                             } icon: {
-                                Image(systemName: "mappin")
-                                    .foregroundStyle(Color(red: 0.6, green: 0.4, blue: 0.2)) // Brown for children
+                                AdaptiveSidebarIcon(systemName: "mappin", defaultColor: brownColor)
                             }
                         }
                     }
