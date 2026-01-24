@@ -92,6 +92,11 @@ struct DocumentDetailView: View {
                 viewModel: viewModel,
                 document: document
             ))
+            .modifier(AutoBackupMonitor(
+                detailViewModel: detailViewModel,
+                viewModel: viewModel,
+                document: document
+            ))
             .navigationTitle(detailViewModel.editedTitle)
             .toolbar { toolbarContent }
             .sheet(isPresented: $showSettings) { settingsSheet }
@@ -536,6 +541,109 @@ private struct DocumentChangeObservers: ViewModifier {
             .onChange(of: detailViewModel.selectedLocations) { _, newValue in
                 viewModel.updateDocument(document, locationIds: newValue)
             }
+    }
+}
+
+// MARK: - Auto Backup Monitor ViewModifier
+
+/// ViewModifier to handle automatic backup (snapshot) creation
+/// Monitors content changes and creates snapshots at configured intervals
+private struct AutoBackupMonitor: ViewModifier {
+    @ObservedObject var detailViewModel: DocumentDetailViewModel
+    @ObservedObject var viewModel: DocumentViewModel
+    let document: ManuscriptDocument.Document
+
+    @State private var backupService = BackupService.shared
+    @State private var lastContentHash: Int = 0
+
+    /// Project settings for backup configuration
+    private var settings: ManuscriptSettings {
+        viewModel.document.settings
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                startBackupMonitoring()
+            }
+            .onDisappear {
+                stopBackupMonitoring()
+            }
+            .onChange(of: detailViewModel.editedContent) { _, newValue in
+                // Notify backup service of content change
+                let contentHash = newValue.hashValue
+                if contentHash != lastContentHash {
+                    lastContentHash = contentHash
+                    backupService.contentDidChange(contentHash: contentHash)
+                }
+            }
+            .onChange(of: settings.autoBackupEnabled) { _, newValue in
+                // Restart monitoring if backup settings change
+                if newValue {
+                    startBackupMonitoring()
+                } else {
+                    stopBackupMonitoring()
+                }
+            }
+            .onChange(of: settings.backupInterval) { _, _ in
+                // Restart monitoring with new interval
+                if settings.autoBackupEnabled {
+                    stopBackupMonitoring()
+                    startBackupMonitoring()
+                }
+            }
+    }
+
+    private func startBackupMonitoring() {
+        guard settings.autoBackupEnabled else { return }
+
+        // Run cleanup on startup
+        cleanupOldBackups()
+
+        // Initialize content hash
+        lastContentHash = detailViewModel.editedContent.hashValue
+        backupService.contentDidChange(contentHash: lastContentHash)
+
+        // Start monitoring with backup action
+        backupService.startMonitoring(
+            documentId: document.id,
+            interval: settings.backupInterval
+        ) { documentId in
+            performAutoBackup(for: documentId)
+        }
+    }
+
+    private func cleanupOldBackups() {
+        // Clean up based on retention days setting
+        viewModel.cleanupOldBackups(retentionDays: settings.backupRetentionDays)
+    }
+
+    private func stopBackupMonitoring() {
+        backupService.stopMonitoring()
+    }
+
+    private func performAutoBackup(for documentId: UUID) {
+        // Find the current document state
+        guard let currentDoc = viewModel.findDocument(withId: documentId) else { return }
+
+        // Check if we need to enforce max backups limit
+        let existingAutoBackups = viewModel.document.documentSnapshots
+            .filter { $0.documentId == documentId && $0.snapshotType == .auto }
+            .sorted { $0.timestamp < $1.timestamp }
+
+        // Remove oldest auto-backups if we're at the limit
+        if existingAutoBackups.count >= settings.maxAutoBackupsPerDocument {
+            let backupsToRemove = existingAutoBackups.prefix(existingAutoBackups.count - settings.maxAutoBackupsPerDocument + 1)
+            for backup in backupsToRemove {
+                viewModel.removeSnapshot(backup)
+            }
+        }
+
+        // Create new auto-backup snapshot
+        viewModel.takeSnapshotOfDocument(currentDoc, title: nil, type: .auto)
+
+        // Record that backup was performed
+        backupService.recordBackup()
     }
 }
 

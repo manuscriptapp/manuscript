@@ -1120,4 +1120,46 @@ class DocumentViewModel: ObservableObject {
             content: snapshot.content
         )
     }
+
+    // MARK: - Backup Cleanup
+
+    /// Clean up old auto-backups based on retention settings
+    /// - Parameter retentionDays: Number of days to retain backups (0 = forever)
+    func cleanupOldBackups(retentionDays: Int) {
+        guard retentionDays > 0 else { return }
+
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date()) ?? Date()
+
+        var doc = document
+        let originalCount = doc.documentSnapshots.count
+
+        // Only remove auto-backups that are older than the retention period
+        // Keep manual and milestone backups forever
+        doc.documentSnapshots.removeAll { snapshot in
+            snapshot.snapshotType == .auto && snapshot.timestamp < cutoffDate
+        }
+
+        // Only update if we actually removed something
+        if doc.documentSnapshots.count < originalCount {
+            document = doc
+            snapshotUpdateTrigger += 1
+        }
+    }
+
+    /// Enforce maximum auto-backups per document
+    /// - Parameters:
+    ///   - documentId: The document to check
+    ///   - maxBackups: Maximum number of auto-backups to keep
+    func enforceMaxBackups(for documentId: UUID, maxBackups: Int) {
+        let autoBackups = document.documentSnapshots
+            .filter { $0.documentId == documentId && $0.snapshotType == .auto }
+            .sorted { $0.timestamp < $1.timestamp }
+
+        guard autoBackups.count > maxBackups else { return }
+
+        let backupsToRemove = autoBackups.prefix(autoBackups.count - maxBackups)
+        for backup in backupsToRemove {
+            removeSnapshot(backup)
+        }
+    }
 }

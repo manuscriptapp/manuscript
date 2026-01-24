@@ -13,6 +13,12 @@ struct ProjectInfoView: View {
     @State private var activeTab: Int = 0
     @State private var showingTemplateSheet: Bool = false
 
+    // Backup settings state
+    @State private var autoBackupEnabled: Bool = true
+    @State private var backupInterval: Int = 300
+    @State private var maxAutoBackups: Int = 10
+    @State private var backupRetentionDays: Int = 30
+
     /// The template used to create this document, if any
     private var template: BookTemplate? {
         guard let templateId = viewModel.document.templateId else { return nil }
@@ -69,6 +75,7 @@ struct ProjectInfoView: View {
         case genre = 1
         case style = 2
         case synopsis = 3
+        case backup = 4
 
         var title: String {
             switch self {
@@ -76,6 +83,7 @@ struct ProjectInfoView: View {
             case .genre: "Genre"
             case .style: "Style"
             case .synopsis: "Synopsis"
+            case .backup: "Backup"
             }
         }
 
@@ -85,6 +93,7 @@ struct ProjectInfoView: View {
             case .genre: "tag"
             case .style: "paintbrush"
             case .synopsis: "doc.text"
+            case .backup: "clock.arrow.circlepath"
             }
         }
     }
@@ -119,6 +128,8 @@ struct ProjectInfoView: View {
                 styleSection
             case 3:
                 synopsisSection
+            case 4:
+                backupSection
             default:
                 basicInfoSection
             }
@@ -156,6 +167,12 @@ struct ProjectInfoView: View {
                     Label("Synopsis", systemImage: "doc.text")
                 }
                 .tag(3)
+
+            backupTab
+                .tabItem {
+                    Label("Backup", systemImage: "clock.arrow.circlepath")
+                }
+                .tag(4)
         }
         .navigationTitle("Project Info")
         .onAppear {
@@ -361,6 +378,64 @@ struct ProjectInfoView: View {
             }
             .font(.callout)
             .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var backupSection: some View {
+        Section("Automatic Backups") {
+            Toggle("Enable automatic backups", isOn: $autoBackupEnabled)
+                .onChange(of: autoBackupEnabled) { _, newValue in
+                    updateBackupSettings()
+                }
+
+            if autoBackupEnabled {
+                Picker("Backup interval", selection: $backupInterval) {
+                    ForEach(BackupIntervalOption.allCases) { option in
+                        Text(option.displayName).tag(option.rawValue)
+                    }
+                }
+                .onChange(of: backupInterval) { _, _ in
+                    updateBackupSettings()
+                }
+
+                Picker("Keep backups for", selection: $backupRetentionDays) {
+                    ForEach(BackupRetentionOption.allCases) { option in
+                        Text(option.displayName).tag(option.rawValue)
+                    }
+                }
+                .onChange(of: backupRetentionDays) { _, _ in
+                    updateBackupSettings()
+                }
+
+                Stepper("Max backups per document: \(maxAutoBackups)", value: $maxAutoBackups, in: 1...50)
+                    .onChange(of: maxAutoBackups) { _, _ in
+                        updateBackupSettings()
+                    }
+            }
+        }
+
+        Section {
+            Text("Automatic backups create snapshots of your documents at regular intervals while you write. You can restore any backup from the Snapshots panel in the document inspector.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("About Backups")
+        }
+
+        if !viewModel.document.documentSnapshots.isEmpty {
+            Section("Backup Statistics") {
+                let autoBackups = viewModel.document.documentSnapshots.filter { $0.snapshotType == .auto }
+                let manualBackups = viewModel.document.documentSnapshots.filter { $0.snapshotType == .manual }
+
+                LabeledContent("Total backups", value: "\(viewModel.document.documentSnapshots.count)")
+                LabeledContent("Automatic", value: "\(autoBackups.count)")
+                LabeledContent("Manual", value: "\(manualBackups.count)")
+
+                if let lastBackup = viewModel.document.documentSnapshots.sorted(by: { $0.timestamp > $1.timestamp }).first {
+                    LabeledContent("Last backup", value: lastBackup.relativeDate)
+                }
+            }
         }
     }
     #endif
@@ -628,6 +703,65 @@ struct ProjectInfoView: View {
             }
         }
     }
+
+    private var backupTab: some View {
+        Form {
+            Section("Automatic Backups") {
+                Toggle("Enable automatic backups", isOn: $autoBackupEnabled)
+                    .onChange(of: autoBackupEnabled) { _, newValue in
+                        updateBackupSettings()
+                    }
+
+                if autoBackupEnabled {
+                    Picker("Backup interval", selection: $backupInterval) {
+                        ForEach(BackupIntervalOption.allCases) { option in
+                            Text(option.displayName).tag(option.rawValue)
+                        }
+                    }
+                    .onChange(of: backupInterval) { _, _ in
+                        updateBackupSettings()
+                    }
+
+                    Picker("Keep backups for", selection: $backupRetentionDays) {
+                        ForEach(BackupRetentionOption.allCases) { option in
+                            Text(option.displayName).tag(option.rawValue)
+                        }
+                    }
+                    .onChange(of: backupRetentionDays) { _, _ in
+                        updateBackupSettings()
+                    }
+
+                    Stepper("Max backups per document: \(maxAutoBackups)", value: $maxAutoBackups, in: 1...50)
+                        .onChange(of: maxAutoBackups) { _, _ in
+                            updateBackupSettings()
+                        }
+                }
+            }
+
+            Section {
+                Text("Automatic backups create snapshots of your documents at regular intervals while you write. You can restore any backup from the Snapshots panel in the document inspector.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text("About Backups")
+            }
+
+            if !viewModel.document.documentSnapshots.isEmpty {
+                Section("Backup Statistics") {
+                    let autoBackups = viewModel.document.documentSnapshots.filter { $0.snapshotType == .auto }
+                    let manualBackups = viewModel.document.documentSnapshots.filter { $0.snapshotType == .manual }
+
+                    LabeledContent("Total backups", value: "\(viewModel.document.documentSnapshots.count)")
+                    LabeledContent("Automatic", value: "\(autoBackups.count)")
+                    LabeledContent("Manual", value: "\(manualBackups.count)")
+
+                    if let lastBackup = viewModel.document.documentSnapshots.sorted(by: { $0.timestamp > $1.timestamp }).first {
+                        LabeledContent("Last backup", value: lastBackup.relativeDate)
+                    }
+                }
+            }
+        }
+    }
     #endif
 
     // MARK: - Shared Helpers
@@ -678,15 +812,21 @@ struct ProjectInfoView: View {
         editedAuthor = viewModel.document.author
         editedDescription = viewModel.document.description
         editedSynopsis = viewModel.document.synopsis
-        
+
         // Load genres
         selectedGenres = Set(viewModel.document.genre.split(separator: ", ").map(String.init))
-        
+
         // Load styles
         let styles = viewModel.document.style.split(separator: ", ").map(String.init)
         selectedNarrativeStyle = styles.first { narrativeStyles.contains($0) } ?? ""
         selectedLiteraryStyle = styles.first { literaryStyles.contains($0) } ?? ""
         selectedStorytellingStyle = styles.first { storytellingStyles.contains($0) } ?? ""
+
+        // Load backup settings
+        autoBackupEnabled = viewModel.document.settings.autoBackupEnabled
+        backupInterval = viewModel.document.settings.backupInterval
+        maxAutoBackups = viewModel.document.settings.maxAutoBackupsPerDocument
+        backupRetentionDays = viewModel.document.settings.backupRetentionDays
     }
     
     private func updateGenre() {
@@ -698,6 +838,15 @@ struct ProjectInfoView: View {
     private func updateStyle() {
         var doc = viewModel.document
         doc.style = combinedStyle
+        viewModel.document = doc
+    }
+
+    private func updateBackupSettings() {
+        var doc = viewModel.document
+        doc.settings.autoBackupEnabled = autoBackupEnabled
+        doc.settings.backupInterval = backupInterval
+        doc.settings.maxAutoBackupsPerDocument = maxAutoBackups
+        doc.settings.backupRetentionDays = backupRetentionDays
         viewModel.document = doc
     }
 }

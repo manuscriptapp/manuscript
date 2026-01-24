@@ -132,7 +132,13 @@ struct ManuscriptSettings: Codable, Equatable {
     var editorTheme: String
     var spellCheck: Bool
     var autoSave: Bool
-    var snapshotInterval: Int  // seconds
+    var snapshotInterval: Int  // seconds (legacy, use backupSettings instead)
+
+    // Backup settings
+    var autoBackupEnabled: Bool
+    var backupInterval: Int  // seconds
+    var maxAutoBackupsPerDocument: Int
+    var backupRetentionDays: Int  // 0 = forever
 
     init(
         defaultFont: String = "Georgia",
@@ -140,7 +146,11 @@ struct ManuscriptSettings: Codable, Equatable {
         editorTheme: String = "light",
         spellCheck: Bool = true,
         autoSave: Bool = true,
-        snapshotInterval: Int = 300
+        snapshotInterval: Int = 300,
+        autoBackupEnabled: Bool = true,
+        backupInterval: Int = 300,
+        maxAutoBackupsPerDocument: Int = 10,
+        backupRetentionDays: Int = 30
     ) {
         self.defaultFont = defaultFont
         self.defaultFontSize = defaultFontSize
@@ -148,6 +158,27 @@ struct ManuscriptSettings: Codable, Equatable {
         self.spellCheck = spellCheck
         self.autoSave = autoSave
         self.snapshotInterval = snapshotInterval
+        self.autoBackupEnabled = autoBackupEnabled
+        self.backupInterval = backupInterval
+        self.maxAutoBackupsPerDocument = maxAutoBackupsPerDocument
+        self.backupRetentionDays = backupRetentionDays
+    }
+
+    // Custom decoder for backward compatibility with older documents
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        defaultFont = try container.decodeIfPresent(String.self, forKey: .defaultFont) ?? "Georgia"
+        defaultFontSize = try container.decodeIfPresent(Int.self, forKey: .defaultFontSize) ?? 14
+        editorTheme = try container.decodeIfPresent(String.self, forKey: .editorTheme) ?? "light"
+        spellCheck = try container.decodeIfPresent(Bool.self, forKey: .spellCheck) ?? true
+        autoSave = try container.decodeIfPresent(Bool.self, forKey: .autoSave) ?? true
+        snapshotInterval = try container.decodeIfPresent(Int.self, forKey: .snapshotInterval) ?? 300
+
+        // New backup settings with defaults for backward compatibility
+        autoBackupEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoBackupEnabled) ?? true
+        backupInterval = try container.decodeIfPresent(Int.self, forKey: .backupInterval) ?? 300
+        maxAutoBackupsPerDocument = try container.decodeIfPresent(Int.self, forKey: .maxAutoBackupsPerDocument) ?? 10
+        backupRetentionDays = try container.decodeIfPresent(Int.self, forKey: .backupRetentionDays) ?? 30
     }
 }
 
