@@ -1,6 +1,10 @@
 import Foundation
 import SwiftUI
 
+#if os(iOS)
+import UIKit
+#endif
+
 /// Builds the .scrivx XML file for Scrivener 3 export
 final class ScrivenerXMLBuilder {
 
@@ -32,9 +36,17 @@ final class ScrivenerXMLBuilder {
 
     /// Builds the complete .scrivx XML content
     func build() -> String {
+        let modifiedDate = formatScrivenerDate(Date())
+
+        #if os(macOS)
+        let deviceName = Host.current().localizedName ?? "Mac"
+        #else
+        let deviceName = UIDevice.current.name
+        #endif
+
         var xml = """
         <?xml version="1.0" encoding="UTF-8"?>
-        <ScrivenerProject Identifier="\(UUID().uuidString)" Version="2.0">
+        <ScrivenerProject Identifier="\(UUID().uuidString)" Version="2.0" Creator="Manuscript-1.0" Device="\(escapeXML(deviceName))" Modified="\(modifiedDate)" ModID="\(UUID().uuidString)">
             <Binder>
 
         """
@@ -99,11 +111,9 @@ final class ScrivenerXMLBuilder {
     ) -> String {
         let indentation = String(repeating: "    ", count: indent)
         let scrivUUID = uuidMapping[folder.id] ?? UUID().uuidString
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withFullDate, .withTime, .withDashSeparatorInDate, .withColonSeparatorInTime, .withTimeZone]
 
         var xml = """
-        \(indentation)<BinderItem UUID="\(scrivUUID)" Type="\(type)" Created="\(dateFormatter.string(from: folder.creationDate))" Modified="\(dateFormatter.string(from: Date()))">
+        \(indentation)<BinderItem UUID="\(scrivUUID)" Type="\(type)" Created="\(formatScrivenerDate(folder.creationDate))" Modified="\(formatScrivenerDate(Date()))">
         \(indentation)    <Title>\(escapeXML(folder.title))</Title>
         \(indentation)    <MetaData>
         \(indentation)        <IncludeInCompile>Yes</IncludeInCompile>
@@ -111,14 +121,25 @@ final class ScrivenerXMLBuilder {
 
         """
 
-        // Add documents as Text items
-        for doc in folder.documents.sorted(by: { $0.order < $1.order }) {
-            xml += buildDocumentBinderItem(document: doc, indent: indent + 1)
-        }
+        // Collect children (documents and subfolders)
+        let sortedDocs = folder.documents.sorted(by: { $0.order < $1.order })
+        let sortedSubfolders = folder.subfolders.sorted(by: { $0.order < $1.order })
 
-        // Add subfolders
-        for subfolder in folder.subfolders.sorted(by: { $0.order < $1.order }) {
-            xml += buildBinderItem(folder: subfolder, type: "Folder", indent: indent + 1)
+        // Only add Children wrapper if there are children
+        if !sortedDocs.isEmpty || !sortedSubfolders.isEmpty {
+            xml += "\(indentation)    <Children>\n"
+
+            // Add documents as Text items
+            for doc in sortedDocs {
+                xml += buildDocumentBinderItem(document: doc, indent: indent + 2)
+            }
+
+            // Add subfolders
+            for subfolder in sortedSubfolders {
+                xml += buildBinderItem(folder: subfolder, type: "Folder", indent: indent + 2)
+            }
+
+            xml += "\(indentation)    </Children>\n"
         }
 
         xml += "\(indentation)</BinderItem>\n"
@@ -129,11 +150,9 @@ final class ScrivenerXMLBuilder {
     private func buildDocumentBinderItem(document doc: ManuscriptDocument.Document, indent: Int) -> String {
         let indentation = String(repeating: "    ", count: indent)
         let scrivUUID = uuidMapping[doc.id] ?? UUID().uuidString
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withFullDate, .withTime, .withDashSeparatorInDate, .withColonSeparatorInTime, .withTimeZone]
 
         var xml = """
-        \(indentation)<BinderItem UUID="\(scrivUUID)" Type="Text" Created="\(dateFormatter.string(from: doc.creationDate))" Modified="\(dateFormatter.string(from: Date()))">
+        \(indentation)<BinderItem UUID="\(scrivUUID)" Type="Text" Created="\(formatScrivenerDate(doc.creationDate))" Modified="\(formatScrivenerDate(Date()))">
         \(indentation)    <Title>\(escapeXML(doc.title))</Title>
         \(indentation)    <MetaData>
         \(indentation)        <IncludeInCompile>\(doc.includeInCompile ? "Yes" : "No")</IncludeInCompile>
@@ -276,6 +295,14 @@ final class ScrivenerXMLBuilder {
     }
 
     // MARK: - Helpers
+
+    /// Formats a date in Scrivener's expected format: "2025-04-12 17:00:59 +0200"
+    private func formatScrivenerDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.string(from: date)
+    }
 
     private func escapeXML(_ string: String) -> String {
         string

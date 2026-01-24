@@ -88,9 +88,39 @@ final class ScrivenerExporter {
 
         progress?(0.30, "Writing version file...")
 
-        // 4. Write version.txt (Scrivener 3 format version)
+        // 4. Write version.txt (Scrivener 3 format version - 23 for current Scrivener 3.x)
         let versionPath = scrivDir.appendingPathComponent("Files/version.txt")
-        try "16".write(to: versionPath, atomically: true, encoding: .utf8)
+        try "23".write(to: versionPath, atomically: true, encoding: .utf8)
+
+        // 5. Write additional required Scrivener 3 files
+        let filesDir = scrivDir.appendingPathComponent("Files")
+
+        // binder.autosave - empty file
+        let binderAutosavePath = filesDir.appendingPathComponent("binder.autosave")
+        try Data().write(to: binderAutosavePath)
+
+        // binder.backup - empty file
+        let binderBackupPath = filesDir.appendingPathComponent("binder.backup")
+        try Data().write(to: binderBackupPath)
+
+        // search.indexes - empty file (Scrivener will rebuild this)
+        let searchIndexesPath = filesDir.appendingPathComponent("search.indexes")
+        try Data().write(to: searchIndexesPath)
+
+        // writing.history - empty file
+        let writingHistoryPath = filesDir.appendingPathComponent("writing.history")
+        try Data().write(to: writingHistoryPath)
+
+        // styles.xml - minimal plist format
+        let stylesXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict/>
+        </plist>
+        """
+        let stylesPath = filesDir.appendingPathComponent("styles.xml")
+        try stylesXML.write(to: stylesPath, atomically: true, encoding: .utf8)
 
         progress?(0.35, "Converting documents...")
 
@@ -138,6 +168,10 @@ final class ScrivenerExporter {
                 progress: progress
             )
         }
+
+        // Write docs.checksum file (Scrivener will rebuild this)
+        let docsChecksumPath = dataDir.appendingPathComponent("docs.checksum")
+        try Data().write(to: docsChecksumPath)
 
         progress?(1.0, "Export complete!")
 

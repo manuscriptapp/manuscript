@@ -57,7 +57,7 @@ struct ProjectSidebar: View {
 
         // Create the content as a separate variable
         let listContent = Group {
-            // Binder - everything related to your story
+            // Binder - Draft, Research, Trash
             Section(isExpanded: $isContentExpanded) {
                 // Draft folder
                 FolderItemView(
@@ -65,6 +65,35 @@ struct ProjectSidebar: View {
                     viewModel: viewModel,
                     detailSelection: typedSelection
                 )
+
+                // Research folder
+                FolderItemView(
+                    folder: viewModel.researchFolder,
+                    viewModel: viewModel,
+                    detailSelection: typedSelection
+                )
+
+                // Trash folder
+                FolderItemView(
+                    folder: viewModel.trashFolder,
+                    viewModel: viewModel,
+                    detailSelection: typedSelection
+                )
+            } header: {
+                Text("Binder")
+            }
+
+            // Project - Project Info, Characters, Locations, History
+            Section {
+                // Project Info
+                NavigationLink(value: DetailSelection.projectInfo) {
+                    Label {
+                        Text("Project Info")
+                    } icon: {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.brown)
+                    }
+                }
 
                 // Characters in a disclosure group
                 DisclosureGroup(isExpanded: $isCharactersExpanded) {
@@ -139,35 +168,21 @@ struct ProjectSidebar: View {
                     .badge(viewModel.locations.count)
                 }
 
-                // Research folder
-                FolderItemView(
-                    folder: viewModel.researchFolder,
-                    viewModel: viewModel,
-                    detailSelection: typedSelection
-                )
-
-                // Trash folder
-                FolderItemView(
-                    folder: viewModel.trashFolder,
-                    viewModel: viewModel,
-                    detailSelection: typedSelection
-                )
-            } header: {
-                Text("Binder")
-            }
-
-            // Progress - tracking your writing
-            Section(isExpanded: $isProgressExpanded) {
                 // Calendar (Writing History)
                 NavigationLink(value: DetailSelection.writingHistory) {
                     Label {
-                        Text("Calendar")
+                        Text("History")
                     } icon: {
                         Image(systemName: "calendar")
                             .foregroundStyle(.brown)
                     }
                 }
+            } header: {
+                Text("Project")
+            }
 
+            // Progress - tracking your writing
+            Section(isExpanded: $isProgressExpanded) {
                 // Writing targets (if set)
                 if let draftTarget = viewModel.document.targets.draftWordCount {
                     WritingTargetProgressView(
@@ -191,31 +206,29 @@ struct ProjectSidebar: View {
                     icon: "character.cursor.ibeam",
                     color: .blue,
                     title: "Total Words",
-                    value: viewModel.rootFolder.totalWordCount.formatted()
+                    value: viewModel.rootFolder.totalWordCount.formatted(),
+                    isMuted: viewModel.rootFolder.totalWordCount == 0
                 )
                 SidebarStatRow(
                     icon: "calendar.badge.clock",
                     color: .green,
                     title: "Days Written",
-                    value: "\(viewModel.document.writingHistory.daysWritten)"
+                    value: "\(viewModel.document.writingHistory.daysWritten)",
+                    isMuted: viewModel.document.writingHistory.daysWritten == 0
                 )
                 SidebarStatRow(
                     icon: "flame.fill",
-                    color: viewModel.document.writingHistory.currentStreak > 0 ? .orange : .secondary,
+                    color: .orange,
                     title: "Current Streak",
-                    value: "\(viewModel.document.writingHistory.currentStreak) days"
+                    value: "\(viewModel.document.writingHistory.currentStreak) days",
+                    isMuted: viewModel.document.writingHistory.currentStreak == 0
                 )
                 SidebarStatRow(
                     icon: "trophy.fill",
                     color: .yellow,
                     title: "Longest Streak",
-                    value: "\(viewModel.document.writingHistory.longestStreak) days"
-                )
-                SidebarStatRow(
-                    icon: "chart.line.uptrend.xyaxis",
-                    color: .purple,
-                    title: "Avg Words/Day",
-                    value: viewModel.document.writingHistory.averageWordsPerDay.formatted()
+                    value: "\(viewModel.document.writingHistory.longestStreak) days",
+                    isMuted: viewModel.document.writingHistory.longestStreak == 0
                 )
             } header: {
                 Text("Progress")
@@ -420,12 +433,13 @@ struct SidebarStatRow: View {
     let color: Color
     let title: String
     let value: String
+    var isMuted: Bool = false
 
     var body: some View {
         HStack {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundColor(color)
+                .foregroundColor(isMuted ? .secondary : color)
                 .frame(width: 24)
 
             Text(title)
@@ -435,6 +449,7 @@ struct SidebarStatRow: View {
 
             Text(value)
                 .fontWeight(.medium)
+                .foregroundColor(isMuted ? .secondary : .primary)
         }
         .font(.subheadline)
     }
