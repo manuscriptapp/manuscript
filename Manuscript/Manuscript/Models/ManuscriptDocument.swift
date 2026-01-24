@@ -410,6 +410,11 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
 
     func createPackageFileWrapper() throws -> FileWrapper {
         let rootWrapper = FileWrapper(directoryWithFileWrappers: [:])
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sanitizedTitle = sanitizedFilename(from: trimmedTitle)
+        if !sanitizedTitle.isEmpty {
+            rootWrapper.preferredFilename = sanitizedTitle
+        }
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -618,6 +623,17 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         }
 
         return snapshotsWrapper
+    }
+
+    private func sanitizedFilename(from title: String) -> String {
+        let invalidCharacters = CharacterSet(charactersIn: "/\\?%*|\"<>:")
+        let cleaned = title
+            .components(separatedBy: invalidCharacters)
+            .joined(separator: "-")
+        let collapsed = cleaned
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return collapsed
     }
 
     private func createMarkdownContent(for document: ManuscriptDocument.Document) -> String {

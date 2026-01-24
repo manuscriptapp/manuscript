@@ -229,15 +229,37 @@ struct LaunchSceneTitle: View {
 struct LaunchNewDocumentView: View {
     @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @Environment(\.dismiss) private var dismiss
+    @State private var title = ""
+
+    private var trimmedTitle: String {
+        title.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Project Title")
+                            .font(.headline)
+
+                        TextField("Title", text: $title)
+                            .textFieldStyle(.roundedBorder)
+                            .textInputAutocapitalization(.words)
+
+                        if trimmedTitle.isEmpty {
+                            Text("Title is required to create a new manuscript.")
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
+                    }
+                    .padding(.bottom, 4)
+
                     // Blank option - styled like a template card
                     Button {
                         print("📝 [LaunchNewDocumentView] Creating blank document")
-                        let document = ManuscriptDocument()
+                        var document = ManuscriptDocument()
+                        document.title = trimmedTitle
                         print("   - Document created with title: '\(document.title)'")
                         print("   - Continuation available: \(continuation != nil)")
                         continuation?.resume(returning: document)
@@ -246,13 +268,14 @@ struct LaunchNewDocumentView: View {
                     } label: {
                         LaunchBlankCard()
                     }
+                    .disabled(trimmedTitle.isEmpty)
                     .buttonStyle(.plain)
 
                     // Template options - reuse LaunchTemplateCard
                     ForEach(BookTemplate.templates) { template in
                         Button {
                             print("📝 [LaunchNewDocumentView] Creating document from template: \(template.name)")
-                            let document = ManuscriptDocument.fromTemplate(template)
+                            let document = ManuscriptDocument.fromTemplate(template, title: trimmedTitle)
                             print("   - Document created with title: '\(document.title)'")
                             print("   - Continuation available: \(continuation != nil)")
                             continuation?.resume(returning: document)
@@ -261,6 +284,7 @@ struct LaunchNewDocumentView: View {
                         } label: {
                             LaunchTemplateCard(template: template)
                         }
+                        .disabled(trimmedTitle.isEmpty)
                         .buttonStyle(.plain)
                     }
                 }
@@ -830,6 +854,9 @@ struct ManuscriptApp: App {
     @StateObject private var recentDocumentsManager = RecentDocumentsManager()
     @State private var isShowingWelcomeScreen = true
     @State private var documentURL: URL?
+    #if os(iOS)
+    @State private var renameAttempts: [URL: Int] = [:]
+    #endif
 
     // iOS 18 DocumentGroupLaunchScene state
     #if os(iOS)
@@ -936,11 +963,32 @@ struct ManuscriptApp: App {
                     print("   - characters: \(file.document.characters.count)")
                     print("   - locations: \(file.document.locations.count)")
 
-                    // Add to recent documents when opened
+                    #if os(iOS)
+                    handleDocumentOpen(
+                        fileURL: file.fileURL,
+                        title: file.document.title
+                    )
+                    #else
                     if let url = file.fileURL {
                         recentDocumentsManager.addDocument(url: url, title: file.document.title.isEmpty ? "Untitled" : file.document.title)
                     }
+                    #endif
                 }
+                #if os(iOS)
+                .onChange(of: file.fileURL) { _, newURL in
+                    guard let newURL else { return }
+                    handleDocumentOpen(
+                        fileURL: newURL,
+                        title: file.document.title
+                    )
+                }
+                .onChange(of: file.document.title) { _, newTitle in
+                    handleDocumentOpen(
+                        fileURL: file.fileURL,
+                        title: newTitle
+                    )
+                }
+                #endif
         }
         #if os(macOS)
         .defaultWindowPlacement { content, context in
@@ -1048,5 +1096,155 @@ struct ManuscriptApp: App {
         }
         #endif
     }
+
+    #if os(iOS)
+    private func handleDocumentOpen(fileURL: URL?, title: String) {
+        guard let fileURL else { return }
+
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let currentName = fileURL.deletingPathExtension().lastPathComponent
+        let shouldRename = !trimmedTitle.isEmpty && currentName.hasPrefix("Untitled")
+
+        if shouldRename {
+            scheduleRename(fileURL: fileURL, title: trimmedTitle)
+        } else {
+            recentDocumentsManager.addDocument(url: fileURL, title: title.isEmpty ? "Untitled" : title)
+        }
+    }
+
+    private func scheduleRename(fileURL: URL, title: String) {
+        let attempts = renameAttempts[fileURL, default: 0]
+        let maxAttempts = 3
+        if attempts >= maxAttempts {
+            renameAttempts[fileURL] = nil
+            recentDocumentsManager.addDocument(url: fileURL, title: title.isEmpty ? "Untitled" : title)
+            return
+        }
+
+        renameAttempts[fileURL] = attempts + 1
+        let delay: TimeInterval
+        switch attempts {
+        case 0: delay = 0.0
+        case 1: delay = 0.3
+        default: delay = 0.8
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            let titleForRename = title
+            DispatchQueue.global(qos: .utility).async {
+                let renamedURL = renameDocumentIfNeeded(fileURL: fileURL, title: titleForRename)
+                DispatchQueue.main.async {
+                    if let renamedURL {
+                        self.renameAttempts[fileURL] = nil
+                        self.recentDocumentsManager.addDocument(
+                            url: renamedURL,
+                            title: titleForRename.isEmpty ? "Untitled" : titleForRename
+                        )
+                    } else {
+                        self.scheduleRename(fileURL: fileURL, title: titleForRename)
+                    }
+                }
+            }
+        }
+    }
+
+    private func renameDocumentIfNeeded(fileURL: URL, title: String) -> URL? {
+        print("🔎 [DocumentGroup] Rename check for: \(fileURL.lastPathComponent) (title: '\(title)')")
+
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty else {
+            print("⚠️ [DocumentGroup] Rename skipped: empty title")
+            return nil
+        }
+
+        let currentName = fileURL.deletingPathExtension().lastPathComponent
+        guard currentName.hasPrefix("Untitled") else {
+            print("ℹ️ [DocumentGroup] Rename skipped: already named '\(currentName)'")
+            return nil
+        }
+
+        let sanitizedTitle = sanitizedFilename(from: trimmedTitle)
+        guard !sanitizedTitle.isEmpty else {
+            print("⚠️ [DocumentGroup] Rename skipped: sanitized title empty")
+            return nil
+        }
+
+        let directory = fileURL.deletingLastPathComponent()
+        let fileExtension = fileURL.pathExtension.isEmpty ? "manuscript" : fileURL.pathExtension
+        let targetURL = uniqueFileURL(
+            baseName: sanitizedTitle,
+            directory: directory,
+            fileExtension: fileExtension,
+            excluding: fileURL
+        )
+
+        guard targetURL != fileURL else {
+            print("ℹ️ [DocumentGroup] Rename skipped: target equals current URL")
+            return nil
+        }
+
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: fileURL.path) {
+            if fileManager.fileExists(atPath: targetURL.path) {
+                return targetURL
+            }
+            print("⚠️ [DocumentGroup] Rename skipped: source file missing")
+            return nil
+        }
+
+        var coordinatorError: NSError?
+        var finalURL: URL? = fileURL
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        coordinator.coordinate(writingItemAt: fileURL, options: .forMoving, error: &coordinatorError) { coordinatedURL in
+            do {
+                try fileManager.moveItem(at: coordinatedURL, to: targetURL)
+                print("✅ [DocumentGroup] Renamed document to: \(targetURL.lastPathComponent)")
+                finalURL = targetURL
+            } catch {
+                print("❌ [DocumentGroup] Failed to rename document: \(error.localizedDescription)")
+                finalURL = nil
+            }
+        }
+        if let coordinatorError {
+            print("❌ [DocumentGroup] File coordination error: \(coordinatorError.localizedDescription)")
+        }
+        return finalURL == fileURL ? nil : finalURL
+    }
+
+    private func sanitizedFilename(from title: String) -> String {
+        let invalidCharacters = CharacterSet(charactersIn: "/\\?%*|\"<>:")
+        let cleaned = title
+            .components(separatedBy: invalidCharacters)
+            .joined(separator: "-")
+        let collapsed = cleaned
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return collapsed
+    }
+
+    private func uniqueFileURL(
+        baseName: String,
+        directory: URL,
+        fileExtension: String,
+        excluding originalURL: URL
+    ) -> URL {
+        var candidate = directory
+            .appendingPathComponent(baseName)
+            .appendingPathExtension(fileExtension)
+        if candidate == originalURL {
+            return candidate
+        }
+
+        var counter = 2
+        while FileManager.default.fileExists(atPath: candidate.path) {
+            let numberedName = "\(baseName) \(counter)"
+            candidate = directory
+                .appendingPathComponent(numberedName)
+                .appendingPathExtension(fileExtension)
+            counter += 1
+        }
+        return candidate
+    }
+    #endif
 
 }
