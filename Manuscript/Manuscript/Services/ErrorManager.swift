@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import OSLog
 
 /// Represents an app error that can be displayed to the user
 struct AppError: Identifiable {
@@ -102,7 +103,7 @@ class ErrorManager: ObservableObject {
 
     /// Show an error to the user
     func showError(_ error: AppError) {
-        print("🚨 [ErrorManager] Showing error: \(error.title) - \(error.message)")
+        Log.app.error("Showing error: \(error.title) - \(error.message)")
         currentError = error
 
         // Add to history

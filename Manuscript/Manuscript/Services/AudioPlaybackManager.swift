@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import SwiftUI
+import OSLog
 
 /// Observable manager for audio playback of TTS content
 @MainActor
@@ -66,7 +67,7 @@ final class AudioPlaybackManager: NSObject {
             try session.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
             try session.setActive(true)
         } catch {
-            print("Failed to setup audio session: \(error)")
+            Log.audio.error("Failed to setup audio session: \(error.localizedDescription)")
         }
         #endif
     }

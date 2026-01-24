@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import OSLog
 
 class RecentDocumentsManager: ObservableObject {
     private let maxRecentDocuments = 10
@@ -84,7 +85,7 @@ class RecentDocumentsManager: ObservableObject {
 
             return resolvedURL
         } catch {
-            print("Error resolving bookmark for \(document.title): \(error)")
+            Log.document.error("Error resolving bookmark for \(document.title): \(error.localizedDescription)")
             return nil
         }
     }
@@ -120,7 +121,7 @@ class RecentDocumentsManager: ObservableObject {
             let decoder = JSONDecoder()
             recentDocuments = try decoder.decode([RecentDocument].self, from: data)
         } catch {
-            print("Error loading recent documents: \(error)")
+            Log.app.error("Error loading recent documents: \(error.localizedDescription)")
         }
     }
 
@@ -130,7 +131,7 @@ class RecentDocumentsManager: ObservableObject {
             let data = try encoder.encode(recentDocuments)
             UserDefaults.standard.set(data, forKey: recentDocumentsKey)
         } catch {
-            print("Error saving recent documents: \(error)")
+            Log.app.error("Error saving recent documents: \(error.localizedDescription)")
         }
     }
 }

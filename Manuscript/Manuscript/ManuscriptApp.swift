@@ -8,6 +8,7 @@
 import SwiftUI
 import UserNotifications
 import UniformTypeIdentifiers
+import OSLog
 #if canImport(AppKit)
 import AppKit
 #endif
@@ -257,11 +258,9 @@ struct LaunchNewDocumentView: View {
 
                     // Blank option - styled like a template card
                     Button {
-                        print("📝 [LaunchNewDocumentView] Creating blank document")
+                        Log.document.debug("Creating blank document with title: \(trimmedTitle)")
                         var document = ManuscriptDocument()
                         document.title = trimmedTitle
-                        print("   - Document created with title: '\(document.title)'")
-                        print("   - Continuation available: \(continuation != nil)")
                         continuation?.resume(returning: document)
                         continuation = nil
                         dismiss()
@@ -274,10 +273,8 @@ struct LaunchNewDocumentView: View {
                     // Template options - reuse LaunchTemplateCard
                     ForEach(BookTemplate.templates) { template in
                         Button {
-                            print("📝 [LaunchNewDocumentView] Creating document from template: \(template.name)")
+                            Log.document.debug("Creating document from template: \(template.name), title: \(trimmedTitle)")
                             let document = ManuscriptDocument.fromTemplate(template, title: trimmedTitle)
-                            print("   - Document created with title: '\(document.title)'")
-                            print("   - Continuation available: \(continuation != nil)")
                             continuation?.resume(returning: document)
                             continuation = nil
                             dismiss()
@@ -295,8 +292,7 @@ struct LaunchNewDocumentView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
-                        print("📝 [LaunchNewDocumentView] User cancelled")
-                        print("   - Continuation available: \(continuation != nil)")
+                        Log.document.debug("New document creation cancelled")
                         continuation?.resume(returning: nil)
                         continuation = nil
                         dismiss()
@@ -305,8 +301,7 @@ struct LaunchNewDocumentView: View {
             }
         }
         .onAppear {
-            print("📝 [LaunchNewDocumentView] Sheet appeared")
-            print("   - Continuation available: \(continuation != nil)")
+            Log.ui.debug("LaunchNewDocumentView appeared")
         }
     }
 }
@@ -787,7 +782,7 @@ struct WelcomeWindowContent: View {
             do {
                 try await openDocument(at: url)
             } catch {
-                print("Error opening document: \(error.localizedDescription)")
+                Log.document.error("Error opening document at \(url.lastPathComponent): \(error.localizedDescription)")
             }
 
             // Stop accessing after a delay to ensure document is loaded
@@ -816,7 +811,7 @@ struct WelcomeWindowContent: View {
 
             savePanel.begin { response in
                 guard response == .OK, let url = savePanel.url else {
-                    print("User cancelled save")
+                    Log.document.debug("User cancelled save for imported document")
                     return
                 }
 
@@ -834,15 +829,15 @@ struct WelcomeWindowContent: View {
                         do {
                             try await openDocument(at: url)
                         } catch {
-                            print("Error opening imported document: \(error.localizedDescription)")
+                            Log.document.error("Error opening imported document: \(error.localizedDescription)")
                         }
                     }
                 } catch {
-                    print("Error saving imported document: \(error.localizedDescription)")
+                    Log.document.error("Error saving imported document: \(error.localizedDescription)")
                 }
             }
         } catch {
-            print("Error creating file wrapper for imported document: \(error.localizedDescription)")
+            Log.io.error("Error creating file wrapper for imported document: \(error.localizedDescription)")
         }
     }
 }
@@ -872,61 +867,43 @@ struct ManuscriptApp: App {
     }
 
     private func printICloudDebugInfo() {
-        print("=== iCloud Debug Info ===")
         #if os(iOS)
-        print("Platform: iOS Simulator/Device")
+        let platform = "iOS"
         #else
-        print("Platform: macOS")
+        let platform = "macOS"
         #endif
-        print("Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")")
 
-        // Check iCloud account status
         let fileManager = FileManager.default
-        print("ubiquityIdentityToken: \(fileManager.ubiquityIdentityToken != nil ? "present" : "nil (not logged in or iCloud disabled)")")
+        let hasToken = fileManager.ubiquityIdentityToken != nil
 
-        // Check default container (nil) - should be generic iCloud Drive
+        Log.sync.debug("iCloud Debug: platform=\(platform), bundleID=\(Bundle.main.bundleIdentifier ?? "unknown"), ubiquityToken=\(hasToken ? "present" : "nil")")
+
         if let defaultURL = fileManager.url(forUbiquityContainerIdentifier: nil) {
-            print("✅ iCloud container accessible at:")
-            print("   \(defaultURL.path)")
-
             let documentsURL = defaultURL.appendingPathComponent("Documents")
-            print("   Documents path: \(documentsURL.path)")
-            print("   Documents exists: \(fileManager.fileExists(atPath: documentsURL.path))")
+            let documentsExists = fileManager.fileExists(atPath: documentsURL.path)
 
-            if fileManager.fileExists(atPath: documentsURL.path) {
+            Log.sync.info("iCloud container accessible at: \(defaultURL.path), Documents exists: \(documentsExists)")
+
+            if documentsExists {
                 do {
                     let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: [.isDirectoryKey, .isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey])
-                    print("   Found \(files.count) file(s) in Documents/:")
-                    for file in files.prefix(10) {
-                        let resourceValues = try? file.resourceValues(forKeys: [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey])
-                        let downloadStatus = resourceValues?.ubiquitousItemDownloadingStatus?.rawValue ?? "unknown"
-                        print("   - \(file.lastPathComponent) (iCloud status: \(downloadStatus))")
-                    }
+                    Log.sync.debug("Found \(files.count) file(s) in iCloud Documents")
                 } catch {
-                    print("   ❌ Error reading Documents: \(error.localizedDescription)")
+                    Log.sync.error("Error reading iCloud Documents: \(error.localizedDescription)")
                 }
             }
         } else {
-            print("❌ Cannot access iCloud container (url(forUbiquityContainerIdentifier:) returned nil)")
-            print("   This usually means:")
-            print("   - iCloud is not enabled for this app")
-            print("   - User is not signed into iCloud")
-            print("   - Running on Simulator without iCloud configured")
+            Log.sync.warning("Cannot access iCloud container - user may not be signed in or iCloud is disabled")
         }
 
-        // Check local documents directory as fallback
-        let localDocs = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
-        print("Local Documents: \(localDocs?.path ?? "nil")")
-        if let localDocs = localDocs {
+        if let localDocs = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first {
             do {
                 let localFiles = try fileManager.contentsOfDirectory(at: localDocs, includingPropertiesForKeys: nil)
-                print("   Found \(localFiles.count) local file(s)")
+                Log.sync.debug("Local Documents: \(localDocs.path), \(localFiles.count) file(s)")
             } catch {
-                print("   ❌ Error reading local docs: \(error.localizedDescription)")
+                Log.sync.error("Error reading local Documents: \(error.localizedDescription)")
             }
         }
-
-        print("========================\n")
     }
 
     var body: some Scene {
@@ -956,12 +933,7 @@ struct ManuscriptApp: App {
                 .frame(minWidth: 900, minHeight: 600)
                 #endif
                 .onAppear {
-                    print("📂 [DocumentGroup] Document opened")
-                    print("   - fileURL: \(file.fileURL?.path ?? "nil (new document)")")
-                    print("   - title: \(file.document.title.isEmpty ? "(empty)" : file.document.title)")
-                    print("   - rootFolder documents: \(file.document.rootFolder.documents.count)")
-                    print("   - characters: \(file.document.characters.count)")
-                    print("   - locations: \(file.document.locations.count)")
+                    Log.document.info("Document opened: \(file.document.title.isEmpty ? "Untitled" : file.document.title), documents: \(file.document.rootFolder.documents.count), characters: \(file.document.characters.count), locations: \(file.document.locations.count)")
 
                     #if os(iOS)
                     handleDocumentOpen(
@@ -1037,17 +1009,16 @@ struct ManuscriptApp: App {
         #if os(iOS)
         DocumentGroupLaunchScene("") {
             NewDocumentButton("New Manuscript", for: ManuscriptDocument.self) {
-                print("🆕 [DocumentGroupLaunchScene] 'New Manuscript' button tapped")
+                Log.ui.debug("New Manuscript button tapped")
                 do {
                     let result = try await withCheckedThrowingContinuation { continuation in
-                        print("   - Setting up continuation for new document")
                         self.newDocContinuation = continuation
                         self.isNewDocPresented = true
                     }
-                    print("   - Continuation resolved with document: \(result?.title ?? "nil")")
+                    Log.document.debug("New document created: \(result?.title ?? "cancelled")")
                     return result
                 } catch {
-                    print("❌ [DocumentGroupLaunchScene] Error creating new document: \(error)")
+                    Log.document.error("Error creating new document: \(error.localizedDescription)")
                     throw error
                 }
             }
@@ -1056,17 +1027,16 @@ struct ManuscriptApp: App {
             }
 
             NewDocumentButton("Import Scrivener Project", for: ManuscriptDocument.self) {
-                print("📥 [DocumentGroupLaunchScene] 'Import Scrivener Project' button tapped")
+                Log.ui.debug("Import Scrivener Project button tapped")
                 do {
                     let result = try await withCheckedThrowingContinuation { continuation in
-                        print("   - Setting up continuation for Scrivener import")
                         self.importContinuation = continuation
                         self.isScrivenerImportPresented = true
                     }
-                    print("   - Import continuation resolved with document: \(result?.title ?? "nil")")
+                    Log.io.info("Scrivener import completed: \(result?.title ?? "cancelled")")
                     return result
                 } catch {
-                    print("❌ [DocumentGroupLaunchScene] Error importing Scrivener project: \(error)")
+                    Log.io.error("Error importing Scrivener project: \(error.localizedDescription)")
                     throw error
                 }
             }
@@ -1076,7 +1046,7 @@ struct ManuscriptApp: App {
         } background: {
             LaunchSceneBackground()
                 .onAppear {
-                    print("📱 [DocumentGroupLaunchScene] Launch scene background appeared")
+                    Log.ui.debug("DocumentGroupLaunchScene appeared")
                 }
         } overlayAccessoryView: { geometry in
             // Title with extra margin above buttons
@@ -1149,23 +1119,23 @@ struct ManuscriptApp: App {
     }
 
     private func renameDocumentIfNeeded(fileURL: URL, title: String) -> URL? {
-        print("🔎 [DocumentGroup] Rename check for: \(fileURL.lastPathComponent) (title: '\(title)')")
+        Log.document.debug("Rename check for: \(fileURL.lastPathComponent), title: \(title)")
 
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTitle.isEmpty else {
-            print("⚠️ [DocumentGroup] Rename skipped: empty title")
+            Log.document.debug("Rename skipped: empty title")
             return nil
         }
 
         let currentName = fileURL.deletingPathExtension().lastPathComponent
         guard currentName.hasPrefix("Untitled") else {
-            print("ℹ️ [DocumentGroup] Rename skipped: already named '\(currentName)'")
+            Log.document.debug("Rename skipped: already named '\(currentName)'")
             return nil
         }
 
         let sanitizedTitle = sanitizedFilename(from: trimmedTitle)
         guard !sanitizedTitle.isEmpty else {
-            print("⚠️ [DocumentGroup] Rename skipped: sanitized title empty")
+            Log.document.debug("Rename skipped: sanitized title empty")
             return nil
         }
 
@@ -1179,7 +1149,7 @@ struct ManuscriptApp: App {
         )
 
         guard targetURL != fileURL else {
-            print("ℹ️ [DocumentGroup] Rename skipped: target equals current URL")
+            Log.document.debug("Rename skipped: target equals current URL")
             return nil
         }
 
@@ -1188,7 +1158,7 @@ struct ManuscriptApp: App {
             if fileManager.fileExists(atPath: targetURL.path) {
                 return targetURL
             }
-            print("⚠️ [DocumentGroup] Rename skipped: source file missing")
+            Log.document.debug("Rename skipped: source file missing")
             return nil
         }
 
@@ -1198,15 +1168,15 @@ struct ManuscriptApp: App {
         coordinator.coordinate(writingItemAt: fileURL, options: .forMoving, error: &coordinatorError) { coordinatedURL in
             do {
                 try fileManager.moveItem(at: coordinatedURL, to: targetURL)
-                print("✅ [DocumentGroup] Renamed document to: \(targetURL.lastPathComponent)")
+                Log.document.info("Renamed document to: \(targetURL.lastPathComponent)")
                 finalURL = targetURL
             } catch {
-                print("❌ [DocumentGroup] Failed to rename document: \(error.localizedDescription)")
+                Log.document.error("Failed to rename document: \(error.localizedDescription)")
                 finalURL = nil
             }
         }
         if let coordinatorError {
-            print("❌ [DocumentGroup] File coordination error: \(coordinatorError.localizedDescription)")
+            Log.document.error("File coordination error: \(coordinatorError.localizedDescription)")
         }
         return finalURL == fileURL ? nil : finalURL
     }

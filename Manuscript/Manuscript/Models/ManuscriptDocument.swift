@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import OSLog
 
 // MARK: - Main Document
 
@@ -85,32 +86,25 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // MARK: - FileDocument Implementation
 
     init(configuration: ReadConfiguration) throws {
-        print("📄 [ManuscriptDocument] init(configuration:) called")
-        print("   - isDirectory: \(configuration.file.isDirectory)")
-        print("   - filename: \(configuration.file.filename ?? "nil")")
-        print("   - preferredFilename: \(configuration.file.preferredFilename ?? "nil")")
+        let filename = configuration.file.filename ?? configuration.file.preferredFilename ?? "unknown"
+        Log.document.debug("Loading document: \(filename), isDirectory: \(configuration.file.isDirectory)")
 
         // Only support package (directory) format
         guard configuration.file.isDirectory else {
-            print("❌ [ManuscriptDocument] Error: File is not a directory (package)")
+            Log.document.error("File is not a directory (package): \(filename)")
             throw CocoaError(.fileReadUnsupportedScheme)
         }
 
         do {
             try self.init(fromPackage: configuration.file)
-            print("✅ [ManuscriptDocument] Successfully loaded document: \(self.title)")
+            Log.document.info("Successfully loaded document: \(self.title)")
         } catch {
-            print("❌ [ManuscriptDocument] Error loading document: \(error)")
-            print("   - Error type: \(type(of: error))")
-            print("   - Localized description: \(error.localizedDescription)")
-            if let cocoaError = error as? CocoaError {
-                print("   - CocoaError code: \(cocoaError.code)")
-            }
+            Log.document.error("Error loading document \(filename): \(error.localizedDescription)")
 
             // Report error to UI
-            let filename = configuration.file.filename ?? configuration.file.preferredFilename
+            let displayFilename = configuration.file.filename ?? configuration.file.preferredFilename
             Task { @MainActor in
-                ErrorManager.shared.showDocumentLoadError(error, filename: filename)
+                ErrorManager.shared.showDocumentLoadError(error, filename: displayFilename)
             }
 
             throw error
@@ -118,17 +112,14 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     }
 
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        print("💾 [ManuscriptDocument] fileWrapper(configuration:) called")
-        print("   - existingFile: \(configuration.existingFile != nil)")
+        Log.document.debug("Creating file wrapper for: \(self.title), existingFile: \(configuration.existingFile != nil)")
 
         do {
             let wrapper = try createPackageFileWrapper()
-            print("✅ [ManuscriptDocument] Successfully created file wrapper for: \(self.title)")
+            Log.document.info("Successfully created file wrapper for: \(self.title)")
             return wrapper
         } catch {
-            print("❌ [ManuscriptDocument] Error creating file wrapper: \(error)")
-            print("   - Error type: \(type(of: error))")
-            print("   - Localized description: \(error.localizedDescription)")
+            Log.document.error("Error creating file wrapper for \(self.title): \(error.localizedDescription)")
             throw error
         }
     }
@@ -136,25 +127,24 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // MARK: - Package Format Reading
 
     private init(fromPackage fileWrapper: FileWrapper) throws {
-        print("📦 [ManuscriptDocument] Reading package...")
-        print("   - fileWrapper.filename: \(fileWrapper.filename ?? "nil")")
+        let filename = fileWrapper.filename ?? "unknown"
+        Log.document.debug("Reading package: \(filename)")
 
         guard let children = fileWrapper.fileWrappers else {
-            print("❌ [ManuscriptDocument] Package has no children (not a directory)")
+            Log.document.error("Package has no children (not a directory): \(filename)")
             throw CocoaError(.fileReadCorruptFile)
         }
 
-        print("   - Package contents: \(children.keys.sorted().joined(separator: ", "))")
+        Log.document.debug("Package contents: \(children.keys.sorted().joined(separator: ", "))")
 
         // Read project.json
         guard let projectJsonWrapper = children["project.json"],
               let projectJsonData = projectJsonWrapper.regularFileContents else {
-            print("❌ [ManuscriptDocument] Missing or unreadable project.json")
-            print("   - project.json exists: \(children["project.json"] != nil)")
+            Log.document.error("Missing or unreadable project.json in \(filename)")
             throw CocoaError(.fileReadCorruptFile)
         }
 
-        print("   - project.json size: \(projectJsonData.count) bytes")
+        Log.document.debug("project.json size: \(projectJsonData.count) bytes")
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -162,22 +152,23 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         let projectData: ProjectJSON
         do {
             projectData = try decoder.decode(ProjectJSON.self, from: projectJsonData)
-            print("   - Decoded project: \(projectData.title)")
+            Log.document.debug("Decoded project: \(projectData.title)")
         } catch {
-            print("❌ [ManuscriptDocument] Failed to decode project.json: \(error)")
             if let decodingError = error as? DecodingError {
                 switch decodingError {
                 case .keyNotFound(let key, let context):
-                    print("   - Missing key: \(key.stringValue) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    Log.document.error("Failed to decode project.json: missing key '\(key.stringValue)' at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
                 case .typeMismatch(let type, let context):
-                    print("   - Type mismatch: expected \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    Log.document.error("Failed to decode project.json: type mismatch for \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
                 case .valueNotFound(let type, let context):
-                    print("   - Value not found: \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    Log.document.error("Failed to decode project.json: value not found for \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
                 case .dataCorrupted(let context):
-                    print("   - Data corrupted at \(context.codingPath.map { $0.stringValue }.joined(separator: ".")): \(context.debugDescription)")
+                    Log.document.error("Failed to decode project.json: data corrupted at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
                 @unknown default:
-                    print("   - Unknown decoding error")
+                    Log.document.error("Failed to decode project.json: unknown error")
                 }
+            } else {
+                Log.document.error("Failed to decode project.json: \(error.localizedDescription)")
             }
             throw error
         }

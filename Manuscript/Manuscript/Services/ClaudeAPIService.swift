@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 /// Service for making requests to the Anthropic Claude API
 actor ClaudeAPIService {
@@ -6,7 +7,6 @@ actor ClaudeAPIService {
 
     private let baseURL = URL(string: "https://api.anthropic.com/v1")!
     private let apiVersion = "2023-06-01"
-    private let logger = LoggingService.shared
 
     private init() {}
 
@@ -166,13 +166,17 @@ actor ClaudeAPIService {
         do {
             urlRequest.httpBody = try JSONEncoder().encode(request)
         } catch {
+            Log.ai.error("Failed to encode Claude request: \(error.localizedDescription)")
             throw ClaudeError.networkError(error)
         }
+
+        Log.ai.debug("Claude API request to messages endpoint, model: \(request.model)")
 
         do {
             let (data, response) = try await URLSession.shared.data(for: urlRequest)
 
             guard let httpResponse = response as? HTTPURLResponse else {
+                Log.ai.error("Claude API returned invalid response (not HTTPURLResponse)")
                 throw ClaudeError.invalidResponse
             }
 
@@ -181,13 +185,18 @@ actor ClaudeAPIService {
             case 200...299:
                 break
             case 401:
+                Log.ai.error("Claude API authentication failed (401)")
                 throw ClaudeError.invalidAPIKey
             case 429:
+                Log.ai.warning("Claude API rate limited (429)")
                 throw ClaudeError.rateLimited
             case 529:
+                Log.ai.warning("Claude API overloaded (529)")
                 throw ClaudeError.overloaded
             default:
-                throw ClaudeError.httpError(httpResponse.statusCode, extractErrorMessage(from: data))
+                let errorMsg = extractErrorMessage(from: data)
+                Log.ai.error("Claude API error \(httpResponse.statusCode): \(errorMsg)")
+                throw ClaudeError.httpError(httpResponse.statusCode, errorMsg)
             }
 
             do {
@@ -198,17 +207,22 @@ actor ClaudeAPIService {
                     .joined()
 
                 if text.isEmpty {
+                    Log.ai.error("Claude API returned empty response content")
                     throw ClaudeError.invalidResponse
                 }
+
+                Log.ai.debug("Claude API response received, usage: \(messagesResponse.usage.inputTokens) in / \(messagesResponse.usage.outputTokens) out tokens")
                 return text
             } catch let error as ClaudeError {
                 throw error
             } catch {
+                Log.ai.error("Failed to decode Claude response: \(error.localizedDescription)")
                 throw ClaudeError.decodingError(error)
             }
         } catch let error as ClaudeError {
             throw error
         } catch {
+            Log.ai.error("Claude API network error: \(error.localizedDescription)")
             throw ClaudeError.networkError(error)
         }
     }

@@ -1,11 +1,11 @@
 import Foundation
+import OSLog
 
 /// Service for making requests to the OpenAI API
 actor OpenAIService {
     static let shared = OpenAIService()
 
     private let baseURL = URL(string: "https://api.openai.com/v1")!
-    private let logger = LoggingService.shared
 
     private init() {}
 
@@ -170,13 +170,17 @@ actor OpenAIService {
         do {
             urlRequest.httpBody = try JSONEncoder().encode(request)
         } catch {
+            Log.ai.error("Failed to encode OpenAI request: \(error.localizedDescription)")
             throw OpenAIError.networkError(error)
         }
+
+        Log.ai.debug("OpenAI API request to chat/completions, model: \(request.model)")
 
         do {
             let (data, response) = try await URLSession.shared.data(for: urlRequest)
 
             guard let httpResponse = response as? HTTPURLResponse else {
+                Log.ai.error("OpenAI API returned invalid response (not HTTPURLResponse)")
                 throw OpenAIError.invalidResponse
             }
 
@@ -185,34 +189,48 @@ actor OpenAIService {
             case 200...299:
                 break
             case 401:
+                Log.ai.error("OpenAI API authentication failed (401)")
                 throw OpenAIError.invalidAPIKey
             case 429:
+                Log.ai.warning("OpenAI API rate limited (429)")
                 throw OpenAIError.rateLimited
             case 402, 403:
                 // Check if it's a quota issue
                 if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data),
                    errorResponse.error.code == "insufficient_quota" {
+                    Log.ai.error("OpenAI API quota exceeded")
                     throw OpenAIError.insufficientQuota
                 }
-                throw OpenAIError.httpError(httpResponse.statusCode, extractErrorMessage(from: data))
+                let errorMsg = extractErrorMessage(from: data)
+                Log.ai.error("OpenAI API error \(httpResponse.statusCode): \(errorMsg)")
+                throw OpenAIError.httpError(httpResponse.statusCode, errorMsg)
             default:
-                throw OpenAIError.httpError(httpResponse.statusCode, extractErrorMessage(from: data))
+                let errorMsg = extractErrorMessage(from: data)
+                Log.ai.error("OpenAI API error \(httpResponse.statusCode): \(errorMsg)")
+                throw OpenAIError.httpError(httpResponse.statusCode, errorMsg)
             }
 
             do {
                 let completionResponse = try JSONDecoder().decode(ChatCompletionResponse.self, from: data)
                 guard let content = completionResponse.choices.first?.message.content else {
+                    Log.ai.error("OpenAI API returned empty response content")
                     throw OpenAIError.invalidResponse
+                }
+
+                if let usage = completionResponse.usage {
+                    Log.ai.debug("OpenAI API response received, usage: \(usage.promptTokens) prompt / \(usage.completionTokens) completion tokens")
                 }
                 return content
             } catch let error as OpenAIError {
                 throw error
             } catch {
+                Log.ai.error("Failed to decode OpenAI response: \(error.localizedDescription)")
                 throw OpenAIError.decodingError(error)
             }
         } catch let error as OpenAIError {
             throw error
         } catch {
+            Log.ai.error("OpenAI API network error: \(error.localizedDescription)")
             throw OpenAIError.networkError(error)
         }
     }
