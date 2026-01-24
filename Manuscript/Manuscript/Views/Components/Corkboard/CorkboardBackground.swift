@@ -5,11 +5,11 @@ struct CorkboardBackground: View {
     /// Controls the density of cork grain details
     var grainDensity: Double = 1.0
 
-    /// Base cork colors
-    private let corkBaseColor = Color(red: 0.76, green: 0.60, blue: 0.42)
-    private let corkLightColor = Color(red: 0.82, green: 0.68, blue: 0.52)
-    private let corkDarkColor = Color(red: 0.58, green: 0.44, blue: 0.30)
-    private let corkSpotColor = Color(red: 0.50, green: 0.36, blue: 0.22)
+    /// Base cork colors (slightly muted)
+    private let corkBaseColor = Color(red: 0.74, green: 0.59, blue: 0.43)
+    private let corkLightColor = Color(red: 0.79, green: 0.66, blue: 0.52)
+    private let corkDarkColor = Color(red: 0.58, green: 0.45, blue: 0.32)
+    private let corkSpotColor = Color(red: 0.51, green: 0.38, blue: 0.25)
 
     var body: some View {
         GeometryReader { geometry in
@@ -39,16 +39,16 @@ struct CorkboardBackground: View {
                 RadialGradient(
                     colors: [
                         .clear,
-                        .black.opacity(0.08)
+                        .black.opacity(0.06)
                     ],
                     center: .center,
-                    startRadius: min(geometry.size.width, geometry.size.height) * 0.3,
-                    endRadius: max(geometry.size.width, geometry.size.height) * 0.8
+                    startRadius: min(geometry.size.width, geometry.size.height) * 0.35,
+                    endRadius: max(geometry.size.width, geometry.size.height) * 0.85
                 )
 
                 // Very subtle noise overlay for extra texture
                 CorkNoiseOverlay()
-                    .opacity(0.03)
+                    .opacity(0.02)
             }
         }
         .ignoresSafeArea()
@@ -100,19 +100,19 @@ private struct CorkTextureCanvas: View {
         size: CGSize,
         rng: inout SeededRandomGenerator
     ) {
-        let poreCount = Int(size.width * size.height / 800 * grainDensity)
+        let poreCount = Int(size.width * size.height / 900 * grainDensity)
 
         for _ in 0..<poreCount {
             let x = rng.nextDouble() * size.width
             let y = rng.nextDouble() * size.height
-            let radius = rng.nextDouble() * 2.5 + 0.5
-            let opacity = rng.nextDouble() * 0.15 + 0.05
+            let radius = rng.nextDouble() * 2.2 + 0.4
+            let opacity = rng.nextDouble() * 0.11 + 0.04
 
             let path = Path(ellipseIn: CGRect(
                 x: x - radius,
                 y: y - radius,
-                width: radius * 2 * (0.8 + rng.nextDouble() * 0.4),
-                height: radius * 2 * (0.8 + rng.nextDouble() * 0.4)
+                width: radius * 2 * (0.85 + rng.nextDouble() * 0.3),
+                height: radius * 2 * (0.85 + rng.nextDouble() * 0.3)
             ))
 
             context.fill(
@@ -127,15 +127,15 @@ private struct CorkTextureCanvas: View {
         size: CGSize,
         rng: inout SeededRandomGenerator
     ) {
-        let highlightCount = Int(size.width * size.height / 2000 * grainDensity)
+        let highlightCount = Int(size.width * size.height / 2200 * grainDensity)
 
         for _ in 0..<highlightCount {
             let x = rng.nextDouble() * size.width
             let y = rng.nextDouble() * size.height
-            let width = rng.nextDouble() * 8 + 2
-            let height = rng.nextDouble() * 3 + 1
+            let width = rng.nextDouble() * 6.5 + 1.8
+            let height = rng.nextDouble() * 2.5 + 0.9
             let rotation = Angle.degrees(rng.nextDouble() * 180)
-            let opacity = rng.nextDouble() * 0.12 + 0.03
+            let opacity = rng.nextDouble() * 0.09 + 0.025
 
             var grainContext = context
             grainContext.translateBy(x: x, y: y)
@@ -160,20 +160,20 @@ private struct CorkTextureCanvas: View {
         size: CGSize,
         rng: inout SeededRandomGenerator
     ) {
-        let variationCount = Int(size.width * size.height / 5000 * grainDensity)
+        let variationCount = Int(size.width * size.height / 5500 * grainDensity)
 
         for _ in 0..<variationCount {
             let x = rng.nextDouble() * size.width
             let y = rng.nextDouble() * size.height
-            let radius = rng.nextDouble() * 15 + 5
-            let opacity = rng.nextDouble() * 0.06 + 0.02
+            let radius = rng.nextDouble() * 12 + 4
+            let opacity = rng.nextDouble() * 0.045 + 0.015
             let isDark = rng.nextDouble() > 0.5
 
             let path = Path(ellipseIn: CGRect(
                 x: x - radius,
                 y: y - radius,
                 width: radius * 2,
-                height: radius * 2 * (0.6 + rng.nextDouble() * 0.8)
+                height: radius * 2 * (0.65 + rng.nextDouble() * 0.7)
             ))
 
             context.fill(
@@ -190,7 +190,7 @@ private struct CorkNoiseOverlay: View {
         GeometryReader { geometry in
             Canvas { context, size in
                 var rng = SeededRandomGenerator(seed: 42)
-                let cellSize: CGFloat = 3
+                let cellSize: CGFloat = 2.5
 
                 for x in stride(from: 0, to: size.width, by: cellSize) {
                     for y in stride(from: 0, to: size.height, by: cellSize) {
