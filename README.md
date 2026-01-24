@@ -34,7 +34,7 @@ Think Scrivener or Ulysses, but free and open source.
 | Comments system | ✅ | Inline comments with chat bubble UI and inspector |
 | Templates | ✅ | 9 story structure templates (Hero's Journey, Save the Cat, Three-Act, etc.) |
 | Scrivener import | ✅ | Full .scriv import with RTF conversion and comments |
-| Export | ✅ | PDF and Markdown export |
+| Export | ✅ | PDF, Word, EPUB, Markdown, Plain Text, Scrivener |
 | AI assistance | ✅ | Text generation with custom API keys (OpenAI, Anthropic) |
 | State restoration | ✅ | Remembers last open document and expanded folders |
 | Paragraph formatting | ✅ | First-line indentation, line spacing |
@@ -47,7 +47,10 @@ Think Scrivener or Ulysses, but free and open source.
 | Outliner view | ✅ | Hierarchical outline with sortable metadata columns |
 | Composition mode | 🔜 | Distraction-free full-screen writing |
 | Compile presets | 🔜 | Save and reuse export configurations |
-| More export formats | 🔜 | DOCX, EPUB, HTML, LaTeX |
+| Print | 🔜 | Print documents directly |
+| Import documents | 🔜 | Import Word, PDF, HTML files |
+| Import images | 🔜 | Import and embed images in research |
+| Auto backups | 🔜 | Automatic backup on close |
 | Trash folder | 🔜 | Recoverable deleted items |
 | Document links | 🔜 | Internal links between documents |
 | Keywords/tags | 🔜 | Tagging system for organization |
@@ -159,8 +162,12 @@ It was a dark and stormy night...
 
 **Phase 4: Import & Export** ✅
 - [x] Scrivener .scriv import (with RTF conversion, comments, icons)
-- [x] PDF export
-- [x] Markdown export
+- [x] PDF export with customizable fonts, margins, page sizes
+- [x] Word (DOCX) export
+- [x] EPUB export
+- [x] Markdown export with optional frontmatter
+- [x] Plain text export
+- [x] Scrivener (.scriv) export
 
 **Phase 5: AI Integration** ✅
 - [x] AI text generation service
@@ -187,8 +194,12 @@ It was a dark and stormy night...
 - [x] Split editor (side-by-side documents on macOS)
 - [x] Outliner view with sortable columns
 - [x] Read mode (distraction-free reading)
+- [x] Exclude files from compile (per-document include/exclude)
 - [ ] Composition mode (distraction-free writing)
-- [ ] DOCX, EPUB, HTML, LaTeX export
+- [ ] Print documents
+- [ ] Import documents (Word, PDF, HTML)
+- [ ] Import images
+- [ ] Auto backups
 - [ ] Snapshot comparison/diff view
 
 ## Contributing
