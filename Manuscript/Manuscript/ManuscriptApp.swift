@@ -102,14 +102,28 @@ struct FindMenuCommands: View {
 struct LaunchNewDocumentView: View {
     @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @Environment(\.dismiss) private var dismiss
+    @State private var title = ""
+    @FocusState private var isTitleFocused: Bool
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    // Title input at the top
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Title")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        TextField("My Manuscript", text: $title)
+                            .textFieldStyle(.roundedBorder)
+                            .focused($isTitleFocused)
+                    }
+                    .padding(.bottom, 8)
+
                     // Blank option - styled like a template card
                     Button {
-                        let document = ManuscriptDocument()
+                        var document = ManuscriptDocument()
+                        document.title = title.isEmpty ? "Untitled" : title
                         continuation?.resume(returning: document)
                         continuation = nil
                         dismiss()
@@ -121,7 +135,8 @@ struct LaunchNewDocumentView: View {
                     // Template options - reuse LaunchTemplateCard
                     ForEach(BookTemplate.templates) { template in
                         Button {
-                            let document = ManuscriptDocument.fromTemplate(template)
+                            var document = ManuscriptDocument.fromTemplate(template)
+                            document.title = title.isEmpty ? "Untitled" : title
                             continuation?.resume(returning: document)
                             continuation = nil
                             dismiss()
@@ -143,6 +158,9 @@ struct LaunchNewDocumentView: View {
                         dismiss()
                     }
                 }
+            }
+            .onAppear {
+                isTitleFocused = true
             }
         }
     }
