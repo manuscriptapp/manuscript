@@ -92,32 +92,28 @@ final class ScrivenerExporter {
         let versionPath = scrivDir.appendingPathComponent("Files/version.txt")
         try "23".write(to: versionPath, atomically: true, encoding: .utf8)
 
-        // 5. Write additional required Scrivener 3 files
+        // 5. Write additional Scrivener 3 support files
         let filesDir = scrivDir.appendingPathComponent("Files")
 
-        // binder.autosave - empty file
-        let binderAutosavePath = filesDir.appendingPathComponent("binder.autosave")
-        try Data().write(to: binderAutosavePath)
+        // Note: binder.autosave and binder.backup are created by Scrivener, not needed for export
 
-        // binder.backup - empty file
-        let binderBackupPath = filesDir.appendingPathComponent("binder.backup")
-        try Data().write(to: binderBackupPath)
+        // search.indexes - Scrivener will rebuild this on first open
+        // (empty file is acceptable, Scrivener rebuilds it)
 
-        // search.indexes - empty file (Scrivener will rebuild this)
-        let searchIndexesPath = filesDir.appendingPathComponent("search.indexes")
-        try Data().write(to: searchIndexesPath)
-
-        // writing.history - empty file
+        // writing.history - proper XML structure (empty history)
+        let writingHistoryXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <WritingHistory>
+        </WritingHistory>
+        """
         let writingHistoryPath = filesDir.appendingPathComponent("writing.history")
-        try Data().write(to: writingHistoryPath)
+        try writingHistoryXML.write(to: writingHistoryPath, atomically: true, encoding: .utf8)
 
-        // styles.xml - minimal plist format
+        // styles.xml - proper Scrivener Styles format (empty styles)
         let stylesXML = """
         <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict/>
-        </plist>
+        <Styles>
+        </Styles>
         """
         let stylesPath = filesDir.appendingPathComponent("styles.xml")
         try stylesXML.write(to: stylesPath, atomically: true, encoding: .utf8)

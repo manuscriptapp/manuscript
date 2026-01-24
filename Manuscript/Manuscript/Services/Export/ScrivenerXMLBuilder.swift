@@ -58,22 +58,28 @@ final class ScrivenerXMLBuilder {
             indent: 2
         )
 
-        // Add Research folder if it has content
-        if let researchFolder = document.researchFolder, !researchFolder.isEmpty {
+        // Add Research folder (Scrivener requires this even if empty)
+        if let researchFolder = document.researchFolder {
             xml += buildBinderItem(
                 folder: researchFolder,
                 type: "ResearchFolder",
                 indent: 2
             )
+        } else {
+            // Create empty Research folder
+            xml += buildEmptySpecialFolder(type: "ResearchFolder", title: "Research", indent: 2)
         }
 
-        // Add Trash folder if it has content
-        if let trashFolder = document.trashFolder, !trashFolder.isEmpty {
+        // Add Trash folder (Scrivener requires this even if empty)
+        if let trashFolder = document.trashFolder {
             xml += buildBinderItem(
                 folder: trashFolder,
                 type: "TrashFolder",
                 indent: 2
             )
+        } else {
+            // Create empty Trash folder
+            xml += buildEmptySpecialFolder(type: "TrashFolder", title: "Trash", indent: 2)
         }
 
         xml += """
@@ -152,6 +158,23 @@ final class ScrivenerXMLBuilder {
         xml += "\(indentation)</BinderItem>\n"
 
         return xml
+    }
+
+    /// Builds an empty BinderItem for required special folders (Research, Trash)
+    private func buildEmptySpecialFolder(type: String, title: String, indent: Int) -> String {
+        let indentation = String(repeating: "    ", count: indent)
+        let scrivUUID = UUID().uuidString
+        let dateString = formatScrivenerDate(Date())
+
+        return """
+        \(indentation)<BinderItem UUID="\(scrivUUID)" Type="\(type)" Created="\(dateString)" Modified="\(dateString)">
+        \(indentation)    <Title>\(escapeXML(title))</Title>
+        \(indentation)    <MetaData>
+        \(indentation)        <IncludeInCompile>Yes</IncludeInCompile>
+        \(indentation)    </MetaData>
+        \(indentation)</BinderItem>
+
+        """
     }
 
     private func buildDocumentBinderItem(document doc: ManuscriptDocument.Document, indent: Int) -> String {
