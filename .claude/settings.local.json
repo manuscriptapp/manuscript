@@ -151,7 +151,8 @@
       "Bash(pip3 install:*)",
       "Bash(source .venv/bin/activate)",
       "Bash(pip install:*)",
-      "Bash(python output/manuscript-poster.py:*)"
+      "Bash(python output/manuscript-poster.py:*)",
+      "Bash(cat:*)"
     ],
     "additionalDirectories": [
       "/Users/jonasdalesjo/code/literati-swift"
