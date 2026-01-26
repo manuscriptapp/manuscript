@@ -24,6 +24,49 @@ enum MarkdownParser {
     static let commentUnderlineColor = NSColor(red: 0.9, green: 0.5, blue: 0.1, alpha: 1.0)
     #endif
 
+    /// Regex patterns for inline formatting (order matters)
+    private static let inlinePatterns: [(pattern: String, style: MarkdownStyle)] = [
+        ("\\*\\*\\*(.+?)\\*\\*\\*", .boldItalic),     // ***bold italic***
+        ("___(.+?)___", .boldItalic),                  // ___bold italic___
+        ("\\*\\*(.+?)\\*\\*", .bold),                  // **bold**
+        ("__(.+?)__", .bold),                          // __bold__
+        ("\\*(.+?)\\*", .italic),                      // *italic*
+        ("_(.+?)_", .italic),                          // _italic_
+        ("~~(.+?)~~", .strikethrough),                 // ~~strikethrough~~
+        ("==(.+?)==", .highlight),                     // ==highlight==
+    ]
+
+    /// Cached regex patterns for inline formatting
+    private static let inlineRegexCache: [String: NSRegularExpression] = {
+        var cache: [String: NSRegularExpression] = [:]
+        for pattern in inlinePatterns.map(\.pattern) {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+                cache[pattern] = regex
+            }
+        }
+        return cache
+    }()
+
+    /// Patterns for merging adjacent formatting
+    private static let cleanupPatterns: [(pattern: String, replacement: String)] = [
+        ("\\*\\*\\*(.+?)\\*\\*\\*\\*\\*\\*(.+?)\\*\\*\\*", "***$1$2***"),
+        ("\\*\\*(.+?)\\*\\*\\*\\*(.+?)\\*\\*", "**$1$2**"),
+        ("\\*(.+?)\\*\\*(.+?)\\*", "*$1$2*"),
+        ("~~(.+?)~~~~(.+?)~~", "~~$1$2~~"),
+        ("==(.+?)====(.+?)==", "==$1$2=="),
+    ]
+
+    /// Cached regex patterns for cleanup formatting
+    private static let cleanupRegexCache: [String: NSRegularExpression] = {
+        var cache: [String: NSRegularExpression] = [:]
+        for pattern in cleanupPatterns.map(\.pattern) {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+                cache[pattern] = regex
+            }
+        }
+        return cache
+    }()
+
     /// Helper to compare colors with tolerance
     private static func colorsMatch(_ color1: Any, _ color2: PlatformColor) -> Bool {
         guard let c1 = color1 as? PlatformColor else { return false }
@@ -91,25 +134,12 @@ enum MarkdownParser {
     ) -> NSAttributedString {
         let result = NSMutableAttributedString()
 
-        // Regex patterns for markdown formatting
-        // Order matters: process bold+italic first, then bold, then italic, then strikethrough, then highlight
-        let patterns: [(pattern: String, style: MarkdownStyle)] = [
-            ("\\*\\*\\*(.+?)\\*\\*\\*", .boldItalic),     // ***bold italic***
-            ("___(.+?)___", .boldItalic),                  // ___bold italic___
-            ("\\*\\*(.+?)\\*\\*", .bold),                  // **bold**
-            ("__(.+?)__", .bold),                          // __bold__
-            ("\\*(.+?)\\*", .italic),                      // *italic*
-            ("_(.+?)_", .italic),                          // _italic_
-            ("~~(.+?)~~", .strikethrough),                 // ~~strikethrough~~
-            ("==(.+?)==", .highlight),                     // ==highlight==
-        ]
-
         let processedText = text
         var formattingRanges: [(range: Range<String.Index>, style: MarkdownStyle, content: String)] = []
 
         // Find all formatting ranges
-        for (pattern, style) in patterns {
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { continue }
+        for (pattern, style) in inlinePatterns {
+            guard let regex = inlineRegexCache[pattern] else { continue }
 
             let nsRange = NSRange(processedText.startIndex..., in: processedText)
             let matches = regex.matches(in: processedText, options: [], range: nsRange)
@@ -340,19 +370,10 @@ enum MarkdownParser {
         result = result.replacingOccurrences(of: "====", with: "")
 
         // Merge adjacent same formatting: **a****b** -> **ab**
-        let patterns = [
-            ("\\*\\*\\*(.+?)\\*\\*\\*\\*\\*\\*(.+?)\\*\\*\\*", "***$1$2***"),
-            ("\\*\\*(.+?)\\*\\*\\*\\*(.+?)\\*\\*", "**$1$2**"),
-            ("\\*(.+?)\\*\\*(.+?)\\*", "*$1$2*"),
-            ("~~(.+?)~~~~(.+?)~~", "~~$1$2~~"),
-            ("==(.+?)====(.+?)==", "==$1$2=="),
-        ]
-
-        for (pattern, replacement) in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
-                let range = NSRange(result.startIndex..., in: result)
-                result = regex.stringByReplacingMatches(in: result, options: [], range: range, withTemplate: replacement)
-            }
+        for (pattern, replacement) in cleanupPatterns {
+            guard let regex = cleanupRegexCache[pattern] else { continue }
+            let range = NSRange(result.startIndex..., in: result)
+            result = regex.stringByReplacingMatches(in: result, options: [], range: range, withTemplate: replacement)
         }
 
         return result

@@ -370,8 +370,7 @@ private struct CompositionModeContent: View {
 
     private var wordCountView: some View {
         let wordCount = viewModel.editedContent
-            .components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }
+            .split(whereSeparator: { $0.isWhitespace || $0.isNewline })
             .count
 
         return Text("\(wordCount) words")

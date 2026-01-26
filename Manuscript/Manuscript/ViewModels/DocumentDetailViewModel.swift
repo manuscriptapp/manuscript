@@ -45,7 +45,6 @@ class DocumentDetailViewModel: ObservableObject {
         didSet {
             // Update hasTextSelection based on whether there's text
             hasTextSelection = !selectedText.isEmpty
-            print("selectedText updated: \(selectedText.count) chars, hasTextSelection: \(hasTextSelection)")
         }
     }
     @Published var hasTextSelection: Bool = false
