@@ -209,6 +209,14 @@ struct ManuscriptProjectView: View {
             } message: {
                 Text("Enter new name")
             }
+            .alert("Empty Trash?", isPresented: $viewModel.showEmptyTrashConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Empty Trash", role: .destructive) {
+                    viewModel.emptyTrash()
+                }
+            } message: {
+                Text("All items in the Trash will be permanently deleted. This action cannot be undone.")
+            }
     }
 
     @ViewBuilder

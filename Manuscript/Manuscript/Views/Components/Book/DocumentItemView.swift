@@ -189,24 +189,53 @@ struct DocumentItemView: View {
                 Label("Rename Document", systemImage: "pencil")
             }
 
-            Button(role: .destructive, action: {
-                viewModel.deleteDocument(document)
-            }) {
-                Label("Delete Document", systemImage: "trash")
+            if viewModel.isDocumentInTrash(document) {
+                Button(action: {
+                    viewModel.restoreDocumentFromTrash(document)
+                }) {
+                    Label("Restore", systemImage: "arrow.uturn.backward")
+                }
+
+                Button(role: .destructive, action: {
+                    viewModel.permanentlyDeleteDocument(document)
+                }) {
+                    Label("Delete Permanently", systemImage: "trash.slash")
+                }
+            } else {
+                Button(role: .destructive, action: {
+                    viewModel.moveDocumentToTrash(document)
+                }) {
+                    Label("Move to Trash", systemImage: "trash")
+                }
             }
         }
         .swipeActions(edge: .trailing) {
-            Button {
-                viewModel.showRenameAlert(for: document)
-            } label: {
-                Label("Rename", systemImage: "pencil")
-            }
-            .tint(.blue)
+            if viewModel.isDocumentInTrash(document) {
+                Button(role: .destructive, action: {
+                    viewModel.permanentlyDeleteDocument(document)
+                }) {
+                    Label("Delete", systemImage: "trash.slash")
+                }
 
-            Button(role: .destructive, action: {
-                viewModel.deleteDocument(document)
-            }) {
-                Label("Delete", systemImage: "trash")
+                Button {
+                    viewModel.restoreDocumentFromTrash(document)
+                } label: {
+                    Label("Restore", systemImage: "arrow.uturn.backward")
+                }
+                .tint(.green)
+            } else {
+                Button {
+                    viewModel.showRenameAlert(for: document)
+                } label: {
+                    Label("Rename", systemImage: "pencil")
+                }
+                .tint(.blue)
+
+                Button(role: .destructive, action: {
+                    viewModel.moveDocumentToTrash(document)
+                }) {
+                    Label("Trash", systemImage: "trash")
+                }
             }
         }
         #else
@@ -259,10 +288,24 @@ struct DocumentItemView: View {
                         Label("Rename Document", systemImage: "pencil")
                     }
 
-                    Button(role: .destructive, action: {
-                        viewModel.deleteDocument(document)
-                    }) {
-                        Label("Delete Document", systemImage: "trash")
+                    if viewModel.isDocumentInTrash(document) {
+                        Button(action: {
+                            viewModel.restoreDocumentFromTrash(document)
+                        }) {
+                            Label("Restore", systemImage: "arrow.uturn.backward")
+                        }
+
+                        Button(role: .destructive, action: {
+                            viewModel.permanentlyDeleteDocument(document)
+                        }) {
+                            Label("Delete Permanently", systemImage: "trash.slash")
+                        }
+                    } else {
+                        Button(role: .destructive, action: {
+                            viewModel.moveDocumentToTrash(document)
+                        }) {
+                            Label("Move to Trash", systemImage: "trash")
+                        }
                     }
                 }
             }

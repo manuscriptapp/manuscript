@@ -40,6 +40,9 @@ class DocumentViewModel: ObservableObject {
     @Published var lastSnapshotDocumentTitle: String = ""
     @Published var snapshotUpdateTrigger: Int = 0
 
+    // Trash management
+    @Published var showEmptyTrashConfirmation: Bool = false
+
     private var itemToRename: Any?
 
     // Reference to the document binding - set by the view
@@ -1119,5 +1122,298 @@ class DocumentViewModel: ObservableObject {
             notes: snapshot.notes,
             content: snapshot.content
         )
+    }
+
+    // MARK: - Trash Management
+
+    /// Check if a document is currently in the trash folder
+    func isDocumentInTrash(_ doc: ManuscriptDocument.Document) -> Bool {
+        return findDocumentRecursively(withId: doc.id, in: trashFolder) != nil
+    }
+
+    /// Check if a folder is currently in the trash folder
+    func isFolderInTrash(_ folder: ManuscriptFolder) -> Bool {
+        // The trash folder itself is not "in trash"
+        guard folder.id != trashFolder.id else { return false }
+        return findFolder(withId: folder.id, in: trashFolder) != nil
+    }
+
+    /// Move a document to the trash folder
+    func moveDocumentToTrash(_ doc: ManuscriptDocument.Document) {
+        // Find the current parent folder
+        guard let parentFolder = findParentFolderInAllHierarchies(of: doc) else { return }
+
+        // Create trash metadata to remember where to restore
+        let trashMetadata = TrashedItemMetadata(
+            originalParentFolderId: parentFolder.id,
+            originalOrder: doc.order
+        )
+
+        var manuscriptDoc = document
+
+        // Remove from source folder (in all hierarchies)
+        manuscriptDoc.rootFolder = removeDocumentFromFolder(manuscriptDoc.rootFolder, docId: doc.id)
+        if let researchFolder = manuscriptDoc.researchFolder {
+            manuscriptDoc.researchFolder = removeDocumentFromFolder(researchFolder, docId: doc.id)
+        }
+
+        // Add to trash with metadata
+        var trashedDoc = doc
+        trashedDoc.trashMetadata = trashMetadata
+        trashedDoc.order = manuscriptDoc.trashFolder?.documents.count ?? 0
+
+        if var trash = manuscriptDoc.trashFolder {
+            trash.documents.append(trashedDoc)
+            manuscriptDoc.trashFolder = trash
+        }
+
+        self.document = manuscriptDoc
+
+        // Clear selection if this document was selected
+        if selectedDocument?.id == doc.id {
+            selectedDocument = nil
+        }
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
+            currentFolder = updated
+        }
+    }
+
+    /// Move a folder (with all its contents) to the trash folder
+    func moveFolderToTrash(_ folder: ManuscriptFolder) {
+        // Don't allow trashing root folders or the trash folder itself
+        guard folder.id != document.rootFolder.id,
+              folder.id != researchFolder.id,
+              folder.id != trashFolder.id else { return }
+
+        // Find the parent folder
+        guard let parentFolder = findParentOfFolderInAllHierarchies(folder.id) else { return }
+
+        // Create trash metadata
+        let trashMetadata = TrashedItemMetadata(
+            originalParentFolderId: parentFolder.id,
+            originalOrder: folder.order
+        )
+
+        var manuscriptDoc = document
+
+        // Remove from source hierarchy
+        manuscriptDoc.rootFolder = removeFolderRecursively(manuscriptDoc.rootFolder, folderIdToRemove: folder.id)
+        if let research = manuscriptDoc.researchFolder {
+            manuscriptDoc.researchFolder = removeFolderRecursively(research, folderIdToRemove: folder.id)
+        }
+
+        // Add to trash with metadata
+        var trashedFolder = folder
+        trashedFolder.trashMetadata = trashMetadata
+        trashedFolder.order = manuscriptDoc.trashFolder?.subfolders.count ?? 0
+
+        if var trash = manuscriptDoc.trashFolder {
+            trash.subfolders.append(trashedFolder)
+            manuscriptDoc.trashFolder = trash
+        }
+
+        self.document = manuscriptDoc
+
+        // Navigate to root if we deleted the current folder
+        if folder.id == currentFolder.id {
+            navigateToRootFolder()
+        }
+    }
+
+    /// Restore a document from trash to its original location
+    func restoreDocumentFromTrash(_ doc: ManuscriptDocument.Document) {
+        guard let trashMetadata = doc.trashMetadata else { return }
+
+        var manuscriptDoc = document
+
+        // Remove from trash
+        if var trash = manuscriptDoc.trashFolder {
+            trash.documents.removeAll { $0.id == doc.id }
+            manuscriptDoc.trashFolder = trash
+        }
+
+        // Clear trash metadata and restore
+        var restoredDoc = doc
+        restoredDoc.trashMetadata = nil
+
+        // Try to restore to original parent, or fall back to root
+        let targetFolderId: UUID
+        if findFolderInAllHierarchies(withId: trashMetadata.originalParentFolderId, in: manuscriptDoc) != nil {
+            targetFolderId = trashMetadata.originalParentFolderId
+        } else {
+            targetFolderId = manuscriptDoc.rootFolder.id
+        }
+
+        // Add to target folder
+        if targetFolderId == manuscriptDoc.rootFolder.id {
+            restoredDoc.order = manuscriptDoc.rootFolder.documents.count
+            manuscriptDoc.rootFolder.documents.append(restoredDoc)
+        } else {
+            manuscriptDoc.rootFolder = updateFolderRecursively(manuscriptDoc.rootFolder, folderId: targetFolderId) { f in
+                var updated = f
+                restoredDoc.order = updated.documents.count
+                updated.documents.append(restoredDoc)
+                return updated
+            }
+            if let research = manuscriptDoc.researchFolder {
+                manuscriptDoc.researchFolder = updateFolderRecursively(research, folderId: targetFolderId) { f in
+                    var updated = f
+                    restoredDoc.order = updated.documents.count
+                    updated.documents.append(restoredDoc)
+                    return updated
+                }
+            }
+        }
+
+        self.document = manuscriptDoc
+
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
+            currentFolder = updated
+        }
+    }
+
+    /// Restore a folder from trash to its original location
+    func restoreFolderFromTrash(_ folder: ManuscriptFolder) {
+        guard let trashMetadata = folder.trashMetadata else { return }
+
+        var manuscriptDoc = document
+
+        // Remove from trash
+        if var trash = manuscriptDoc.trashFolder {
+            trash.subfolders.removeAll { $0.id == folder.id }
+            manuscriptDoc.trashFolder = trash
+        }
+
+        // Clear trash metadata
+        var restoredFolder = folder
+        restoredFolder.trashMetadata = nil
+
+        // Try to restore to original parent, or fall back to root
+        let targetFolderId: UUID
+        if findFolderInAllHierarchies(withId: trashMetadata.originalParentFolderId, in: manuscriptDoc) != nil {
+            targetFolderId = trashMetadata.originalParentFolderId
+        } else {
+            targetFolderId = manuscriptDoc.rootFolder.id
+        }
+
+        // Add to target folder
+        if targetFolderId == manuscriptDoc.rootFolder.id {
+            restoredFolder.order = manuscriptDoc.rootFolder.subfolders.count
+            manuscriptDoc.rootFolder.subfolders.append(restoredFolder)
+        } else {
+            manuscriptDoc.rootFolder = updateFolderRecursively(manuscriptDoc.rootFolder, folderId: targetFolderId) { f in
+                var updated = f
+                restoredFolder.order = updated.subfolders.count
+                updated.subfolders.append(restoredFolder)
+                return updated
+            }
+            if let research = manuscriptDoc.researchFolder {
+                manuscriptDoc.researchFolder = updateFolderRecursively(research, folderId: targetFolderId) { f in
+                    var updated = f
+                    restoredFolder.order = updated.subfolders.count
+                    updated.subfolders.append(restoredFolder)
+                    return updated
+                }
+            }
+        }
+
+        self.document = manuscriptDoc
+
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
+            currentFolder = updated
+        }
+    }
+
+    /// Permanently delete a document (only from trash)
+    func permanentlyDeleteDocument(_ doc: ManuscriptDocument.Document) {
+        // Only allow permanent deletion from trash
+        guard isDocumentInTrash(doc) else { return }
+        deleteDocument(doc)
+    }
+
+    /// Permanently delete a folder (only from trash)
+    func permanentlyDeleteFolder(_ folder: ManuscriptFolder) {
+        // Only allow permanent deletion from trash
+        guard isFolderInTrash(folder) else { return }
+        deleteFolder(folder)
+    }
+
+    /// Empty the trash (permanently delete all items)
+    func emptyTrash() {
+        var manuscriptDoc = document
+
+        // Get all documents in trash to clean up character/location references
+        let trashedDocs = collectAllDocuments(from: manuscriptDoc.trashFolder ?? trashFolder)
+
+        // Clean up character references for all trashed documents
+        for doc in trashedDocs {
+            for i in 0..<manuscriptDoc.characters.count {
+                manuscriptDoc.characters[i].appearsInDocumentIds.removeAll { $0 == doc.id }
+            }
+            // Clean up location references
+            for i in 0..<manuscriptDoc.locations.count {
+                manuscriptDoc.locations[i].appearsInDocumentIds.removeAll { $0 == doc.id }
+            }
+        }
+
+        // Clear all items from trash
+        if var trash = manuscriptDoc.trashFolder {
+            trash.documents = []
+            trash.subfolders = []
+            manuscriptDoc.trashFolder = trash
+        }
+
+        self.document = manuscriptDoc
+    }
+
+    // MARK: - Trash Helper Methods
+
+    /// Find parent folder of a document in all hierarchies (root, research, trash)
+    private func findParentFolderInAllHierarchies(of doc: ManuscriptDocument.Document) -> ManuscriptFolder? {
+        if let found = findParentFolderRecursively(of: doc.id, in: rootFolder) {
+            return found
+        }
+        if let found = findParentFolderRecursively(of: doc.id, in: researchFolder) {
+            return found
+        }
+        if let found = findParentFolderRecursively(of: doc.id, in: trashFolder) {
+            return found
+        }
+        return nil
+    }
+
+    /// Find parent of a folder in all hierarchies
+    private func findParentOfFolderInAllHierarchies(_ folderId: UUID) -> ManuscriptFolder? {
+        if let found = findParentOfFolderRecursively(folderId, in: rootFolder) {
+            return found
+        }
+        if let found = findParentOfFolderRecursively(folderId, in: researchFolder) {
+            return found
+        }
+        if let found = findParentOfFolderRecursively(folderId, in: trashFolder) {
+            return found
+        }
+        return nil
+    }
+
+    /// Find a folder by ID in a specific document's folder hierarchies
+    private func findFolderInAllHierarchies(withId id: UUID, in manuscriptDoc: ManuscriptDocument) -> ManuscriptFolder? {
+        if let found = findFolder(withId: id, in: manuscriptDoc.rootFolder) {
+            return found
+        }
+        if let research = manuscriptDoc.researchFolder, let found = findFolder(withId: id, in: research) {
+            return found
+        }
+        // Don't search in trash for restore targets
+        return nil
+    }
+
+    /// Collect all documents from a folder and its subfolders
+    private func collectAllDocuments(from folder: ManuscriptFolder) -> [ManuscriptDocument.Document] {
+        var docs = folder.documents
+        for subfolder in folder.subfolders {
+            docs.append(contentsOf: collectAllDocuments(from: subfolder))
+        }
+        return docs
     }
 }

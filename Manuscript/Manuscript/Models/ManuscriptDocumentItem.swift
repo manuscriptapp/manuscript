@@ -1,5 +1,23 @@
 import Foundation
 
+// MARK: - Trash Metadata
+
+/// Metadata stored with trashed items to enable restoration
+struct TrashedItemMetadata: Codable, Equatable, Hashable {
+    /// The ID of the folder this item was in before being trashed
+    let originalParentFolderId: UUID
+    /// The order/position of the item in its original folder
+    let originalOrder: Int
+    /// When the item was moved to trash
+    let trashedDate: Date
+
+    init(originalParentFolderId: UUID, originalOrder: Int, trashedDate: Date = Date()) {
+        self.originalParentFolderId = originalParentFolderId
+        self.originalOrder = originalOrder
+        self.trashedDate = trashedDate
+    }
+}
+
 // MARK: - Document Item
 
 extension ManuscriptDocument {
@@ -28,6 +46,9 @@ extension ManuscriptDocument {
         // Inline comments (Scrivener-compatible)
         var comments: [DocumentComment]
 
+        // Trash metadata (nil if not in trash)
+        var trashMetadata: TrashedItemMetadata?
+
         init(
             id: UUID = UUID(),
             title: String,
@@ -45,7 +66,8 @@ extension ManuscriptDocument {
             includeInCompile: Bool = true,
             characterIds: [UUID] = [],
             locationIds: [UUID] = [],
-            comments: [DocumentComment] = []
+            comments: [DocumentComment] = [],
+            trashMetadata: TrashedItemMetadata? = nil
         ) {
             self.id = id
             self.title = title
@@ -64,6 +86,7 @@ extension ManuscriptDocument {
             self.characterIds = characterIds
             self.locationIds = locationIds
             self.comments = comments
+            self.trashMetadata = trashMetadata
         }
 
         /// Word count for this document's content

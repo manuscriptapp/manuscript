@@ -32,6 +32,9 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
     var iconName: String
     var iconColor: String?  // Optional hex color for icon tint (e.g., "#FF0000")
 
+    // Trash metadata (nil if not in trash)
+    var trashMetadata: TrashedItemMetadata?
+
     var subfolders: [ManuscriptFolder]
     var documents: [ManuscriptDocument.Document]
 
@@ -44,6 +47,7 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         hasher.combine(expanded)
         hasher.combine(iconName)
         hasher.combine(iconColor)
+        hasher.combine(trashMetadata)
         hasher.combine(subfolders)
         hasher.combine(documents)
     }
@@ -57,6 +61,7 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         lhs.expanded == rhs.expanded &&
         lhs.iconName == rhs.iconName &&
         lhs.iconColor == rhs.iconColor &&
+        lhs.trashMetadata == rhs.trashMetadata &&
         lhs.subfolders == rhs.subfolders &&
         lhs.documents == rhs.documents
     }
@@ -73,6 +78,7 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         expanded: Bool = true,
         iconName: String = "folder",
         iconColor: String? = defaultIconColor,
+        trashMetadata: TrashedItemMetadata? = nil,
         subfolders: [ManuscriptFolder] = [],
         documents: [ManuscriptDocument.Document] = []
     ) {
@@ -84,6 +90,7 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         self.expanded = expanded
         self.iconName = iconName
         self.iconColor = iconColor
+        self.trashMetadata = trashMetadata
         self.subfolders = subfolders
         self.documents = documents
     }
