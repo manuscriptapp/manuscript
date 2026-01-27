@@ -53,11 +53,16 @@ struct SettingsView: View {
     ]
     private let indentSizeOptions = [12, 18, 24, 30, 36, 48]
 
+    private var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
+    }
+
     var body: some View {
         Form {
             Section("Author") {
-                TextField("Default Author Name", text: $defaultAuthorName)
-                    .textFieldStyle(.automatic)
+                TextField("Name", text: $defaultAuthorName, prompt: Text("Enter default author name"))
                 #if os(iOS)
                     .textInputAutocapitalization(.words)
                 #endif
@@ -69,9 +74,8 @@ struct SettingsView: View {
 
             ttsSettingsSection
 
-            Section("App Info") {
-                LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
-                LabeledContent("Build", value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1")
+            Section("About") {
+                LabeledContent("Version", value: appVersion)
             }
         }
         #if os(macOS)
@@ -84,20 +88,15 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Formatting Section
-
     @ViewBuilder
     private var formattingSection: some View {
-        Section {
-            // Font family picker
+        Section("Formatting") {
             Picker("Font", selection: $defaultFontName) {
                 ForEach(availableFonts, id: \.self) { fontName in
-                    Text(fontName)
-                        .tag(fontName)
+                    Text(fontName).tag(fontName)
                 }
             }
 
-            // Font size picker
             Picker("Size", selection: Binding(
                 get: { Int(defaultFontSize) },
                 set: { defaultFontSize = Double($0) }
@@ -107,17 +106,14 @@ struct SettingsView: View {
                 }
             }
 
-            // Line spacing picker
             Picker("Line Spacing", selection: $defaultLineSpacing) {
                 ForEach(lineSpacingOptions, id: \.1) { option in
                     Text(option.0).tag(option.1)
                 }
             }
 
-            // Paragraph indent toggle
             Toggle("First Line Indent", isOn: $enableParagraphIndent)
 
-            // Indent size picker (only shown when indent is enabled)
             if enableParagraphIndent {
                 Picker("Indent Size", selection: Binding(
                     get: { Int(paragraphIndentSize) },
@@ -128,10 +124,6 @@ struct SettingsView: View {
                     }
                 }
             }
-        } header: {
-            Text("Formatting")
-        } footer: {
-            Text("These settings apply to new documents and empty content. Use Shift+Return for line breaks without paragraph indent.")
         }
     }
 
@@ -157,43 +149,19 @@ struct SettingsView: View {
         return result
     }
 
-    // MARK: - AI Settings Section
-
     @ViewBuilder
     private var aiSettingsSection: some View {
-        Section {
-            // Disclaimer
-            Text("AI features are coming soon. Configure your API keys now to be ready when they launch.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .listRowBackground(Color.clear)
-                .padding(.vertical, 4)
-
-            // Model Provider Picker
-            Picker("AI Provider", selection: $aiSettings.selectedProvider) {
+        Section("AI Provider") {
+            Picker("Provider", selection: $aiSettings.selectedProvider) {
                 ForEach(AIModelProvider.allCases) { provider in
-                    VStack(alignment: .leading) {
-                        Text(provider.displayName)
-                    }
-                    .tag(provider)
+                    Text(provider.displayName).tag(provider)
                 }
             }
             #if os(iOS)
             .pickerStyle(.navigationLink)
             #endif
-
-            // Provider description
-            Text(aiSettings.selectedProvider.description)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-        } header: {
-            Text("AI Settings")
-        } footer: {
-            Text("API keys are securely stored in your iCloud Keychain and sync across your Apple devices.")
         }
 
-        // OpenAI Settings
         if aiSettings.selectedProvider == .openAI || aiSettings.selectedProvider == .auto {
             Section("OpenAI") {
                 openAIKeyField
@@ -201,13 +169,7 @@ struct SettingsView: View {
                 if aiSettings.selectedProvider == .openAI {
                     Picker("Model", selection: $aiSettings.selectedOpenAIModel) {
                         ForEach(OpenAIModel.allCases) { model in
-                            VStack(alignment: .leading) {
-                                Text(model.displayName)
-                                Text(model.description)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .tag(model)
+                            Text(model.displayName).tag(model)
                         }
                     }
                     #if os(iOS)
@@ -215,28 +177,20 @@ struct SettingsView: View {
                     #endif
                 }
 
-                // Test connection button
                 if aiSettings.hasOpenAIKey {
                     testConnectionButton(for: .openAI)
                 }
             }
         }
 
-        // Claude Settings
         if aiSettings.selectedProvider == .claude || aiSettings.selectedProvider == .auto {
-            Section("Claude (Anthropic)") {
+            Section("Claude") {
                 claudeKeyField
 
                 if aiSettings.selectedProvider == .claude {
                     Picker("Model", selection: $aiSettings.selectedClaudeModel) {
                         ForEach(ClaudeModel.allCases) { model in
-                            VStack(alignment: .leading) {
-                                Text(model.displayName)
-                                Text(model.description)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .tag(model)
+                            Text(model.displayName).tag(model)
                         }
                     }
                     #if os(iOS)
@@ -244,7 +198,6 @@ struct SettingsView: View {
                     #endif
                 }
 
-                // Test connection button
                 if aiSettings.hasClaudeKey {
                     testConnectionButton(for: .claude)
                 }
@@ -252,20 +205,11 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - TTS Settings Section
-
     @ViewBuilder
     private var ttsSettingsSection: some View {
         Section {
-            Text("Listen to your documents read aloud with natural-sounding AI voices.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .listRowBackground(Color.clear)
-                .padding(.vertical, 4)
-
             elevenLabsKeyField
 
-            // Voice picker (only shown when API key is saved)
             if elevenLabsSettings.hasAPIKey {
                 HStack {
                     Picker("Voice", selection: Binding(
@@ -288,7 +232,6 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
                     #endif
 
-                    // Refresh voices button
                     Button {
                         Task {
                             await loadVoices()
@@ -305,9 +248,7 @@ struct SettingsView: View {
                     .disabled(isLoadingVoices)
                 }
 
-                // Preview and test buttons
                 HStack {
-                    // Preview voice button
                     Button {
                         Task {
                             await previewVoice()
@@ -327,20 +268,15 @@ struct SettingsView: View {
 
                     Spacer()
 
-                    // Test connection button
                     elevenLabsTestButton
                 }
             }
         } header: {
             Text("Text-to-Speech")
         } footer: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Powered by ElevenLabs. API keys are securely stored in your iCloud Keychain.")
-                Link("Browse Voice Library for more voices →", destination: URL(string: "https://elevenlabs.io/voice-library")!)
-                    .font(.caption)
-            }
+            Link("ElevenLabs Voice Library", destination: URL(string: "https://elevenlabs.io/voice-library")!)
+                .font(.caption)
         }
-
     }
 
     @ViewBuilder
@@ -363,28 +299,23 @@ struct SettingsView: View {
         }
         .disabled(isTestingElevenLabs)
 
-        // Show test result
         if let result = elevenLabsTestResult {
             testResultView(result)
         }
     }
-
-    // MARK: - ElevenLabs Key Field
 
     @ViewBuilder
     private var elevenLabsKeyField: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 if showElevenLabsKey {
-                    TextField("ElevenLabs API Key", text: $elevenLabsKeyInput)
-                        .textFieldStyle(.automatic)
+                    TextField("API Key", text: $elevenLabsKeyInput)
                         #if os(iOS)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         #endif
                 } else {
-                    SecureField("ElevenLabs API Key", text: $elevenLabsKeyInput)
-                        .textFieldStyle(.automatic)
+                    SecureField("API Key", text: $elevenLabsKeyInput)
                 }
 
                 Button {
@@ -400,7 +331,7 @@ struct SettingsView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                    Text("Key saved: \(elevenLabsSettings.apiKeyPreview)")
+                    Text(elevenLabsSettings.apiKeyPreview)
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
@@ -414,7 +345,7 @@ struct SettingsView: View {
             }
 
             if !elevenLabsKeyInput.isEmpty {
-                Button("Save Key") {
+                Button("Save") {
                     saveElevenLabsKey()
                 }
                 .buttonStyle(.borderedProminent)
@@ -423,22 +354,18 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - OpenAI Key Field
-
     @ViewBuilder
     private var openAIKeyField: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 if showOpenAIKey {
-                    TextField("OpenAI API Key", text: $openAIKeyInput)
-                        .textFieldStyle(.automatic)
+                    TextField("API Key", text: $openAIKeyInput)
                         #if os(iOS)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         #endif
                 } else {
-                    SecureField("OpenAI API Key", text: $openAIKeyInput)
-                        .textFieldStyle(.automatic)
+                    SecureField("API Key", text: $openAIKeyInput)
                 }
 
                 Button {
@@ -454,7 +381,7 @@ struct SettingsView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                    Text("Key saved: \(aiSettings.openAIKeyPreview)")
+                    Text(aiSettings.openAIKeyPreview)
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
@@ -468,7 +395,7 @@ struct SettingsView: View {
             }
 
             if !openAIKeyInput.isEmpty {
-                Button("Save Key") {
+                Button("Save") {
                     saveOpenAIKey()
                 }
                 .buttonStyle(.borderedProminent)
@@ -476,28 +403,23 @@ struct SettingsView: View {
             }
         }
 
-        // Show test result
         if let result = openAITestResult {
             testResultView(result)
         }
     }
-
-    // MARK: - Claude Key Field
 
     @ViewBuilder
     private var claudeKeyField: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 if showClaudeKey {
-                    TextField("Claude API Key", text: $claudeKeyInput)
-                        .textFieldStyle(.automatic)
+                    TextField("API Key", text: $claudeKeyInput)
                         #if os(iOS)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         #endif
                 } else {
-                    SecureField("Claude API Key", text: $claudeKeyInput)
-                        .textFieldStyle(.automatic)
+                    SecureField("API Key", text: $claudeKeyInput)
                 }
 
                 Button {
@@ -513,7 +435,7 @@ struct SettingsView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                    Text("Key saved: \(aiSettings.claudeKeyPreview)")
+                    Text(aiSettings.claudeKeyPreview)
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
@@ -527,7 +449,7 @@ struct SettingsView: View {
             }
 
             if !claudeKeyInput.isEmpty {
-                Button("Save Key") {
+                Button("Save") {
                     saveClaudeKey()
                 }
                 .buttonStyle(.borderedProminent)
@@ -535,13 +457,10 @@ struct SettingsView: View {
             }
         }
 
-        // Show test result
         if let result = claudeTestResult {
             testResultView(result)
         }
     }
-
-    // MARK: - Test Connection Button
 
     @ViewBuilder
     private func testConnectionButton(for provider: AIModelProvider) -> some View {
@@ -564,8 +483,6 @@ struct SettingsView: View {
         .disabled((provider == .openAI && isTestingOpenAI) || (provider == .claude && isTestingClaude))
     }
 
-    // MARK: - Test Result View
-
     @ViewBuilder
     private func testResultView(_ result: TestResult) -> some View {
         HStack {
@@ -585,8 +502,6 @@ struct SettingsView: View {
             }
         }
     }
-
-    // MARK: - Actions
 
     private func loadExistingKeys() {
         // Clear input fields - we show preview of saved keys separately
@@ -634,8 +549,6 @@ struct SettingsView: View {
             claudeTestResult = .failure("Failed to remove key: \(error.localizedDescription)")
         }
     }
-
-    // MARK: - ElevenLabs Key Management
 
     private func saveElevenLabsKey() {
         do {

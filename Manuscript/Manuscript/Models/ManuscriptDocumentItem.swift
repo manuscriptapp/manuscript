@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Document Item
 
 extension ManuscriptDocument {
-    struct Document: Identifiable, Codable, Equatable {
+    struct Document: Identifiable, Codable, Equatable, Hashable {
         var id: UUID
         var title: String
         var synopsis: String
@@ -68,21 +68,19 @@ extension ManuscriptDocument {
 
         /// Word count for this document's content
         var wordCount: Int {
-            let words = content.components(separatedBy: .whitespacesAndNewlines)
-                .filter { !$0.isEmpty }
-            return words.count
+            content.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
         }
     }
 
     /// Inline comment (Scrivener-compatible)
-    struct DocumentComment: Identifiable, Codable, Equatable {
+    struct DocumentComment: Identifiable, Codable, Equatable, Hashable {
         var id: UUID
         var text: String
         var color: String  // Hex color (e.g., "#FFFF00")
         var range: Range?  // Optional text range this comment refers to
         var creationDate: Date
 
-        struct Range: Codable, Equatable {
+        struct Range: Codable, Equatable, Hashable {
             var location: Int
             var length: Int
         }

@@ -101,13 +101,17 @@ Manuscript vs Scrivener vs Ulysses.
 |---|:-:|:-:|:-:|
 | Compile to single doc | ✅ | ✅ | ✅ |
 | Export PDF | ✅ | ✅ | ✅ |
-| Export DOCX | ✅ | ✅ | 🔜 |
-| Export EPUB | ✅ | ✅ | 🔜 |
+| Export DOCX | ✅ | ✅ | ✅ |
+| Export EPUB | ✅ | ✅ | ✅ |
+| Export Plain Text | ✅ | ✅ | ✅ |
+| Export Scrivener | ➖ | ❌ | ✅ |
 | Export HTML | ✅ | ✅ | 🔜 |
 | Export LaTeX | ✅ | ❌ | 🔜 |
 | Export Markdown | ✅ | ✅ | ✅ |
 | Compile presets | ✅ | ✅ | 🔜 |
-| Custom formatting | ✅ | ✅ | 🔜 |
+| Custom formatting | ✅ | ✅ | ✅ |
+| Exclude files from compile | ✅ | ✅ | ✅ |
+| Print | ✅ | ✅ | 🔜 |
 
 ---
 
@@ -129,8 +133,10 @@ Manuscript vs Scrivener vs Ulysses.
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
 | Import DOCX | ✅ | ✅ | 🔜 |
+| Import PDF | ✅ | ❌ | 🔜 |
 | Import Markdown | ✅ | ✅ | ✅ |
 | Import HTML | ✅ | ✅ | 🔜 |
+| Import images | ✅ | ✅ | 🔜 |
 | Import folder | ✅ | ✅ | 🔜 |
 | Import & split | ✅ | ❌ | 🔜 |
 | Import Scrivener | ➖ | ❌ | ✅ |
@@ -143,8 +149,10 @@ Manuscript vs Scrivener vs Ulysses.
 |---|:-:|:-:|:-:|
 | Cloud sync | Dropbox | iCloud | ✅ iCloud Drive |
 | iOS sync | ✅ | ✅ | ✅ |
+| Sync status indicator | ✅ | ✅ | ✅ macOS |
 | Auto backup | ✅ | ✅ | 🔜 |
 | Backup on close | ✅ | ❌ | 🔜 |
+| Manual backup/export | ✅ | ✅ | 🔜 |
 
 ---
 
@@ -196,4 +204,4 @@ Manuscript vs Scrivener vs Ulysses.
 
 ---
 
-*Last updated: January 23, 2026*
+*Last updated: January 24, 2026*
