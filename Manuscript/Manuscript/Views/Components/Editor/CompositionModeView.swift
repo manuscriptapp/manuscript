@@ -265,7 +265,7 @@ struct CompositionModeView: View {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .medium))
             }
-            .foregroundStyle(currentTheme.textColor.opacity(0.5))
+            .foregroundStyle(currentTheme.isLight ? Color.black : Color.white)
         }
         .padding(.trailing, 24)
     }
