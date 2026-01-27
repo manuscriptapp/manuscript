@@ -125,7 +125,7 @@ enum CompositionTheme: String, CaseIterable, Identifiable {
         case .rose: return "heart.fill"
         case .sky: return "cloud.fill"
         case .mint: return "leaf.fill"
-        case .lavender: return "flower.fill"
+        case .lavender: return "sparkle"
         case .paper: return "doc.fill"
         }
     }
