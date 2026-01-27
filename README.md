@@ -51,7 +51,7 @@ Think Scrivener or Ulysses, but free and open source.
 | Import documents | 🔜 | Import Word, PDF, HTML files |
 | Import images | 🔜 | Import and embed images in research |
 | Auto backups | 🔜 | Automatic backup on close |
-| Trash folder | 🔜 | Recoverable deleted items |
+| Trash folder | ✅ | Soft-delete with restore capability |
 | Document links | 🔜 | Internal links between documents |
 | Keywords/tags | 🔜 | Tagging system for organization |
 | Collections | 🔜 | Saved searches and filtered views |
@@ -195,6 +195,7 @@ It was a dark and stormy night...
 - [x] Outliner view with sortable columns
 - [x] Read mode (distraction-free reading)
 - [x] Exclude files from compile (per-document include/exclude)
+- [x] Trash folder (soft-delete with restore)
 - [ ] Composition mode (distraction-free writing)
 - [ ] Print documents
 - [ ] Import documents (Word, PDF, HTML)
