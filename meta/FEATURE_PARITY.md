@@ -111,7 +111,7 @@ Manuscript vs Scrivener vs Ulysses.
 | Compile presets | ✅ | ✅ | 🔜 |
 | Custom formatting | ✅ | ✅ | ✅ |
 | Exclude files from compile | ✅ | ✅ | ✅ |
-| Print | ✅ | ✅ | 🔜 |
+| Print | ✅ | ✅ | ✅ |
 
 ---
 
@@ -132,7 +132,7 @@ Manuscript vs Scrivener vs Ulysses.
 
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
-| Import DOCX | ✅ | ✅ | 🔜 |
+| Import DOCX | ✅ | ✅ | ✅ |
 | Import PDF | ✅ | ❌ | 🔜 |
 | Import Markdown | ✅ | ✅ | ✅ |
 | Import HTML | ✅ | ✅ | 🔜 |
