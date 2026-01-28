@@ -28,6 +28,7 @@ struct ProjectSidebar: View {
     @State private var showCompileSheet: Bool = false
     @State private var isCompositionModeActive: Bool = false
     @State private var compositionDocument: ManuscriptDocument.Document?
+    @State private var showImportDocumentSheet: Bool = false
 
     init(
         viewModel: DocumentViewModel,
@@ -268,6 +269,10 @@ struct ProjectSidebar: View {
                         Label("Add Document", systemImage: "doc.badge.plus")
                     }
 
+                    Button(action: { showImportDocumentSheet = true }) {
+                        Label("Import Document...", systemImage: "square.and.arrow.down")
+                    }
+
                     Divider()
 
                     Button(action: { isAddCharacterSheetPresented.toggle() }) {
@@ -314,6 +319,11 @@ struct ProjectSidebar: View {
                     set: { if !$0 { compositionDocument = nil } }
                 )
             )
+        }
+        .sheet(isPresented: $showImportDocumentSheet) {
+            DocumentImportView(targetFolder: selectedFolderForImport) { importedDocument in
+                viewModel.addImportedDocument(to: selectedFolderForImport, importedDocument: importedDocument)
+            }
         }
         #endif
     }
@@ -403,6 +413,10 @@ struct ProjectSidebar: View {
                         Label("Add Document", systemImage: "doc.badge.plus")
                     }
 
+                    Button(action: { showImportDocumentSheet = true }) {
+                        Label("Import Document...", systemImage: "square.and.arrow.down")
+                    }
+
                     Divider()
 
                     Button(action: { isAddCharacterSheetPresented.toggle() }) {
@@ -423,7 +437,22 @@ struct ProjectSidebar: View {
                 }
             }
         }
+        .sheet(isPresented: $showImportDocumentSheet) {
+            DocumentImportView(targetFolder: selectedFolderForImport) { importedDocument in
+                viewModel.addImportedDocument(to: selectedFolderForImport, importedDocument: importedDocument)
+            }
+        }
         #endif
+    }
+
+    /// Returns the appropriate folder for importing documents based on current selection
+    private var selectedFolderForImport: ManuscriptFolder {
+        if case .folder(let folder) = detailSelection {
+            return folder
+        } else if case .document(let doc) = detailSelection {
+            return viewModel.findParentFolder(of: doc) ?? viewModel.rootFolder
+        }
+        return viewModel.rootFolder
     }
 }
 
