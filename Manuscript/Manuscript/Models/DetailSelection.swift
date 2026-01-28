@@ -14,6 +14,7 @@ enum DetailSelection: Hashable, Identifiable {
         case .document(let document): return "document-\(document.id)"
         case .character(let character): return "character-\(character.id)"
         case .location(let location): return "location-\(location.id)"
+        case .mediaItem(let mediaItem): return "media-\(mediaItem.id)"
         }
     }
 
@@ -26,7 +27,8 @@ enum DetailSelection: Hashable, Identifiable {
     case document(ManuscriptDocument.Document)
     case character(ManuscriptCharacter)
     case location(ManuscriptLocation)
-    
+    case mediaItem(ManuscriptDocument.MediaItem)
+
     // Custom Hashable implementation
     func hash(into hasher: inout Hasher) {
         switch self {
@@ -52,9 +54,12 @@ enum DetailSelection: Hashable, Identifiable {
         case .location(let location):
             hasher.combine(8)
             hasher.combine(location.id)
+        case .mediaItem(let mediaItem):
+            hasher.combine(9)
+            hasher.combine(mediaItem.id)
         }
     }
-    
+
     // Custom Equatable implementation
     static func == (lhs: DetailSelection, rhs: DetailSelection) -> Bool {
         switch (lhs, rhs) {
@@ -76,6 +81,8 @@ enum DetailSelection: Hashable, Identifiable {
             return c1.id == c2.id
         case (.location(let l1), .location(let l2)):
             return l1.id == l2.id
+        case (.mediaItem(let m1), .mediaItem(let m2)):
+            return m1.id == m2.id
         default:
             return false
         }

@@ -86,6 +86,23 @@ struct ImportResult {
     let skippedItems: Int
     let importedDocuments: Int
     let importedFolders: Int
+    let importedMediaItems: Int
+
+    init(
+        document: ManuscriptDocument,
+        warnings: [ImportWarning],
+        skippedItems: Int,
+        importedDocuments: Int,
+        importedFolders: Int,
+        importedMediaItems: Int = 0
+    ) {
+        self.document = document
+        self.warnings = warnings
+        self.skippedItems = skippedItems
+        self.importedDocuments = importedDocuments
+        self.importedFolders = importedFolders
+        self.importedMediaItems = importedMediaItems
+    }
 
     var hasWarnings: Bool {
         !warnings.isEmpty
@@ -95,6 +112,9 @@ struct ImportResult {
         var parts: [String] = []
         parts.append("Imported \(importedDocuments) document\(importedDocuments == 1 ? "" : "s")")
         parts.append("\(importedFolders) folder\(importedFolders == 1 ? "" : "s")")
+        if importedMediaItems > 0 {
+            parts.append("\(importedMediaItems) media file\(importedMediaItems == 1 ? "" : "s")")
+        }
         if skippedItems > 0 {
             parts.append("(\(skippedItems) item\(skippedItems == 1 ? "" : "s") skipped)")
         }

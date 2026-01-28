@@ -22,6 +22,7 @@ struct FolderItemView: View {
         @ObservedObject var viewModel: DocumentViewModel
         @Binding var detailSelection: DetailSelection?
         @State private var isAddFolderSheetPresented = false
+        @State private var isAddMediaSheetPresented = false
 
         /// Look up the current folder from all folder hierarchies to ensure we always have fresh data
         private var folder: ManuscriptFolder {
@@ -161,6 +162,16 @@ struct FolderItemView: View {
                     viewModel.moveDocuments(in: folder, from: source, to: destination)
                 }
 
+                // Media items in this folder (sorted by order)
+                ForEach(folder.mediaItems.sorted { $0.order < $1.order }) { mediaItem in
+                    MediaItemView(
+                        mediaItem: mediaItem,
+                        viewModel: viewModel,
+                        selection: $detailSelection
+                    )
+                    .tag(DetailSelection.mediaItem(mediaItem))
+                }
+
                 // Subfolders (sorted by order)
                 ForEach(folder.subfolders.sorted { $0.order < $1.order }) { subfolder in
                     RecursiveFolderView(
@@ -297,6 +308,12 @@ struct FolderItemView: View {
                         Label("Add Document", systemImage: "doc.badge.plus")
                     }
 
+                    Button(action: {
+                        isAddMediaSheetPresented = true
+                    }) {
+                        Label("Add Media", systemImage: "photo.badge.plus")
+                    }
+
                     Divider()
 
                     Button(action: {
@@ -383,6 +400,12 @@ struct FolderItemView: View {
                     AddFolderSheet(
                         viewModel: viewModel,
                         initialFolder: folder
+                    )
+                }
+                .sheet(isPresented: $isAddMediaSheetPresented) {
+                    AddMediaSheet(
+                        viewModel: viewModel,
+                        targetFolder: folder
                     )
                 }
             }

@@ -50,6 +50,19 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
     // Template reference (ID of the template used to create this document)
     var templateId: String?
 
+    // Pending asset files to be copied during save (filename -> source URL)
+    // Used during Scrivener import to defer file copying until document save
+    // Note: This is transient state and is not persisted (excluded from Codable)
+    var pendingAssetFiles: [String: URL] = [:]
+
+    // CodingKeys to exclude pendingAssetFiles from serialization
+    private enum CodingKeys: String, CodingKey {
+        case formatVersion, title, author, description, style, genre, synopsis
+        case creationDate, modifiedDate, rootFolder, notesFolder, researchFolder, trashFolder
+        case characters, locations, labels, statuses, targets, settings, compileSettings
+        case writingHistory, projectState, documentSnapshots, templateId
+    }
+
     // Required for FileDocument
     // Include .package and .folder as fallbacks for when custom UTType isn't registered (e.g., running from Xcode)
     // .folder is needed because macOS may identify .manuscript directories as folders rather than packages
@@ -333,6 +346,32 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                         let subfolder = try readFolder(from: subfolderWrapper, type: .subfolder)
                         folder.subfolders.append(subfolder)
                     }
+                } else if item.type == "media" {
+                    // Read media item metadata (actual file is in assets/)
+                    if let mediaTypeStr = item.mediaType,
+                       let mediaType = MediaType(rawValue: mediaTypeStr) {
+                        let mediaItem = ManuscriptDocument.MediaItem(
+                            id: UUID(uuidString: item.id) ?? UUID(),
+                            title: item.title,
+                            synopsis: item.synopsis ?? "",
+                            mediaType: mediaType,
+                            filename: item.file,
+                            originalFilename: item.originalFilename ?? item.file,
+                            fileSize: item.fileSize ?? 0,
+                            creationDate: item.created ?? Date(),
+                            order: folder.mediaItems.count,
+                            iconName: item.iconName,
+                            iconColor: item.iconColor,
+                            labelId: item.label,
+                            statusId: item.status,
+                            keywords: item.keywords ?? [],
+                            includeInCompile: item.includeInCompile ?? false,
+                            imageWidth: item.imageWidth,
+                            imageHeight: item.imageHeight,
+                            pageCount: item.pageCount
+                        )
+                        folder.mediaItems.append(mediaItem)
+                    }
                 }
             }
         } else {
@@ -476,8 +515,8 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             rootWrapper.addFileWrapper(trashWrapper)
         }
 
-        // Create empty directories for assets and snapshots
-        let assetsWrapper = FileWrapper(directoryWithFileWrappers: [:])
+        // Create assets directory with media files
+        let assetsWrapper = try createAssetsWrapper()
         assetsWrapper.preferredFilename = "assets"
         rootWrapper.addFileWrapper(assetsWrapper)
 
@@ -579,6 +618,35 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
             folderWrapper.addFileWrapper(subfolderWrapper)
         }
 
+        // Sort media items by order before writing
+        let sortedMediaItems = folder.mediaItems.sorted { $0.order < $1.order }
+
+        // Add media items (metadata only - actual files are in assets/)
+        for mediaItem in sortedMediaItems {
+            let item = FolderItem(
+                id: mediaItem.id.uuidString,
+                file: mediaItem.filename,
+                title: mediaItem.title,
+                type: "media",
+                label: mediaItem.labelId,
+                status: mediaItem.statusId,
+                keywords: mediaItem.keywords.isEmpty ? nil : mediaItem.keywords,
+                synopsis: mediaItem.synopsis.isEmpty ? nil : mediaItem.synopsis,
+                includeInCompile: mediaItem.includeInCompile,
+                created: mediaItem.creationDate,
+                modified: Date(),
+                iconName: mediaItem.iconName == mediaItem.mediaType.iconName ? nil : mediaItem.iconName,
+                iconColor: mediaItem.iconColor,
+                mediaType: mediaItem.mediaType.rawValue,
+                originalFilename: mediaItem.originalFilename,
+                fileSize: mediaItem.fileSize,
+                imageWidth: mediaItem.imageWidth,
+                imageHeight: mediaItem.imageHeight,
+                pageCount: mediaItem.pageCount
+            )
+            items.append(item)
+        }
+
         // Create folder.json
         let folderJson = FolderJSON(
             id: folder.id.uuidString,
@@ -623,6 +691,46 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
         }
 
         return snapshotsWrapper
+    }
+
+    private func createAssetsWrapper() throws -> FileWrapper {
+        let assetsWrapper = FileWrapper(directoryWithFileWrappers: [:])
+
+        // Collect all media items from all folders
+        var allMediaItems: [ManuscriptDocument.MediaItem] = []
+        collectMediaItems(from: rootFolder, into: &allMediaItems)
+        if let research = researchFolder {
+            collectMediaItems(from: research, into: &allMediaItems)
+        }
+        if let notes = notesFolder {
+            collectMediaItems(from: notes, into: &allMediaItems)
+        }
+        if let trash = trashFolder {
+            collectMediaItems(from: trash, into: &allMediaItems)
+        }
+
+        // For each media item, check if we have a pending file to copy
+        for mediaItem in allMediaItems {
+            if let sourceURL = pendingAssetFiles[mediaItem.filename] {
+                // Copy the file from the source URL
+                do {
+                    let fileData = try Data(contentsOf: sourceURL)
+                    assetsWrapper.addRegularFile(withContents: fileData, preferredFilename: mediaItem.filename)
+                } catch {
+                    print("⚠️ [ManuscriptDocument] Failed to copy asset file \(mediaItem.filename): \(error)")
+                }
+            }
+            // Note: Existing assets (already in the package) are preserved by FileWrapper's merge behavior
+        }
+
+        return assetsWrapper
+    }
+
+    private func collectMediaItems(from folder: ManuscriptFolder, into items: inout [ManuscriptDocument.MediaItem]) {
+        items.append(contentsOf: folder.mediaItems)
+        for subfolder in folder.subfolders {
+            collectMediaItems(from: subfolder, into: &items)
+        }
     }
 
     private func sanitizedFilename(from title: String) -> String {
@@ -697,7 +805,7 @@ private struct FolderItem: Codable {
     var id: String
     var file: String
     var title: String
-    var type: String  // "document" or "folder"
+    var type: String  // "document", "folder", or "media"
     var label: String?
     var status: String?
     var keywords: [String]?
@@ -707,6 +815,14 @@ private struct FolderItem: Codable {
     var modified: Date?
     var iconName: String?
     var iconColor: String?  // Hex color for icon tint (e.g., "#FF0000")
+
+    // Media-specific properties
+    var mediaType: String?         // "image" or "pdf"
+    var originalFilename: String?
+    var fileSize: Int64?
+    var imageWidth: Int?
+    var imageHeight: Int?
+    var pageCount: Int?
 }
 
 // MARK: - Preview Support

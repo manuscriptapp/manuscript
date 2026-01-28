@@ -37,6 +37,7 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
 
     var subfolders: [ManuscriptFolder]
     var documents: [ManuscriptDocument.Document]
+    var mediaItems: [ManuscriptDocument.MediaItem]
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
@@ -50,6 +51,7 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         hasher.combine(trashMetadata)
         hasher.combine(subfolders)
         hasher.combine(documents)
+        hasher.combine(mediaItems)
     }
 
     static func == (lhs: ManuscriptFolder, rhs: ManuscriptFolder) -> Bool {
@@ -63,7 +65,8 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         lhs.iconColor == rhs.iconColor &&
         lhs.trashMetadata == rhs.trashMetadata &&
         lhs.subfolders == rhs.subfolders &&
-        lhs.documents == rhs.documents
+        lhs.documents == rhs.documents &&
+        lhs.mediaItems == rhs.mediaItems
     }
 
     /// Default blue color for folder icons (hex)
@@ -80,7 +83,8 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         iconColor: String? = defaultIconColor,
         trashMetadata: TrashedItemMetadata? = nil,
         subfolders: [ManuscriptFolder] = [],
-        documents: [ManuscriptDocument.Document] = []
+        documents: [ManuscriptDocument.Document] = [],
+        mediaItems: [ManuscriptDocument.MediaItem] = []
     ) {
         self.id = id
         self.title = title
@@ -93,14 +97,42 @@ struct ManuscriptFolder: Identifiable, Codable, Hashable {
         self.trashMetadata = trashMetadata
         self.subfolders = subfolders
         self.documents = documents
+        self.mediaItems = mediaItems
+    }
+
+    // Custom decoder for backward compatibility with older documents (without mediaItems)
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        folderType = try container.decode(ManuscriptFolderType.self, forKey: .folderType)
+        creationDate = try container.decode(Date.self, forKey: .creationDate)
+        order = try container.decode(Int.self, forKey: .order)
+        expanded = try container.decode(Bool.self, forKey: .expanded)
+        iconName = try container.decode(String.self, forKey: .iconName)
+        iconColor = try container.decodeIfPresent(String.self, forKey: .iconColor)
+        trashMetadata = try container.decodeIfPresent(TrashedItemMetadata.self, forKey: .trashMetadata)
+        subfolders = try container.decode([ManuscriptFolder].self, forKey: .subfolders)
+        documents = try container.decode([ManuscriptDocument.Document].self, forKey: .documents)
+        mediaItems = try container.decodeIfPresent([ManuscriptDocument.MediaItem].self, forKey: .mediaItems) ?? []
     }
 
     var totalDocumentCount: Int {
         documents.count + subfolders.reduce(0) { $0 + $1.totalDocumentCount }
     }
 
+    /// Total count of all items (documents, media, subfolders) in this folder and its subfolders
+    var totalItemCount: Int {
+        documents.count + mediaItems.count + subfolders.reduce(0) { $0 + $1.totalItemCount }
+    }
+
+    /// Total media item count in this folder and subfolders
+    var totalMediaItemCount: Int {
+        mediaItems.count + subfolders.reduce(0) { $0 + $1.totalMediaItemCount }
+    }
+
     var isEmpty: Bool {
-        documents.isEmpty && subfolders.isEmpty
+        documents.isEmpty && subfolders.isEmpty && mediaItems.isEmpty
     }
 
     /// Total word count across all documents in this folder and subfolders

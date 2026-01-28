@@ -14,6 +14,7 @@ struct ProjectState: Codable, Equatable {
         case document
         case character
         case location
+        case mediaItem
     }
 
     /// The type of the currently selected item
@@ -92,6 +93,9 @@ struct ProjectState: Codable, Equatable {
         case .location(let location):
             state.selectionType = .location
             state.selectedItemId = location.id
+        case .mediaItem(let mediaItem):
+            state.selectionType = .mediaItem
+            state.selectedItemId = mediaItem.id
         }
 
         return state
@@ -139,6 +143,12 @@ struct ProjectState: Codable, Equatable {
                 return nil
             }
             return .location(location)
+        case .mediaItem:
+            guard let id = selectedItemId,
+                  let mediaItem = findMediaItem(withId: id, in: document.rootFolder) else {
+                return nil
+            }
+            return .mediaItem(mediaItem)
         }
     }
 
@@ -161,6 +171,18 @@ struct ProjectState: Codable, Equatable {
         for subfolder in folder.subfolders {
             if let doc = findDocument(withId: id, in: subfolder) {
                 return doc
+            }
+        }
+        return nil
+    }
+
+    private func findMediaItem(withId id: UUID, in folder: ManuscriptFolder) -> ManuscriptDocument.MediaItem? {
+        if let item = folder.mediaItems.first(where: { $0.id == id }) {
+            return item
+        }
+        for subfolder in folder.subfolders {
+            if let item = findMediaItem(withId: id, in: subfolder) {
+                return item
             }
         }
         return nil

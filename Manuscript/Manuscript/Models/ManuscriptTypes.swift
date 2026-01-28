@@ -21,6 +21,46 @@ enum ManuscriptFormatVersion: String, Codable {
     static var current: ManuscriptFormatVersion { .v1_0 }
 }
 
+// MARK: - Media Type
+
+enum MediaType: String, Codable, CaseIterable {
+    case image
+    case pdf
+
+    var iconName: String {
+        switch self {
+        case .image: return "photo"
+        case .pdf: return "doc.richtext"
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .image: return "Image"
+        case .pdf: return "PDF"
+        }
+    }
+
+    /// Supported file extensions for this media type
+    var supportedExtensions: [String] {
+        switch self {
+        case .image: return ["png", "jpg", "jpeg", "gif", "heic", "heif", "webp", "tiff", "tif", "bmp"]
+        case .pdf: return ["pdf"]
+        }
+    }
+
+    /// Detect media type from file extension
+    static func from(extension ext: String) -> MediaType? {
+        let lowercased = ext.lowercased()
+        if MediaType.image.supportedExtensions.contains(lowercased) {
+            return .image
+        } else if MediaType.pdf.supportedExtensions.contains(lowercased) {
+            return .pdf
+        }
+        return nil
+    }
+}
+
 // MARK: - Character Gender
 
 enum ManuscriptCharacterGender: String, Codable, CaseIterable {

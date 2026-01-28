@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
+import CoreGraphics
+import ImageIO
 #if canImport(AppKit)
 import AppKit
 #endif
@@ -19,6 +21,10 @@ final class ScrivenerImporter {
     private var skippedItems = 0
     private var importedDocuments = 0
     private var importedFolders = 0
+    private var importedMediaItems = 0
+
+    // Pending media files to copy (filename -> source URL)
+    private var pendingMediaFiles: [String: URL] = [:]
 
     // Mapping tables built during import
     private var labelMap: [Int: ManuscriptLabel] = [:]
@@ -117,6 +123,8 @@ final class ScrivenerImporter {
         skippedItems = 0
         importedDocuments = 0
         importedFolders = 0
+        importedMediaItems = 0
+        pendingMediaFiles = [:]
         labelMap = [:]
         statusMap = [:]
         keywordMap = [:]
@@ -273,12 +281,16 @@ final class ScrivenerImporter {
 
         progress?(1.0, "Import complete!")
 
+        // Attach pending media files to the document for copying during save
+        manuscript.pendingAssetFiles = pendingMediaFiles
+
         return ImportResult(
             document: manuscript,
             warnings: warnings,
             skippedItems: skippedItems,
             importedDocuments: importedDocuments,
-            importedFolders: importedFolders
+            importedFolders: importedFolders,
+            importedMediaItems: importedMediaItems
         )
     }
 
@@ -533,9 +545,33 @@ final class ScrivenerImporter {
                     onProgress(1)
                 }
 
-            case .pdf, .image, .webPage:
+            case .pdf, .image:
+                // Import media items (images and PDFs)
+                do {
+                    let mediaItem = try convertMediaItem(
+                        child,
+                        projectURL: projectURL,
+                        contentPath: contentPath,
+                        version: version,
+                        order: folder.mediaItems.count
+                    )
+                    folder.mediaItems.append(mediaItem)
+                    importedMediaItems += 1
+                    onProgress(1)
+                } catch {
+                    warnings.append(ImportWarning(
+                        message: "Could not import media: \(error.localizedDescription)",
+                        itemTitle: child.title,
+                        severity: .warning
+                    ))
+                    skippedItems += 1
+                    onProgress(1)
+                }
+
+            case .webPage:
+                // Web pages are not supported
                 warnings.append(ImportWarning(
-                    message: "Media item skipped (not yet supported)",
+                    message: "Web page item skipped (not supported)",
                     itemTitle: child.title,
                     severity: .info
                 ))
@@ -698,6 +734,166 @@ final class ScrivenerImporter {
         let data = try Data(contentsOf: url)
         let parser = ScrivenerCommentsParser()
         return try parser.parse(data: data, rtfConverter: rtfConverter)
+    }
+
+    /// Convert a Scrivener media item (image or PDF) to a Manuscript MediaItem
+    private func convertMediaItem(
+        _ item: ScrivenerBinderItem,
+        projectURL: URL,
+        contentPath: String,
+        version: ScrivenerVersion,
+        order: Int
+    ) throws -> ManuscriptDocument.MediaItem {
+        // Determine media type
+        let mediaType: MediaType
+        switch item.type {
+        case .image:
+            mediaType = .image
+        case .pdf:
+            mediaType = .pdf
+        default:
+            throw ImportError.fileReadFailed("Unsupported media type: \(item.type)")
+        }
+
+        // Find the media file in Scrivener bundle
+        let itemFolder: URL
+        if version == .v3, let uuid = item.uuid {
+            itemFolder = projectURL
+                .appendingPathComponent(contentPath)
+                .appendingPathComponent(uuid)
+        } else {
+            itemFolder = projectURL.appendingPathComponent(contentPath)
+        }
+
+        // Find the actual media file in the folder
+        guard let mediaFileURL = findMediaFile(in: itemFolder, forItem: item, version: version) else {
+            throw ImportError.fileReadFailed("Could not find media file for '\(item.title)'")
+        }
+
+        // Get file attributes
+        let attributes = try fileManager.attributesOfItem(atPath: mediaFileURL.path)
+        let fileSize = (attributes[.size] as? Int64) ?? 0
+        let originalFilename = mediaFileURL.lastPathComponent
+        let fileExtension = mediaFileURL.pathExtension.lowercased()
+
+        // Generate a UUID-based filename for the assets folder
+        let newFilename = "\(UUID().uuidString).\(fileExtension)"
+
+        // Track this file for copying during save
+        pendingMediaFiles[newFilename] = mediaFileURL
+
+        // Get image dimensions if applicable
+        var imageWidth: Int?
+        var imageHeight: Int?
+        var pageCount: Int?
+
+        if mediaType == .image {
+            if let dimensions = getImageDimensions(from: mediaFileURL) {
+                imageWidth = dimensions.width
+                imageHeight = dimensions.height
+            }
+        } else if mediaType == .pdf {
+            pageCount = getPDFPageCount(from: mediaFileURL)
+        }
+
+        // Map label and status
+        var labelId: String?
+        var statusId: String?
+
+        if let scrivLabelID = item.labelID, let label = labelMap[scrivLabelID] {
+            labelId = label.id
+        }
+        if let scrivStatusID = item.statusID, let status = statusMap[scrivStatusID] {
+            statusId = status.id
+        }
+
+        // Map keywords
+        let keywordNames = item.keywordIDs.compactMap { keywordMap[$0] }
+
+        // Read synopsis if available
+        let synopsisURL: URL
+        if version == .v3 {
+            synopsisURL = itemFolder.appendingPathComponent("synopsis.txt")
+        } else {
+            synopsisURL = itemFolder.appendingPathComponent("\(item.id)_synopsis.txt")
+        }
+
+        var synopsis = item.synopsis ?? ""
+        if fileManager.fileExists(atPath: synopsisURL.path) {
+            synopsis = (try? String(contentsOf: synopsisURL, encoding: .utf8)) ?? synopsis
+        }
+
+        return ManuscriptDocument.MediaItem(
+            id: UUID(),
+            title: item.title,
+            synopsis: synopsis,
+            mediaType: mediaType,
+            filename: newFilename,
+            originalFilename: originalFilename,
+            fileSize: fileSize,
+            creationDate: item.created ?? Date(),
+            order: order,
+            labelId: labelId,
+            statusId: statusId,
+            keywords: keywordNames,
+            includeInCompile: false,
+            imageWidth: imageWidth,
+            imageHeight: imageHeight,
+            pageCount: pageCount
+        )
+    }
+
+    /// Find the media file in a Scrivener item folder
+    private func findMediaFile(in folder: URL, forItem item: ScrivenerBinderItem, version: ScrivenerVersion) -> URL? {
+        // For v3, look for files directly in the item's UUID folder
+        if version == .v3 {
+            if let contents = try? fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) {
+                // Look for image or PDF files (exclude .rtf, .txt, .comments, etc.)
+                let mediaExtensions = ["png", "jpg", "jpeg", "gif", "heic", "heif", "webp", "tiff", "tif", "bmp", "pdf"]
+                for url in contents {
+                    if mediaExtensions.contains(url.pathExtension.lowercased()) {
+                        return url
+                    }
+                }
+            }
+        } else {
+            // For v2, the file is named after the item ID
+            let basePath = folder.appendingPathComponent(item.id)
+            let extensions = ["png", "jpg", "jpeg", "gif", "pdf"]
+            for ext in extensions {
+                let url = basePath.appendingPathExtension(ext)
+                if fileManager.fileExists(atPath: url.path) {
+                    return url
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Get image dimensions using CGImageSource
+    private func getImageDimensions(from url: URL) -> (width: Int, height: Int)? {
+        guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+            return nil
+        }
+
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any] else {
+            return nil
+        }
+
+        if let width = properties[kCGImagePropertyPixelWidth] as? Int,
+           let height = properties[kCGImagePropertyPixelHeight] as? Int {
+            return (width, height)
+        }
+
+        return nil
+    }
+
+    /// Get PDF page count
+    private func getPDFPageCount(from url: URL) -> Int? {
+        guard let document = CGPDFDocument(url as CFURL) else {
+            return nil
+        }
+        return document.numberOfPages
     }
 
     private func colorToHex(_ color: SwiftUI.Color) -> String {

@@ -289,6 +289,8 @@ struct ManuscriptProjectView: View {
                     viewModel.expandToDocument(doc)
                 case .folder(let folder):
                     viewModel.expandToFolder(folder)
+                case .mediaItem(let mediaItem):
+                    viewModel.expandToMediaItem(mediaItem)
                 default:
                     break
                 }

@@ -116,8 +116,28 @@ struct FolderDetailView: View {
                     }
                 }
 
+                // Media items section
+                if !folder.mediaItems.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        if !folder.subfolders.isEmpty || !folder.documents.isEmpty {
+                            Text("Media")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal)
+                        }
+
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 200))], spacing: 16) {
+                            ForEach(folder.mediaItems) { mediaItem in
+                                FolderMediaCard(mediaItem: mediaItem, viewModel: viewModel, selection: $selection)
+                                    .frame(height: 220)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+
                 // Empty state
-                if folder.subfolders.isEmpty && folder.documents.isEmpty {
+                if folder.subfolders.isEmpty && folder.documents.isEmpty && folder.mediaItems.isEmpty {
                     VStack(spacing: 16) {
                         Image(systemName: "folder")
                             .font(.system(size: 48))
@@ -266,6 +286,74 @@ struct FolderDocumentCard: View {
             "Brown": .brown
         ]
         return colorMap[document.colorName] ?? .primary
+    }
+}
+
+struct FolderMediaCard: View {
+    let mediaItem: ManuscriptDocument.MediaItem
+    @ObservedObject var viewModel: DocumentViewModel
+    @Binding var selection: DetailSelection?
+
+    var body: some View {
+        Button {
+            viewModel.expandToMediaItem(mediaItem)
+            selection = .mediaItem(mediaItem)
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: mediaItem.iconName)
+                        .foregroundColor(iconColor)
+                    Text(mediaItem.title.isEmpty ? "Untitled" : mediaItem.title)
+                        .font(.headline)
+                        .lineLimit(1)
+                }
+
+                Divider()
+
+                // Synopsis or placeholder
+                Text(mediaItem.synopsis.isEmpty ? "No synopsis" : mediaItem.synopsis)
+                    .font(.caption)
+                    .lineLimit(5)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                HStack {
+                    Text(mediaItem.mediaType.displayName)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text(mediaItem.formattedFileSize)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(8)
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button {
+                viewModel.showRenameAlert(for: mediaItem)
+            } label: {
+                Label("Rename", systemImage: "pencil")
+            }
+
+            Button(role: .destructive) {
+                viewModel.moveMediaItemToTrash(mediaItem)
+            } label: {
+                Label("Move to Trash", systemImage: "trash")
+            }
+        }
+    }
+
+    private var iconColor: Color {
+        if let hexColor = mediaItem.iconColor {
+            return Color(hex: hexColor) ?? .accentColor
+        }
+        return mediaItem.mediaType == .image ? .purple : .orange
     }
 }
 

@@ -1416,4 +1416,250 @@ class DocumentViewModel: ObservableObject {
         }
         return docs
     }
+
+    // MARK: - Media Item Management
+
+    /// Find a media item by ID in all folder hierarchies
+    func findMediaItem(withId id: UUID) -> ManuscriptDocument.MediaItem? {
+        if let found = findMediaItemRecursively(withId: id, in: rootFolder) {
+            return found
+        }
+        if let found = findMediaItemRecursively(withId: id, in: researchFolder) {
+            return found
+        }
+        if let found = findMediaItemRecursively(withId: id, in: trashFolder) {
+            return found
+        }
+        return nil
+    }
+
+    private func findMediaItemRecursively(withId id: UUID, in folder: ManuscriptFolder) -> ManuscriptDocument.MediaItem? {
+        if let item = folder.mediaItems.first(where: { $0.id == id }) {
+            return item
+        }
+        for subfolder in folder.subfolders {
+            if let item = findMediaItemRecursively(withId: id, in: subfolder) {
+                return item
+            }
+        }
+        return nil
+    }
+
+    /// Find the parent folder of a media item
+    func findParentFolder(of mediaItem: ManuscriptDocument.MediaItem) -> ManuscriptFolder? {
+        if let found = findParentFolderOfMediaItem(mediaItem.id, in: rootFolder) {
+            return found
+        }
+        if let found = findParentFolderOfMediaItem(mediaItem.id, in: researchFolder) {
+            return found
+        }
+        if let found = findParentFolderOfMediaItem(mediaItem.id, in: trashFolder) {
+            return found
+        }
+        return nil
+    }
+
+    private func findParentFolderOfMediaItem(_ mediaItemId: UUID, in folder: ManuscriptFolder) -> ManuscriptFolder? {
+        if folder.mediaItems.contains(where: { $0.id == mediaItemId }) {
+            return folder
+        }
+        for subfolder in folder.subfolders {
+            if let found = findParentFolderOfMediaItem(mediaItemId, in: subfolder) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    /// Add a media item to a folder
+    func addMediaItem(to folder: ManuscriptFolder, mediaItem: ManuscriptDocument.MediaItem) {
+        var doc = document
+
+        // Determine which folder hierarchy to update
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            let addTransform: (ManuscriptFolder) -> ManuscriptFolder = { f in
+                var updated = f
+                var item = mediaItem
+                item.order = updated.mediaItems.count
+                updated.mediaItems.append(item)
+                return updated
+            }
+
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id, transform: addTransform)
+            case .research:
+                doc.researchFolder = updateFolderRecursively(doc.researchFolder ?? researchFolder, folderId: folder.id, transform: addTransform)
+            case .trash:
+                doc.trashFolder = updateFolderRecursively(doc.trashFolder ?? trashFolder, folderId: folder.id, transform: addTransform)
+            }
+        }
+        document = doc
+
+        // Expand the folder to show the new item
+        setFolderExpanded(folder, expanded: true)
+
+        // Auto-select the new media item
+        detailSelection = .mediaItem(mediaItem)
+    }
+
+    /// Update a media item's properties
+    func updateMediaItem(_ mediaItem: ManuscriptDocument.MediaItem, title: String? = nil, synopsis: String? = nil) {
+        var updatedItem = mediaItem
+        if let title = title { updatedItem.title = title }
+        if let synopsis = synopsis { updatedItem.synopsis = synopsis }
+
+        var doc = document
+
+        // Update in all folder hierarchies
+        doc.rootFolder = updateMediaItemInFolder(doc.rootFolder, mediaItemId: mediaItem.id, updatedItem: updatedItem)
+        doc.researchFolder = updateMediaItemInFolder(doc.researchFolder ?? researchFolder, mediaItemId: mediaItem.id, updatedItem: updatedItem)
+        doc.trashFolder = updateMediaItemInFolder(doc.trashFolder ?? trashFolder, mediaItemId: mediaItem.id, updatedItem: updatedItem)
+
+        document = doc
+    }
+
+    private func updateMediaItemInFolder(_ folder: ManuscriptFolder, mediaItemId: UUID, updatedItem: ManuscriptDocument.MediaItem) -> ManuscriptFolder {
+        var updatedFolder = folder
+        if let index = folder.mediaItems.firstIndex(where: { $0.id == mediaItemId }) {
+            updatedFolder.mediaItems[index] = updatedItem
+            return updatedFolder
+        }
+        updatedFolder.subfolders = folder.subfolders.map { subfolder in
+            updateMediaItemInFolder(subfolder, mediaItemId: mediaItemId, updatedItem: updatedItem)
+        }
+        return updatedFolder
+    }
+
+    /// Delete a media item permanently
+    func deleteMediaItem(_ mediaItem: ManuscriptDocument.MediaItem) {
+        var doc = document
+
+        // Remove from all folder hierarchies
+        doc.rootFolder = removeMediaItemFromFolder(doc.rootFolder, mediaItemId: mediaItem.id)
+        doc.researchFolder = removeMediaItemFromFolder(doc.researchFolder ?? researchFolder, mediaItemId: mediaItem.id)
+        doc.trashFolder = removeMediaItemFromFolder(doc.trashFolder ?? trashFolder, mediaItemId: mediaItem.id)
+
+        document = doc
+    }
+
+    private func removeMediaItemFromFolder(_ folder: ManuscriptFolder, mediaItemId: UUID) -> ManuscriptFolder {
+        var updatedFolder = folder
+        updatedFolder.mediaItems.removeAll { $0.id == mediaItemId }
+        updatedFolder.subfolders = folder.subfolders.map { subfolder in
+            removeMediaItemFromFolder(subfolder, mediaItemId: mediaItemId)
+        }
+        return updatedFolder
+    }
+
+    /// Check if a media item is in the trash
+    func isMediaItemInTrash(_ mediaItem: ManuscriptDocument.MediaItem) -> Bool {
+        return findMediaItemRecursively(withId: mediaItem.id, in: trashFolder) != nil
+    }
+
+    /// Move a media item to the trash
+    func moveMediaItemToTrash(_ mediaItem: ManuscriptDocument.MediaItem) {
+        guard let parentFolder = findParentFolder(of: mediaItem) else { return }
+
+        // Create trash metadata
+        let trashMetadata = TrashedItemMetadata(
+            originalParentFolderId: parentFolder.id,
+            originalOrder: mediaItem.order
+        )
+
+        var doc = document
+
+        // Remove from source folder
+        doc.rootFolder = removeMediaItemFromFolder(doc.rootFolder, mediaItemId: mediaItem.id)
+        if let research = doc.researchFolder {
+            doc.researchFolder = removeMediaItemFromFolder(research, mediaItemId: mediaItem.id)
+        }
+
+        // Add to trash with metadata
+        var trashedItem = mediaItem
+        trashedItem.trashMetadata = trashMetadata
+        trashedItem.order = doc.trashFolder?.mediaItems.count ?? 0
+
+        if var trash = doc.trashFolder {
+            trash.mediaItems.append(trashedItem)
+            doc.trashFolder = trash
+        }
+
+        document = doc
+    }
+
+    /// Restore a media item from trash
+    func restoreMediaItemFromTrash(_ mediaItem: ManuscriptDocument.MediaItem) {
+        guard let trashMetadata = mediaItem.trashMetadata else { return }
+
+        var doc = document
+
+        // Remove from trash
+        if var trash = doc.trashFolder {
+            trash.mediaItems.removeAll { $0.id == mediaItem.id }
+            doc.trashFolder = trash
+        }
+
+        // Clear trash metadata
+        var restoredItem = mediaItem
+        restoredItem.trashMetadata = nil
+
+        // Try to restore to original parent
+        let targetFolderId: UUID
+        if findFolderInAllHierarchies(withId: trashMetadata.originalParentFolderId, in: doc) != nil {
+            targetFolderId = trashMetadata.originalParentFolderId
+        } else {
+            targetFolderId = doc.rootFolder.id
+        }
+
+        // Add to target folder
+        let addTransform: (ManuscriptFolder) -> ManuscriptFolder = { f in
+            var updated = f
+            restoredItem.order = updated.mediaItems.count
+            updated.mediaItems.append(restoredItem)
+            return updated
+        }
+
+        if targetFolderId == doc.rootFolder.id {
+            doc.rootFolder = addTransform(doc.rootFolder)
+        } else {
+            doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: targetFolderId, transform: addTransform)
+            if let research = doc.researchFolder {
+                doc.researchFolder = updateFolderRecursively(research, folderId: targetFolderId, transform: addTransform)
+            }
+        }
+
+        document = doc
+    }
+
+    /// Permanently delete a media item (only from trash)
+    func permanentlyDeleteMediaItem(_ mediaItem: ManuscriptDocument.MediaItem) {
+        guard isMediaItemInTrash(mediaItem) else { return }
+        deleteMediaItem(mediaItem)
+    }
+
+    /// Expand ancestors to show a media item in the sidebar
+    func expandToMediaItem(_ targetMediaItem: ManuscriptDocument.MediaItem) {
+        let ancestorIds = findAncestorIdsForMediaItem(targetMediaItem.id, in: document.rootFolder, path: [])
+        for id in ancestorIds {
+            expandedFolderIds.insert(id)
+        }
+    }
+
+    private func findAncestorIdsForMediaItem(_ targetMediaItemId: UUID, in folder: ManuscriptFolder, path: [UUID]) -> [UUID] {
+        // Check if target media item is in this folder
+        if folder.mediaItems.contains(where: { $0.id == targetMediaItemId }) {
+            return path + [folder.id]
+        }
+
+        // Recursively search in subfolders
+        for subfolder in folder.subfolders {
+            let result = findAncestorIdsForMediaItem(targetMediaItemId, in: subfolder, path: path + [folder.id])
+            if !result.isEmpty {
+                return result
+            }
+        }
+
+        return []
+    }
 }

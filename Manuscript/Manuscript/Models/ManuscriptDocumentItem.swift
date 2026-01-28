@@ -122,4 +122,95 @@ extension ManuscriptDocument {
             self.creationDate = creationDate
         }
     }
+
+    // MARK: - Media Item
+
+    /// A media item (image or PDF) stored in the project's assets folder
+    struct MediaItem: Identifiable, Codable, Equatable, Hashable {
+        var id: UUID
+        var title: String
+        var synopsis: String
+        var mediaType: MediaType
+        var filename: String        // UUID.ext filename in assets/ folder
+        var originalFilename: String
+        var fileSize: Int64
+        var creationDate: Date
+        var order: Int
+        var iconName: String
+        var iconColor: String?
+
+        // Scrivener-compatible metadata
+        var labelId: String?
+        var statusId: String?
+        var keywords: [String]
+        var includeInCompile: Bool
+
+        // Image-specific properties (nil for PDFs)
+        var imageWidth: Int?
+        var imageHeight: Int?
+
+        // PDF-specific properties (nil for images)
+        var pageCount: Int?
+
+        // Trash metadata (nil if not in trash)
+        var trashMetadata: TrashedItemMetadata?
+
+        init(
+            id: UUID = UUID(),
+            title: String,
+            synopsis: String = "",
+            mediaType: MediaType,
+            filename: String,
+            originalFilename: String,
+            fileSize: Int64 = 0,
+            creationDate: Date = Date(),
+            order: Int = 0,
+            iconName: String? = nil,
+            iconColor: String? = nil,
+            labelId: String? = nil,
+            statusId: String? = nil,
+            keywords: [String] = [],
+            includeInCompile: Bool = false,
+            imageWidth: Int? = nil,
+            imageHeight: Int? = nil,
+            pageCount: Int? = nil,
+            trashMetadata: TrashedItemMetadata? = nil
+        ) {
+            self.id = id
+            self.title = title
+            self.synopsis = synopsis
+            self.mediaType = mediaType
+            self.filename = filename
+            self.originalFilename = originalFilename
+            self.fileSize = fileSize
+            self.creationDate = creationDate
+            self.order = order
+            self.iconName = iconName ?? mediaType.iconName
+            self.iconColor = iconColor
+            self.labelId = labelId
+            self.statusId = statusId
+            self.keywords = keywords
+            self.includeInCompile = includeInCompile
+            self.imageWidth = imageWidth
+            self.imageHeight = imageHeight
+            self.pageCount = pageCount
+            self.trashMetadata = trashMetadata
+        }
+
+        /// Human-readable file size string
+        var formattedFileSize: String {
+            ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
+        }
+
+        /// Dimensions string for images (e.g., "1920 × 1080")
+        var dimensionsString: String? {
+            guard let width = imageWidth, let height = imageHeight else { return nil }
+            return "\(width) × \(height)"
+        }
+
+        /// File extension from filename
+        var fileExtension: String {
+            (filename as NSString).pathExtension.lowercased()
+        }
+    }
 }

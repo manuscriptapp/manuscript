@@ -6,6 +6,7 @@ struct DetailContentView: View {
     @Binding var selection: DetailSelection?
     let fileURL: URL?
     @Binding var splitEditorState: SplitEditorState
+    @StateObject private var assetManager = AssetManager()
 
     var body: some View {
         if let currentSelection = selection {
@@ -52,6 +53,29 @@ struct DetailContentView: View {
             CharacterDetailView(character: character, viewModel: viewModel)
         case .location(let location):
             LocationDetailView(viewModel: viewModel, location: location)
+        case .mediaItem(let mediaItem):
+            // Look up fresh media item from view model
+            if let freshMediaItem = viewModel.findMediaItem(withId: mediaItem.id) {
+                MediaDetailView(
+                    mediaItem: freshMediaItem,
+                    viewModel: viewModel,
+                    assetManager: assetManager
+                )
+                .id(freshMediaItem.id)
+                .onAppear {
+                    assetManager.setPackageURL(fileURL)
+                }
+            } else {
+                MediaDetailView(
+                    mediaItem: mediaItem,
+                    viewModel: viewModel,
+                    assetManager: assetManager
+                )
+                .id(mediaItem.id)
+                .onAppear {
+                    assetManager.setPackageURL(fileURL)
+                }
+            }
         }
     }
 }
