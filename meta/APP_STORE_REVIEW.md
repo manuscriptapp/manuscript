@@ -12,8 +12,8 @@ A comprehensive guide for Manuscript's App Store submission, covering Apple's 20
 
 Manuscript has solid core functionality but requires significant work on compliance, assets, and metadata before App Store submission. The main blockers are:
 
-1. **Privacy Manifest** - Critical requirement since Spring 2024
-2. **App Icons** - Not properly integrated into Asset Catalog
+1. **Privacy Manifest** - Done
+2. **App Icons** - Done (using Xcode 15+ single-source format)
 3. **Legal Documents** - Privacy Policy and Terms of Service
 4. **App Store Metadata** - Description, keywords, screenshots
 
@@ -159,21 +159,6 @@ Create `PrivacyInfo.xcprivacy` in the main app bundle:
 - [ ] Add to Xcode project
 - [ ] Verify RichTextKit's privacy manifest requirements
 - [ ] Test build with privacy manifest
-
-#### 1.2 Fix App Icon Integration
-
-**Priority:** CRITICAL
-**Effort:** 2-3 hours
-
-The app icon exists but isn't properly integrated.
-
-**Actions:**
-- [ ] Create AppIcon.appiconset in Assets.xcassets
-- [ ] Generate all required sizes:
-  - iOS: 20, 29, 40, 60, 76, 83.5, 1024 points (@1x, @2x, @3x)
-  - macOS: 16, 32, 128, 256, 512 points (@1x, @2x)
-- [ ] Verify icon renders correctly in all contexts
-- [ ] Test on physical devices
 
 ### Phase 2: Legal & Documentation (Week 1-2)
 
@@ -415,7 +400,7 @@ writing,novel,screenplay,markdown,scrivener,author,manuscript,book,editor,distra
 
 | Week | Focus | Key Deliverables |
 |------|-------|------------------|
-| 1 | Critical blockers | Privacy manifest, app icons |
+| 1 | Critical blockers | Privacy manifest (done), app icons (done) |
 | 2 | Legal & metadata | Privacy policy, ToS, App Store description |
 | 3 | Screenshots & testing | All screenshot sizes, expanded tests |
 | 4 | Pre-submission | TestFlight, App Store Connect setup |
