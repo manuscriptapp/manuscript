@@ -303,6 +303,7 @@ struct ProjectSidebar: View {
         }
         #if os(macOS)
         .focusedValue(\.exportSheetBinding, $showCompileSheet)
+        .focusedValue(\.printSheetBinding, $showCompileSheet)
         #endif
         #if os(iOS)
         .fullScreenCover(item: $compositionDocument) { doc in

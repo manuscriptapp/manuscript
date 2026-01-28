@@ -265,7 +265,7 @@ struct CompositionModeView: View {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .medium))
             }
-            .foregroundStyle(currentTheme.textColor.opacity(0.5))
+            .foregroundStyle(currentTheme.isLight ? Color.black : Color.white)
         }
         .padding(.trailing, 24)
     }
@@ -285,8 +285,7 @@ struct CompositionModeView: View {
 
     private var wordCountView: some View {
         let wordCount = viewModel.editedContent
-            .components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }
+            .split(whereSeparator: { $0.isWhitespace || $0.isNewline })
             .count
 
         return Text("\(wordCount) words")

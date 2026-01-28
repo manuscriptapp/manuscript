@@ -29,9 +29,7 @@ struct CorkboardView: View {
                 // Subfolders section
                 if !sortedSubfolders.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Folders")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+                        CorkboardSectionLabel(title: "Folders")
                             .padding(.horizontal)
 
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 220))], spacing: 16) {
@@ -55,9 +53,7 @@ struct CorkboardView: View {
                 if !sortedDocuments.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         if !sortedSubfolders.isEmpty {
-                            Text("Documents")
-                                .font(.headline)
-                                .foregroundColor(.secondary)
+                            CorkboardSectionLabel(title: "Documents")
                                 .padding(.horizontal)
                         }
 
@@ -80,33 +76,15 @@ struct CorkboardView: View {
 
                 // Empty state
                 if sortedSubfolders.isEmpty && sortedDocuments.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "rectangle.on.rectangle")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
-                        Text("This folder is empty")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        Text("Add documents or subfolders to see them as index cards")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 60)
+                    CorkboardEmptyState()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
                 }
             }
             .padding(.vertical)
         }
         .id(orderKey)
-        .background(corkboardBackground)
-    }
-
-    private var corkboardBackground: Color {
-        #if os(macOS)
-        Color(nsColor: .windowBackgroundColor)
-        #else
-        Color(uiColor: .systemBackground)
-        #endif
+        .background(CorkboardBackground())
     }
 
     /// Handle dropping items onto a folder card (move document into folder)

@@ -54,7 +54,7 @@ Manuscript vs Scrivener vs Ulysses.
 | Keywords/tags | ✅ | ✅ | 🔜 |
 | Collections/filters | ✅ | ✅ | 🔜 |
 | Favorites | ✅ | ✅ | 🔜 |
-| Trash | ✅ | ✅ | 🔜 |
+| Trash | ✅ | ✅ | ✅ |
 
 ---
 
@@ -204,4 +204,4 @@ Manuscript vs Scrivener vs Ulysses.
 
 ---
 
-*Last updated: January 24, 2026*
+*Last updated: January 27, 2026*

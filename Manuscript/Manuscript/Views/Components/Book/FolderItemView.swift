@@ -225,11 +225,33 @@ struct FolderItemView: View {
                         Label("Rename Folder", systemImage: "pencil")
                     }
 
-                    if folder.id != viewModel.rootFolder.id {
+                    // Trash folder gets "Empty Trash" option
+                    if folder.folderType == .trash {
                         Button(role: .destructive, action: {
-                            viewModel.deleteFolder(folder)
+                            viewModel.showEmptyTrashConfirmation = true
                         }) {
-                            Label("Delete Folder", systemImage: "trash")
+                            Label("Empty Trash", systemImage: "trash.slash")
+                        }
+                        .disabled(folder.isEmpty)
+                    } else if viewModel.isFolderInTrash(folder) {
+                        // Folders inside trash get restore/permanent delete options
+                        Button(action: {
+                            viewModel.restoreFolderFromTrash(folder)
+                        }) {
+                            Label("Restore", systemImage: "arrow.uturn.backward")
+                        }
+
+                        Button(role: .destructive, action: {
+                            viewModel.permanentlyDeleteFolder(folder)
+                        }) {
+                            Label("Delete Permanently", systemImage: "trash.slash")
+                        }
+                    } else if folder.id != viewModel.rootFolder.id && folder.id != viewModel.researchFolder.id {
+                        // Normal folders get move to trash option
+                        Button(role: .destructive, action: {
+                            viewModel.moveFolderToTrash(folder)
+                        }) {
+                            Label("Move to Trash", systemImage: "trash")
                         }
                     }
                 }
@@ -283,28 +305,77 @@ struct FolderItemView: View {
                         Label("Rename Folder", systemImage: "pencil")
                     }
 
-                    if folder.id != viewModel.rootFolder.id {
+                    // Trash folder gets "Empty Trash" option
+                    if folder.folderType == .trash {
                         Button(role: .destructive, action: {
-                            viewModel.deleteFolder(folder)
+                            viewModel.showEmptyTrashConfirmation = true
                         }) {
-                            Label("Delete Folder", systemImage: "trash")
+                            Label("Empty Trash", systemImage: "trash.slash")
+                        }
+                        .disabled(folder.isEmpty)
+                    } else if viewModel.isFolderInTrash(folder) {
+                        // Folders inside trash get restore/permanent delete options
+                        Button(action: {
+                            viewModel.restoreFolderFromTrash(folder)
+                        }) {
+                            Label("Restore", systemImage: "arrow.uturn.backward")
+                        }
+
+                        Button(role: .destructive, action: {
+                            viewModel.permanentlyDeleteFolder(folder)
+                        }) {
+                            Label("Delete Permanently", systemImage: "trash.slash")
+                        }
+                    } else if folder.id != viewModel.rootFolder.id && folder.id != viewModel.researchFolder.id {
+                        // Normal folders get move to trash option
+                        Button(role: .destructive, action: {
+                            viewModel.moveFolderToTrash(folder)
+                        }) {
+                            Label("Move to Trash", systemImage: "trash")
                         }
                     }
                 }
                 .swipeActions(edge: .trailing) {
-                    Button(action: {
-                        viewModel.showRenameAlert(for: folder)
-                    }) {
-                        Label("Rename Folder", systemImage: "pencil")
-                    }
-                    .tint(.blue)
-
-                    if folder.id != viewModel.rootFolder.id {
+                    if folder.folderType == .trash {
                         Button(role: .destructive, action: {
-                            viewModel.deleteFolder(folder)
+                            viewModel.showEmptyTrashConfirmation = true
                         }) {
-                            Label("Delete", systemImage: "trash")
+                            Label("Empty", systemImage: "trash.slash")
                         }
+                        .disabled(folder.isEmpty)
+                    } else if viewModel.isFolderInTrash(folder) {
+                        Button(role: .destructive, action: {
+                            viewModel.permanentlyDeleteFolder(folder)
+                        }) {
+                            Label("Delete", systemImage: "trash.slash")
+                        }
+
+                        Button {
+                            viewModel.restoreFolderFromTrash(folder)
+                        } label: {
+                            Label("Restore", systemImage: "arrow.uturn.backward")
+                        }
+                        .tint(.green)
+                    } else if folder.id != viewModel.rootFolder.id && folder.id != viewModel.researchFolder.id {
+                        Button(action: {
+                            viewModel.showRenameAlert(for: folder)
+                        }) {
+                            Label("Rename", systemImage: "pencil")
+                        }
+                        .tint(.blue)
+
+                        Button(role: .destructive, action: {
+                            viewModel.moveFolderToTrash(folder)
+                        }) {
+                            Label("Trash", systemImage: "trash")
+                        }
+                    } else {
+                        Button(action: {
+                            viewModel.showRenameAlert(for: folder)
+                        }) {
+                            Label("Rename", systemImage: "pencil")
+                        }
+                        .tint(.blue)
                     }
                 }
                 #endif

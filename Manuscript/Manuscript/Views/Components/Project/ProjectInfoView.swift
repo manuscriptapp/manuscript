@@ -69,6 +69,7 @@ struct ProjectInfoView: View {
         case genre = 1
         case style = 2
         case synopsis = 3
+        case targets = 4
 
         var title: String {
             switch self {
@@ -76,6 +77,7 @@ struct ProjectInfoView: View {
             case .genre: "Genre"
             case .style: "Style"
             case .synopsis: "Synopsis"
+            case .targets: "Targets"
             }
         }
 
@@ -85,6 +87,7 @@ struct ProjectInfoView: View {
             case .genre: "tag"
             case .style: "paintbrush"
             case .synopsis: "doc.text"
+            case .targets: "target"
             }
         }
     }
@@ -119,6 +122,8 @@ struct ProjectInfoView: View {
                 styleSection
             case 3:
                 synopsisSection
+            case 4:
+                targetsSection
             default:
                 basicInfoSection
             }
@@ -156,6 +161,12 @@ struct ProjectInfoView: View {
                     Label("Synopsis", systemImage: "doc.text")
                 }
                 .tag(3)
+
+            targetsTab
+                .tabItem {
+                    Label("Targets", systemImage: "target")
+                }
+                .tag(4)
         }
         .navigationTitle("Project Info")
         .onAppear {
@@ -362,6 +373,15 @@ struct ProjectInfoView: View {
             .font(.callout)
             .foregroundStyle(.secondary)
         }
+    }
+
+    @ViewBuilder
+    private var targetsSection: some View {
+        WritingTargetsView(
+            targets: targetsBinding,
+            currentDraftWords: viewModel.document.rootFolder.totalWordCount,
+            currentSessionWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0
+        )
     }
     #endif
 
@@ -628,6 +648,17 @@ struct ProjectInfoView: View {
             }
         }
     }
+
+    private var targetsTab: some View {
+        ScrollView {
+            WritingTargetsView(
+                targets: targetsBinding,
+                currentDraftWords: viewModel.document.rootFolder.totalWordCount,
+                currentSessionWords: viewModel.document.writingHistory.todayEntry?.wordsWritten ?? 0
+            )
+            .padding()
+        }
+    }
     #endif
 
     // MARK: - Shared Helpers
@@ -699,6 +730,25 @@ struct ProjectInfoView: View {
         var doc = viewModel.document
         doc.style = combinedStyle
         viewModel.document = doc
+    }
+
+    /// Binding to the document's targets for WritingTargetsView
+    private var targetsBinding: Binding<ManuscriptTargets?> {
+        Binding(
+            get: {
+                // Return nil if no targets are set (both word counts nil)
+                let targets = viewModel.document.targets
+                if targets.draftWordCount == nil && targets.sessionWordCount == nil {
+                    return nil
+                }
+                return targets
+            },
+            set: { newValue in
+                var doc = viewModel.document
+                doc.targets = newValue ?? ManuscriptTargets()
+                viewModel.document = doc
+            }
+        )
     }
 }
 

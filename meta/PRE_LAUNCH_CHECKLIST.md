@@ -51,19 +51,20 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 | Scrivener import | 🟢 | High |
 | Compile to single doc | 🟢 | Medium |
 | Export to PDF | 🟢 | Medium |
-| Find & replace | 🔴 | High |
-| Distraction-free mode | 🔴 | Medium |
+| Find & replace | 🟢 | High |
+| Read mode | 🟢 | Medium |
+| Trash folder | 🟢 | High |
 
 ### Nice to Have (Post-Launch)
 
-- Split editor
+- ~~Split editor~~ ✅
 - Typewriter scrolling
-- Corkboard view
-- Outliner view
+- ~~Corkboard view~~ ✅
+- ~~Outliner view~~ ✅
 - Import DOCX
-- Export EPUB
-- Writing goals/targets
-- Version comparison
+- ~~Export EPUB~~ ✅
+- ~~Writing goals/targets~~ ✅
+- Version comparison (diff view)
 
 ---
 
@@ -202,4 +203,4 @@ Before clicking "Submit for Review":
 
 ---
 
-*Last updated: January 22, 2026*
+*Last updated: January 27, 2026*

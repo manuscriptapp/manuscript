@@ -1,16 +1,16 @@
 # Manuscript Action Plan
 
-*Last updated: January 22, 2026*
+*Last updated: January 27, 2026*
 
-This document outlines the prioritized next steps for Manuscript development. **Aggressive timeline targeting feature parity by June 2026.**
+This document outlines the prioritized next steps for Manuscript development. **Near feature parity with Scrivener achieved.**
 
 ---
 
 ## Executive Summary
 
-Manuscript has made significant progress. Rich text editing, formatting toolbar, Scrivener import, comments system, drag-and-drop, and inline renaming are all **complete**. We're on track for **feature parity with Scrivener by June 2026**.
+Manuscript has achieved near-complete feature parity with Scrivener. Most core features are **complete** including rich text editing, split editor, corkboard, outliner, snapshots, trash folder, and comprehensive export options.
 
-**Progress Update (Jan 22):**
+**Progress Update (Jan 27):**
 - ✅ Rich text editing complete (bold, italic, underline, fonts, sizes, colors)
 - ✅ Formatting toolbar with undo/redo support
 - ✅ Paragraph formatting (first-line indent, line spacing)
@@ -19,14 +19,25 @@ Manuscript has made significant progress. Rich text editing, formatting toolbar,
 - ✅ Drag-and-drop reordering and moving between folders
 - ✅ Inline document renaming (Scrivener-style)
 - ✅ State restoration and window persistence
+- ✅ Find & replace with search highlighting
+- ✅ Split editor (side-by-side documents on macOS)
+- ✅ Snapshots (version history with restore)
+- ✅ Corkboard view with index cards
+- ✅ Outliner view with sortable columns
+- ✅ Writing targets (draft and session goals)
+- ✅ iCloud Drive sync
+- ✅ Read mode (distraction-free reading)
+- ✅ Trash folder (soft-delete with restore)
+- ✅ Export: PDF, DOCX, EPUB, Markdown, Plain Text, Scrivener
 
-**Remaining Timeline:**
-- **Now - Feb**: Find & replace, writing targets UI
-- **Mar - Apr**: Core UI features (split editor, composition mode)
-- **Apr - May**: CloudKit sync, advanced views (cork board, outliner)
-- **May - Jun**: Export formats, polish, beta release
+**Remaining:**
+- Composition mode (distraction-free writing)
+- Print documents
+- Import documents (Word, PDF, HTML)
+- Document links
+- Keywords/tags system
 
-**Key Strategy**: Run multiple tracks in parallel. Ship incrementally.
+**Key Strategy**: Polish and prepare for launch.
 
 ---
 
@@ -67,90 +78,105 @@ Manuscript has made significant progress. Rich text editing, formatting toolbar,
 
 ---
 
-## Sprint 5: Search & Polish (Feb - Mar)
+## Sprint 5: Search & Polish ✅ COMPLETE
 
-**Current focus**
+### Track A: Find & Replace ✅
+- [x] Find-in-document (⌘F)
+- [x] Find-and-replace
+- [x] Search result highlighting
+- [x] Navigate between matches
 
-### Track A: Find & Replace (High Priority)
-- [ ] Find-in-document (⌘F)
-- [ ] Find-and-replace
-- [ ] Search result highlighting
-- [ ] Full-text search across project
-
-### Track B: Writing Targets UI
-- [ ] Document word count targets
-- [ ] Project targets
-- [ ] Session targets
-- [ ] Progress indicators in sidebar
+### Track B: Writing Targets ✅
+- [x] Project targets
+- [x] Session targets
+- [x] Deadline tracking
+- [x] Progress indicators
 
 ---
 
-## Sprint 6: Core UI Features (Mar - Apr)
+## Sprint 6: Core UI Features ✅ COMPLETE
 
-### Track A: Split Editor
-- [ ] Horizontal + vertical split views
-- [ ] Drag-to-resize divider
-- [ ] Independent scrolling
-- [ ] Platform-specific optimizations
+### Track A: Split Editor ✅
+- [x] Side-by-side document views (macOS)
+- [x] Independent scrolling
+- [x] Quick switch between documents
 
-### Track B: Composition Mode
+### Track B: Read Mode ✅
+- [x] Distraction-free reading view
+- [x] Prose typography
+- [x] Clean interface
+
+### Track C: Snapshots ✅
+- [x] Snapshot storage format
+- [x] Manual snapshot creation
+- [x] Snapshot browser in inspector
+- [x] Restore from snapshot
+
+---
+
+## Sprint 7: Organization + Sync ✅ COMPLETE
+
+### Track A: Trash Folder ✅
+- [x] Soft-delete (move to trash)
+- [x] Restore from trash
+- [x] Permanent delete
+- [x] Empty trash
+
+### Track B: Cork Board ✅
+- [x] Card component design
+- [x] Grid layout
+- [x] Synopsis editing on cards
+- [x] Visual organization
+
+### Track C: Outliner ✅
+- [x] Table view implementation
+- [x] Sortable columns
+- [x] Metadata display
+- [x] Hierarchical structure
+
+### Track D: iCloud Drive Sync ✅
+- [x] Document-based iCloud sync
+- [x] Cross-device access
+- [x] Sync status indicator (macOS)
+
+---
+
+## Sprint 8: Export ✅ COMPLETE
+
+### Multi-Format Export ✅
+- [x] Compile/export UI
+- [x] PDF export with customization
+- [x] DOCX export
+- [x] EPUB export
+- [x] Markdown export
+- [x] Plain Text export
+- [x] Scrivener (.scriv) export
+- [x] Exclude files from compile
+
+---
+
+## Sprint 9: Remaining Features (Current)
+
+### Composition Mode
 - [ ] Fullscreen distraction-free mode
 - [ ] Customizable background
 - [ ] Fade-in controls on hover
-- [ ] Keyboard toggle (⌘⇧F)
 
-### Track C: Snapshots
-- [ ] Snapshot storage format
-- [ ] Auto-snapshot on significant changes
-- [ ] Manual snapshot command
-- [ ] Snapshot browser + restore
+### Import
+- [ ] Import DOCX
+- [ ] Import PDF
+- [ ] Import HTML
+- [ ] Import images
 
----
+### Organization
+- [ ] Keywords/tags system
+- [ ] Document links
+- [ ] Collections/filtered views
 
-## Sprint 7: Organization + Sync (Apr - May)
-
-### Track A: Labels & Status UI
-- [ ] Label model UI (name, color)
-- [ ] Status model UI (To Do → Done)
-- [ ] Binder color indicators
-- [ ] Batch operations
-
-### Track B: Cork Board
-- [ ] Card component design
-- [ ] Grid layout with drag-and-drop
-- [ ] Card size options
-- [ ] Keyboard navigation
-
-### Track C: Outliner
-- [ ] Table view implementation
-- [ ] Sortable columns
-- [ ] Inline editing
-- [ ] Column customization
-
-### Track D: CloudKit Sync
-- [ ] CloudKit container setup
-- [ ] CKRecord mapping
-- [ ] Conflict resolution (last-write-wins initially)
-- [ ] Sync status indicators
-- [ ] Offline/online handling
-
----
-
-## Sprint 8: Export + Polish (May - Jun)
-
-### Multi-Format Export
-- [ ] Compile/export UI improvements
-- [ ] DOCX export
-- [ ] EPUB export
-- [ ] HTML export
-- [ ] PDF improvements
-- [ ] LaTeX export
-- [ ] Export templates/presets
-
-### Polish Sprint
-- [ ] Bug fixes from beta feedback
+### Polish
 - [ ] Performance optimization
 - [ ] Accessibility audit
+- [ ] Print documents
 
 ---
 
@@ -186,14 +212,20 @@ Move Between Folders       ✅ DONE
 Inline Renaming            ✅ DONE
 State Restoration          ✅ DONE
 AI Integration             ✅ DONE
-Find & Replace             🔜 Next
-Writing Targets UI         🔜 Next
-Split Editor               🔜 Planned
+Find & Replace             ✅ DONE
+Writing Targets            ✅ DONE
+Split Editor               ✅ DONE
+Read Mode                  ✅ DONE
+Cork Board                 ✅ DONE
+Outliner                   ✅ DONE
+iCloud Sync                ✅ DONE
+Snapshots                  ✅ DONE
+Trash Folder               ✅ DONE
+Export (PDF/DOCX/EPUB)     ✅ DONE
 Composition Mode           🔜 Planned
-Cork Board                 🔜 Planned
-Outliner                   🔜 Planned
-CloudKit Sync              🔜 Planned
-Export Formats             🔜 Planned
+Import Documents           🔜 Planned
+Keywords/Tags              🔜 Planned
+Document Links             🔜 Planned
 ```
 
 ---
@@ -202,11 +234,12 @@ Export Formats             🔜 Planned
 
 | Target | Deliverable |
 |--------|-------------|
-| Feb 2026 | Find & replace, writing targets UI |
-| Mar 2026 | Split editor working |
-| Apr 2026 | Composition mode, snapshots |
-| May 2026 | CloudKit sync, organization views |
-| Jun 2026 | **v1.0 Launch**: Feature parity achieved |
+| ~~Feb 2026~~ | ~~Find & replace, writing targets~~ ✅ |
+| ~~Mar 2026~~ | ~~Split editor~~ ✅ |
+| ~~Apr 2026~~ | ~~Snapshots, corkboard, outliner~~ ✅ |
+| Feb 2026 | Composition mode, polish |
+| Mar 2026 | Import documents, final testing |
+| Apr 2026 | **v1.0 Launch**: Ready for App Store |
 
 ---
 
@@ -248,11 +281,12 @@ If we fall behind, cut in this order:
 
 ## Immediate Actions (Next Steps)
 
-1. [ ] Implement find & replace (⌘F)
-2. [ ] Add writing targets UI
-3. [ ] Plan split editor architecture
-4. [ ] Test Scrivener import with more real-world projects
-5. [ ] Recruit beta testers for upcoming release
+1. [ ] Implement composition mode (distraction-free writing)
+2. [ ] Add print document support
+3. [ ] Implement document import (DOCX, PDF, HTML)
+4. [ ] Add keywords/tags system
+5. [ ] Prepare App Store assets (icons, screenshots, metadata)
+6. [ ] Final performance audit and polish
 
 ---
 
@@ -272,3 +306,4 @@ If we fall behind, cut in this order:
 | Jan 2026 | Initial action plan created |
 | Jan 2026 | Compressed to aggressive 22-week timeline |
 | Jan 22, 2026 | Updated: Rich text, comments, drag-drop, inline renaming, Scrivener import all complete |
+| Jan 27, 2026 | Major update: Find & replace, split editor, corkboard, outliner, snapshots, trash folder, export formats, writing targets, iCloud sync all complete |

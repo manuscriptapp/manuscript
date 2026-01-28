@@ -15,6 +15,7 @@ struct CompileSheet: View {
     @State private var isExportingScrivener = false
     @State private var scrivenerExportProgress: Double = 0
     @State private var scrivenerExportMessage: String = ""
+    @State private var isPrinting = false
 
     private let document: ManuscriptDocument
 
@@ -84,6 +85,15 @@ struct CompileSheet: View {
                         }
                     }
                     .disabled(viewModel.isCompiling || isExportingScrivener || viewModel.compilableDocuments.isEmpty)
+                }
+
+                ToolbarItem(placement: .secondaryAction) {
+                    Button {
+                        Task { await printDocument() }
+                    } label: {
+                        Label("Print", systemImage: "printer")
+                    }
+                    .disabled(viewModel.isCompiling || isPrinting || viewModel.compilableDocuments.isEmpty)
                 }
             }
             .overlay {
@@ -346,6 +356,29 @@ struct CompileSheet: View {
             }
             .padding(24)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    // MARK: - Print
+
+    private func printDocument() async {
+        isPrinting = true
+        defer { isPrinting = false }
+
+        do {
+            try await PrintService.shared.printManuscript(
+                documents: viewModel.compilableDocuments,
+                title: viewModel.effectiveTitle,
+                author: viewModel.effectiveAuthor,
+                settings: viewModel.settings,
+                progress: { progress in
+                    Task { @MainActor in
+                        viewModel.progress = progress
+                    }
+                }
+            )
+        } catch {
+            viewModel.error = .exportFailed(underlying: error)
         }
     }
 
