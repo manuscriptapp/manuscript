@@ -13,6 +13,20 @@ struct ProjectInfoView: View {
     @State private var activeTab: Int = 0
     @State private var showingTemplateSheet: Bool = false
 
+    // Writing targets state
+    @State private var hasDraftTarget: Bool = false
+    @State private var draftWordCount: String = ""
+    @State private var hasDeadline: Bool = false
+    @State private var draftDeadline: Date = Date()
+    @State private var deadlineIgnored: Bool = false
+    @State private var countIncludedOnly: Bool = true
+
+    @State private var hasSessionTarget: Bool = false
+    @State private var sessionWordCount: String = ""
+    @State private var sessionResetType: SessionResetType = .midnight
+    @State private var sessionResetTime: Date = Calendar.current.startOfDay(for: Date())
+    @State private var allowNegatives: Bool = false
+
     /// The template used to create this document, if any
     private var template: BookTemplate? {
         guard let templateId = viewModel.document.templateId else { return nil }
@@ -69,6 +83,7 @@ struct ProjectInfoView: View {
         case genre = 1
         case style = 2
         case synopsis = 3
+        case targets = 4
 
         var title: String {
             switch self {
@@ -76,6 +91,7 @@ struct ProjectInfoView: View {
             case .genre: "Genre"
             case .style: "Style"
             case .synopsis: "Synopsis"
+            case .targets: "Targets"
             }
         }
 
@@ -85,6 +101,7 @@ struct ProjectInfoView: View {
             case .genre: "tag"
             case .style: "paintbrush"
             case .synopsis: "doc.text"
+            case .targets: "target"
             }
         }
     }
@@ -119,6 +136,8 @@ struct ProjectInfoView: View {
                 styleSection
             case 3:
                 synopsisSection
+            case 4:
+                targetsSection
             default:
                 basicInfoSection
             }
@@ -156,6 +175,12 @@ struct ProjectInfoView: View {
                     Label("Synopsis", systemImage: "doc.text")
                 }
                 .tag(3)
+
+            targetsTab
+                .tabItem {
+                    Label("Targets", systemImage: "target")
+                }
+                .tag(4)
         }
         .navigationTitle("Project Info")
         .onAppear {
@@ -361,6 +386,80 @@ struct ProjectInfoView: View {
             }
             .font(.callout)
             .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var targetsSection: some View {
+        Section("Draft Target") {
+            Toggle("Enable Draft Target", isOn: $hasDraftTarget)
+                .onChange(of: hasDraftTarget) { _, _ in updateTargets() }
+
+            if hasDraftTarget {
+                HStack {
+                    Text("Word Count Goal")
+                    Spacer()
+                    TextField("60000", text: $draftWordCount)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 100)
+                        .onChange(of: draftWordCount) { _, _ in updateTargets() }
+                }
+
+                Toggle("Count Included Documents Only", isOn: $countIncludedOnly)
+                    .onChange(of: countIncludedOnly) { _, _ in updateTargets() }
+
+                Divider()
+
+                Toggle("Set Deadline", isOn: $hasDeadline)
+                    .onChange(of: hasDeadline) { _, _ in updateTargets() }
+
+                if hasDeadline {
+                    DatePicker("Deadline", selection: $draftDeadline, displayedComponents: [.date])
+                        .onChange(of: draftDeadline) { _, _ in updateTargets() }
+
+                    Toggle("Ignore Deadline Warnings", isOn: $deadlineIgnored)
+                        .onChange(of: deadlineIgnored) { _, _ in updateTargets() }
+                }
+            }
+        }
+
+        Section("Session Target") {
+            Toggle("Enable Session Target", isOn: $hasSessionTarget)
+                .onChange(of: hasSessionTarget) { _, _ in updateTargets() }
+
+            if hasSessionTarget {
+                HStack {
+                    Text("Daily Word Count")
+                    Spacer()
+                    TextField("500", text: $sessionWordCount)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 100)
+                        .onChange(of: sessionWordCount) { _, _ in updateTargets() }
+                }
+
+                Picker("Reset Type", selection: $sessionResetType) {
+                    Text("At Midnight").tag(SessionResetType.midnight)
+                    Text("At Specific Time").tag(SessionResetType.time)
+                }
+                .onChange(of: sessionResetType) { _, _ in updateTargets() }
+
+                if sessionResetType == .time {
+                    DatePicker("Reset Time", selection: $sessionResetTime, displayedComponents: [.hourAndMinute])
+                        .onChange(of: sessionResetTime) { _, _ in updateTargets() }
+                }
+
+                Toggle("Allow Negative Progress", isOn: $allowNegatives)
+                    .onChange(of: allowNegatives) { _, _ in updateTargets() }
+            }
+        }
+
+        Section("Tips") {
+            Text("Draft targets track your overall manuscript word count goal.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Text("Session targets track your daily writing progress and reset each day.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
         }
     }
     #endif
@@ -628,6 +727,83 @@ struct ProjectInfoView: View {
             }
         }
     }
+
+    private var targetsTab: some View {
+        Form {
+            Section("Draft Target") {
+                Toggle("Enable Draft Target", isOn: $hasDraftTarget)
+                    .onChange(of: hasDraftTarget) { _, _ in updateTargets() }
+
+                if hasDraftTarget {
+                    HStack {
+                        Text("Word Count Goal")
+                        Spacer()
+                        TextField("60000", text: $draftWordCount)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 100)
+                            .onChange(of: draftWordCount) { _, _ in updateTargets() }
+                    }
+
+                    Toggle("Count Included Documents Only", isOn: $countIncludedOnly)
+                        .onChange(of: countIncludedOnly) { _, _ in updateTargets() }
+
+                    Divider()
+
+                    Toggle("Set Deadline", isOn: $hasDeadline)
+                        .onChange(of: hasDeadline) { _, _ in updateTargets() }
+
+                    if hasDeadline {
+                        DatePicker("Deadline", selection: $draftDeadline, displayedComponents: [.date])
+                            .onChange(of: draftDeadline) { _, _ in updateTargets() }
+
+                        Toggle("Ignore Deadline Warnings", isOn: $deadlineIgnored)
+                            .onChange(of: deadlineIgnored) { _, _ in updateTargets() }
+                    }
+                }
+            }
+
+            Section("Session Target") {
+                Toggle("Enable Session Target", isOn: $hasSessionTarget)
+                    .onChange(of: hasSessionTarget) { _, _ in updateTargets() }
+
+                if hasSessionTarget {
+                    HStack {
+                        Text("Daily Word Count")
+                        Spacer()
+                        TextField("500", text: $sessionWordCount)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 100)
+                            .onChange(of: sessionWordCount) { _, _ in updateTargets() }
+                    }
+
+                    Picker("Reset Type", selection: $sessionResetType) {
+                        Text("At Midnight").tag(SessionResetType.midnight)
+                        Text("At Specific Time").tag(SessionResetType.time)
+                    }
+                    .onChange(of: sessionResetType) { _, _ in updateTargets() }
+
+                    if sessionResetType == .time {
+                        DatePicker("Reset Time", selection: $sessionResetTime, displayedComponents: [.hourAndMinute])
+                            .onChange(of: sessionResetTime) { _, _ in updateTargets() }
+                    }
+
+                    Toggle("Allow Negative Progress", isOn: $allowNegatives)
+                        .onChange(of: allowNegatives) { _, _ in updateTargets() }
+                }
+            }
+
+            Section("Tips") {
+                Text("Draft targets track your overall manuscript word count goal.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Text("Session targets track your daily writing progress and reset each day.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
     #endif
 
     // MARK: - Shared Helpers
@@ -699,6 +875,11 @@ struct ProjectInfoView: View {
         var doc = viewModel.document
         doc.style = combinedStyle
         viewModel.document = doc
+    }
+
+    private func updateTargets() {
+        // TODO: Implement writing targets persistence
+        // This will save the target settings to the document when targets feature is fully implemented
     }
 }
 

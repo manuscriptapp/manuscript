@@ -122,6 +122,19 @@ struct ExportMenuCommands: View {
     }
 }
 
+/// Menu commands for Print functionality in the File menu
+struct PrintMenuCommands: View {
+    @FocusedValue(\.printSheetBinding) var printSheetBinding
+
+    var body: some View {
+        Button("Print…") {
+            printSheetBinding?.wrappedValue = true
+        }
+        .keyboardShortcut("p", modifiers: .command)
+        .disabled(printSheetBinding == nil)
+    }
+}
+
 /// Menu commands for Formatting Toolbar toggle in View menu
 struct FormattingToolbarMenuCommands: View {
     @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
@@ -1026,9 +1039,10 @@ struct ManuscriptApp: App {
                 FormattingToolbarMenuCommands()
             }
 
-            // File menu commands - Export
+            // File menu commands - Export and Print
             CommandGroup(after: .importExport) {
                 ExportMenuCommands()
+                PrintMenuCommands()
             }
         }
         #endif
