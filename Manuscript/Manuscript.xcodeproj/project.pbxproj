@@ -120,7 +120,6 @@
 				E629AD4F2F13CBC700C8831E /* Sources */,
 				E629AD502F13CBC700C8831E /* Frameworks */,
 				E629AD512F13CBC700C8831E /* Resources */,
-				E629AD912F13CBC700C8831E /* Set Build Number */,
 			);
 			buildRules = (
 			);
@@ -253,27 +252,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		E629AD912F13CBC700C8831E /* Set Build Number */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Set Build Number";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Auto-increment build number using git commit count\nBUILD_NUMBER=$(git rev-list --count HEAD)\n\n# Update the Info.plist in the built product\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n\necho \"Build number set to $BUILD_NUMBER\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		E629AD4F2F13CBC700C8831E /* Sources */ = {
