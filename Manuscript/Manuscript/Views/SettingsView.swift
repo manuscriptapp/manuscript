@@ -6,10 +6,29 @@ import UIKit
 import AppKit
 #endif
 
+enum SettingsTab: String, CaseIterable, Identifiable {
+    case general = "General"
+    case format = "Format"
+    case ai = "AI"
+    case speech = "Speech"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .general: return "gear"
+        case .format: return "textformat"
+        case .ai: return "brain"
+        case .speech: return "speaker.wave.2"
+        }
+    }
+}
+
 struct SettingsView: View {
     @AppStorage("defaultAuthorName") private var defaultAuthorName: String = ""
     @State private var aiSettings = AISettingsManager.shared
     @State private var elevenLabsSettings = ElevenLabsSettingsManager.shared
+    @State private var selectedTab: SettingsTab = .general
 
     // Formatting defaults
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
@@ -60,33 +79,128 @@ struct SettingsView: View {
     }
 
     var body: some View {
+        #if os(macOS)
+        TabView(selection: $selectedTab) {
+            generalTabContent
+                .tabItem {
+                    Label(SettingsTab.general.rawValue, systemImage: SettingsTab.general.icon)
+                }
+                .tag(SettingsTab.general)
+
+            formatTabContent
+                .tabItem {
+                    Label(SettingsTab.format.rawValue, systemImage: SettingsTab.format.icon)
+                }
+                .tag(SettingsTab.format)
+
+            aiTabContent
+                .tabItem {
+                    Label(SettingsTab.ai.rawValue, systemImage: SettingsTab.ai.icon)
+                }
+                .tag(SettingsTab.ai)
+
+            speechTabContent
+                .tabItem {
+                    Label(SettingsTab.speech.rawValue, systemImage: SettingsTab.speech.icon)
+                }
+                .tag(SettingsTab.speech)
+        }
+        .frame(minWidth: 450, minHeight: 400)
+        .onAppear {
+            loadExistingKeys()
+        }
+        #else
+        NavigationStack {
+            List {
+                ForEach(SettingsTab.allCases) { tab in
+                    NavigationLink(value: tab) {
+                        Label(tab.rawValue, systemImage: tab.icon)
+                    }
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationDestination(for: SettingsTab.self) { tab in
+                settingsContent(for: tab)
+            }
+        }
+        .onAppear {
+            loadExistingKeys()
+        }
+        #endif
+    }
+
+    // MARK: - Tab Content Views
+
+    #if os(macOS)
+    @ViewBuilder
+    private var generalTabContent: some View {
         Form {
             Section("Author") {
                 TextField("Name", text: $defaultAuthorName, prompt: Text("Enter default author name"))
-                #if os(iOS)
-                    .textInputAutocapitalization(.words)
-                #endif
             }
-
-            formattingSection
-
-            aiSettingsSection
-
-            ttsSettingsSection
 
             Section("About") {
                 LabeledContent("Version", value: appVersion)
             }
         }
-        #if os(macOS)
         .formStyle(.grouped)
-        .frame(minWidth: 450, minHeight: 500)
-        #endif
-        .navigationTitle("Settings")
-        .onAppear {
-            loadExistingKeys()
-        }
     }
+
+    @ViewBuilder
+    private var formatTabContent: some View {
+        Form {
+            formattingSection
+        }
+        .formStyle(.grouped)
+    }
+
+    @ViewBuilder
+    private var aiTabContent: some View {
+        Form {
+            aiSettingsSection
+        }
+        .formStyle(.grouped)
+    }
+
+    @ViewBuilder
+    private var speechTabContent: some View {
+        Form {
+            ttsSettingsSection
+        }
+        .formStyle(.grouped)
+    }
+    #endif
+
+    // MARK: - iOS Navigation Content
+
+    #if os(iOS)
+    @ViewBuilder
+    private func settingsContent(for tab: SettingsTab) -> some View {
+        Form {
+            switch tab {
+            case .general:
+                Section("Author") {
+                    TextField("Name", text: $defaultAuthorName, prompt: Text("Enter default author name"))
+                        .textInputAutocapitalization(.words)
+                }
+
+                Section("About") {
+                    LabeledContent("Version", value: appVersion)
+                }
+
+            case .format:
+                formattingSection
+
+            case .ai:
+                aiSettingsSection
+
+            case .speech:
+                ttsSettingsSection
+            }
+        }
+        .navigationTitle(tab.rawValue)
+    }
+    #endif
 
     @ViewBuilder
     private var formattingSection: some View {
