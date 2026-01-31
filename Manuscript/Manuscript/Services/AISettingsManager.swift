@@ -3,7 +3,6 @@ import SwiftUI
 
 /// Model provider options for AI text generation
 enum AIModelProvider: String, CaseIterable, Identifiable {
-    case auto = "auto"
     case openAI = "openai"
     case claude = "claude"
 
@@ -11,8 +10,6 @@ enum AIModelProvider: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .auto:
-            return "Auto (Manuscript Server)"
         case .openAI:
             return "OpenAI"
         case .claude:
@@ -22,8 +19,6 @@ enum AIModelProvider: String, CaseIterable, Identifiable {
 
     var description: String {
         switch self {
-        case .auto:
-            return "Uses Manuscript's server for AI features. No API key required."
         case .openAI:
             return "Use your own OpenAI API key for direct access."
         case .claude:
@@ -180,6 +175,16 @@ final class AISettingsManager {
         keychain.exists(.claudeAPIKey)
     }
 
+    /// Returns true if the currently selected provider has an API key configured
+    var hasAPIKeyForSelectedProvider: Bool {
+        switch selectedProvider {
+        case .openAI:
+            return hasOpenAIKey
+        case .claude:
+            return hasClaudeKey
+        }
+    }
+
     var openAIKeyPreview: String {
         guard let key = try? keychain.retrieve(.openAIAPIKey), !key.isEmpty else {
             return ""
@@ -214,7 +219,7 @@ final class AISettingsManager {
            let provider = AIModelProvider(rawValue: providerRaw) {
             self.selectedProvider = provider
         } else {
-            self.selectedProvider = .auto
+            self.selectedProvider = .openAI
         }
 
         if let modelRaw = userDefaults.string(forKey: DefaultsKey.openAIModel),
