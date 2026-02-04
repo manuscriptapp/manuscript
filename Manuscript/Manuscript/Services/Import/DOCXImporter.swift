@@ -182,21 +182,29 @@ final class DOCXImporter {
 
         #if canImport(AppKit)
         var documentAttributes: NSDictionary?
-        guard let attributedString = NSAttributedString(
-            docFormat: data,
-            documentAttributes: &documentAttributes
-        ) ?? NSAttributedString(
-            data: data,
-            options: [.documentType: documentType],
-            documentAttributes: &documentAttributes
-        ) else {
-            // Try plain text as fallback
+        if fileExtension == "doc" {
+            if let attributed = NSAttributedString(docFormat: data, documentAttributes: &documentAttributes) {
+                return attributed
+            }
             if let plainText = String(data: data, encoding: .utf8) {
                 return NSAttributedString(string: plainText)
             }
             throw ImportError.rtfConversionFailed("Could not parse document data")
         }
-        return attributedString
+
+        do {
+            return try NSAttributedString(
+                data: data,
+                options: [.documentType: documentType],
+                documentAttributes: &documentAttributes
+            )
+        } catch {
+            // Try plain text as fallback
+            if let plainText = String(data: data, encoding: .utf8) {
+                return NSAttributedString(string: plainText)
+            }
+            throw ImportError.rtfConversionFailed("Could not parse document data: \(error.localizedDescription)")
+        }
 
         #elseif canImport(UIKit)
         do {

@@ -17,7 +17,7 @@ struct DocumentImportOptions {
     /// Whether to import as a new project or add to existing folder
     var createNewProject: Bool = false
 
-    static let `default` = DocumentImportOptions()
+    nonisolated static let `default` = DocumentImportOptions()
 }
 
 /// Shared validation result for document imports
