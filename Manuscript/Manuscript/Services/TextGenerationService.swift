@@ -1,43 +1,41 @@
 import Foundation
 
-// Request and Response types
-struct TextGenerationRequest: Codable {
-    let prompt: String
-}
+/// Error type for text generation service
+enum TextGenerationError: LocalizedError {
+    case noAPIKey(AIModelProvider)
 
-struct TextGenerationResponse: Codable {
-    let text: String
+    var errorDescription: String? {
+        switch self {
+        case .noAPIKey(let provider):
+            return "No API key configured for \(provider.displayName). Please add your API key in Settings."
+        }
+    }
 }
 
 actor TextGenerationService {
     static let shared = TextGenerationService()
-    private let apiService = APIService.shared
-    
+
     private init() {}
-    
+
+    /// Generates text using the configured AI provider
+    /// - Parameter prompt: The prompt to send to the AI
+    /// - Returns: The generated text response
+    /// - Throws: TextGenerationError.noAPIKey if no API key is configured, or provider-specific errors
+    @MainActor
     func generateText(prompt: String) async throws -> String {
-        let request = TextGenerationRequest(prompt: prompt)
-        let response: TextGenerationResponse = try await apiService.post(
-            endpoint: "generate-text",
-            payload: request
-        )
-        return response.text
+        let settings = AISettingsManager.shared
+
+        switch settings.selectedProvider {
+        case .openAI:
+            return try await OpenAIService.shared.generateText(
+                prompt: prompt,
+                model: settings.selectedOpenAIModel
+            )
+        case .claude:
+            return try await ClaudeAPIService.shared.generateText(
+                prompt: prompt,
+                model: settings.selectedClaudeModel
+            )
+        }
     }
 }
-
-// Example usage:
-/*
- Task {
-     do {
-         #if DEBUG
-         // Optionally switch to production environment in debug mode
-         // await APIService.shared.setEnvironment(.production)
-         #endif
-         
-         let generatedText = try await TextGenerationService.shared.generateText(prompt: "Your prompt here")
-         print(generatedText)
-     } catch {
-         print("Error: \(error)")
-     }
- }
- */ 

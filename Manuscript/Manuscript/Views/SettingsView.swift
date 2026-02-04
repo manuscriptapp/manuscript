@@ -274,22 +274,24 @@ struct SettingsView: View {
             #if os(iOS)
             .pickerStyle(.navigationLink)
             #endif
+
+            Text(aiSettings.selectedProvider.description)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
 
-        if aiSettings.selectedProvider == .openAI || aiSettings.selectedProvider == .auto {
+        if aiSettings.selectedProvider == .openAI {
             Section("OpenAI") {
                 openAIKeyField
 
-                if aiSettings.selectedProvider == .openAI {
-                    Picker("Model", selection: $aiSettings.selectedOpenAIModel) {
-                        ForEach(OpenAIModel.allCases) { model in
-                            Text(model.displayName).tag(model)
-                        }
+                Picker("Model", selection: $aiSettings.selectedOpenAIModel) {
+                    ForEach(OpenAIModel.allCases) { model in
+                        Text(model.displayName).tag(model)
                     }
-                    #if os(iOS)
-                    .pickerStyle(.navigationLink)
-                    #endif
                 }
+                #if os(iOS)
+                .pickerStyle(.navigationLink)
+                #endif
 
                 if aiSettings.hasOpenAIKey {
                     testConnectionButton(for: .openAI)
@@ -297,20 +299,18 @@ struct SettingsView: View {
             }
         }
 
-        if aiSettings.selectedProvider == .claude || aiSettings.selectedProvider == .auto {
+        if aiSettings.selectedProvider == .claude {
             Section("Claude") {
                 claudeKeyField
 
-                if aiSettings.selectedProvider == .claude {
-                    Picker("Model", selection: $aiSettings.selectedClaudeModel) {
-                        ForEach(ClaudeModel.allCases) { model in
-                            Text(model.displayName).tag(model)
-                        }
+                Picker("Model", selection: $aiSettings.selectedClaudeModel) {
+                    ForEach(ClaudeModel.allCases) { model in
+                        Text(model.displayName).tag(model)
                     }
-                    #if os(iOS)
-                    .pickerStyle(.navigationLink)
-                    #endif
                 }
+                #if os(iOS)
+                .pickerStyle(.navigationLink)
+                #endif
 
                 if aiSettings.hasClaudeKey {
                     testConnectionButton(for: .claude)
@@ -757,9 +757,6 @@ struct SettingsView: View {
                 claudeTestResult = .failure(error.localizedDescription)
             }
             isTestingClaude = false
-
-        case .auto:
-            break
         }
     }
 }
