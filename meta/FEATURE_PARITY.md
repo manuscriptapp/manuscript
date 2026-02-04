@@ -51,9 +51,9 @@ Manuscript vs Scrivener vs Ulysses.
 | Move between folders | ✅ | ✅ | ✅ |
 | Inline renaming | ✅ | ✅ | ✅ |
 | Status labels | ✅ | ❌ | ⚡ Data only |
-| Keywords/tags | ✅ | ✅ | 🔜 |
-| Collections/filters | ✅ | ✅ | 🔜 |
-| Favorites | ✅ | ✅ | 🔜 |
+| Keywords/tags | ✅ | ✅ | ✅ |
+| Collections/filters | ✅ | ✅ | ✅ |
+| Favorites | ✅ | ✅ | ✅ |
 | Trash | ✅ | ✅ | ✅ |
 
 ---
@@ -74,9 +74,9 @@ Manuscript vs Scrivener vs Ulysses.
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
 | Research folder | ✅ | ❌ | ✅ |
-| Import images | ✅ | ✅ | 🔜 |
-| Import PDFs | ✅ | ❌ | 🔜 |
-| Document links | ✅ | ✅ | 🔜 |
+| Import images | ✅ | ✅ | ✅ |
+| Import PDFs | ✅ | ❌ | ✅ |
+| Document links | ✅ | ✅ | ✅ |
 | Inline annotations | ✅ | ✅ | 🔜 |
 | Comments | ✅ | ✅ | ✅ |
 | Comment inspector | ✅ | ✅ | ✅ |
@@ -105,7 +105,7 @@ Manuscript vs Scrivener vs Ulysses.
 | Export EPUB | ✅ | ✅ | ✅ |
 | Export Plain Text | ✅ | ✅ | ✅ |
 | Export Scrivener | ➖ | ❌ | ✅ |
-| Export HTML | ✅ | ✅ | 🔜 |
+| Export HTML | ✅ | ✅ | ✅ |
 | Export LaTeX | ✅ | ❌ | 🔜 |
 | Export Markdown | ✅ | ✅ | ✅ |
 | Compile presets | ✅ | ✅ | 🔜 |
@@ -133,10 +133,10 @@ Manuscript vs Scrivener vs Ulysses.
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
 | Import DOCX | ✅ | ✅ | ✅ |
-| Import PDF | ✅ | ❌ | 🔜 |
+| Import PDF | ✅ | ❌ | ✅ |
 | Import Markdown | ✅ | ✅ | ✅ |
-| Import HTML | ✅ | ✅ | 🔜 |
-| Import images | ✅ | ✅ | 🔜 |
+| Import HTML | ✅ | ✅ | ✅ |
+| Import images | ✅ | ✅ | ✅ |
 | Import folder | ✅ | ✅ | 🔜 |
 | Import & split | ✅ | ❌ | 🔜 |
 | Import Scrivener | ➖ | ❌ | ✅ |
@@ -204,4 +204,4 @@ Manuscript vs Scrivener vs Ulysses.
 
 ---
 
-*Last updated: January 27, 2026*
+*Last updated: February 4, 2026*

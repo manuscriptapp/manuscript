@@ -28,10 +28,11 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 - ✅ iCloud Drive sync
 - ✅ Read mode (distraction-free reading)
 - ✅ Trash folder (soft-delete with restore)
-- ✅ Export: PDF, DOCX, EPUB, Markdown, Plain Text, Scrivener
+- ✅ Export: PDF, DOCX, EPUB, Markdown, Plain Text, HTML, Scrivener
 - ✅ Import: DOCX, PDF, HTML
 - ✅ Import images (as media items)
 - ✅ Keywords/tags system
+- ✅ Favorites
 - ✅ Document links
 - ✅ Collections/filtered views
 
@@ -179,6 +180,7 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 - [x] Keywords/tags system
 - [x] Document links
 - [x] Collections/filtered views
+- [x] Favorites
 
 ### Polish
 - [ ] Performance optimization
@@ -229,6 +231,7 @@ iCloud Sync                ✅ DONE
 Snapshots                  ✅ DONE
 Trash Folder               ✅ DONE
 Export (PDF/DOCX/EPUB)     ✅ DONE
+Export HTML                ✅ DONE
 Composition Mode           ✅ DONE
 Print Documents            ✅ DONE
 Import DOCX                ✅ DONE
@@ -237,6 +240,7 @@ Import Images              ✅ DONE
 Keywords/Tags              ✅ DONE
 Document Links             ✅ DONE
 Collections/Filtered Views ✅ DONE
+Favorites                  ✅ DONE
 ```
 
 ---
@@ -319,4 +323,4 @@ If we fall behind, cut in this order:
 | Jan 2026 | Compressed to aggressive 22-week timeline |
 | Jan 22, 2026 | Updated: Rich text, comments, drag-drop, inline renaming, Scrivener import all complete |
 | Jan 27, 2026 | Major update: Find & replace, split editor, corkboard, outliner, snapshots, trash folder, export formats, writing targets, iCloud sync all complete |
-| Feb 4, 2026 | Completed: PDF/HTML import, image import, keywords/tags, collections, document links |
+| Feb 4, 2026 | Completed: PDF/HTML import, image import, keywords/tags, collections, document links, favorites, HTML export |
