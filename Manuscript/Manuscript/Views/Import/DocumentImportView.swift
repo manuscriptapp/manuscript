@@ -38,6 +38,18 @@ enum ImportFileType: String, CaseIterable, Identifiable {
         allCases.flatMap { $0.utTypes }
     }
 
+    static var availableCases: [ImportFileType] {
+        #if os(iOS)
+        return [.pdf, .html]
+        #else
+        return allCases
+        #endif
+    }
+
+    static var availableUTTypes: [UTType] {
+        availableCases.flatMap { $0.utTypes }
+    }
+
     var icon: String {
         switch self {
         case .docx, .doc:
@@ -175,7 +187,7 @@ struct DocumentImportView: View {
                     .foregroundColor(.secondary)
 
                 HStack(spacing: 12) {
-                    ForEach(ImportFileType.allCases, id: \.self) { type in
+                    ForEach(ImportFileType.availableCases, id: \.self) { type in
                         Label(type.rawValue.components(separatedBy: " ").first ?? "", systemImage: type.icon)
                             .font(.caption)
                             .padding(.horizontal, 12)
@@ -444,7 +456,7 @@ struct DocumentImportView: View {
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        panel.allowedContentTypes = ImportFileType.allUTTypes
+        panel.allowedContentTypes = ImportFileType.availableUTTypes
 
         panel.message = "Select a document to import"
         panel.prompt = "Import"
@@ -565,7 +577,7 @@ struct DocumentImportView: View {
         EmptyView()
             .fileImporter(
                 isPresented: $isFileImporterPresented,
-                allowedContentTypes: ImportFileType.allUTTypes,
+                allowedContentTypes: ImportFileType.availableUTTypes,
                 allowsMultipleSelection: false
             ) { result in
                 switch result {

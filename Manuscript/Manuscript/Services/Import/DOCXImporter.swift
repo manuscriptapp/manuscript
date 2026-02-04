@@ -178,9 +178,8 @@ final class DOCXImporter {
     // MARK: - Private Methods
 
     private func createAttributedString(from data: Data, fileExtension: String) throws -> NSAttributedString {
-        let documentType: NSAttributedString.DocumentType = fileExtension == "doc" ? .docFormat : .officeOpenXML
-
         #if canImport(AppKit)
+        let documentType: NSAttributedString.DocumentType = fileExtension == "doc" ? .docFormat : .officeOpenXML
         var documentAttributes: NSDictionary?
         if fileExtension == "doc" {
             if let attributed = NSAttributedString(docFormat: data, documentAttributes: &documentAttributes) {
@@ -207,20 +206,9 @@ final class DOCXImporter {
         }
 
         #elseif canImport(UIKit)
-        do {
-            let attributedString = try NSAttributedString(
-                data: data,
-                options: [.documentType: documentType],
-                documentAttributes: nil
-            )
-            return attributedString
-        } catch {
-            // Try plain text as fallback
-            if let plainText = String(data: data, encoding: .utf8) {
-                return NSAttributedString(string: plainText)
-            }
-            throw ImportError.rtfConversionFailed("Could not parse document data: \(error.localizedDescription)")
-        }
+        // NSAttributedString.DocumentType doc/docx parsing is macOS-only.
+        // Avoid using macOS-only document type constants on iOS.
+        throw ImportError.rtfConversionFailed("DOCX import is not supported on iOS yet.")
         #endif
     }
 
