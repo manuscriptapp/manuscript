@@ -1,6 +1,6 @@
 # Manuscript Action Plan
 
-*Last updated: January 27, 2026*
+*Last updated: February 4, 2026*
 
 This document outlines the prioritized next steps for Manuscript development. **Near feature parity with Scrivener achieved.**
 
@@ -10,7 +10,7 @@ This document outlines the prioritized next steps for Manuscript development. **
 
 Manuscript has achieved near-complete feature parity with Scrivener. Most core features are **complete** including rich text editing, split editor, corkboard, outliner, snapshots, trash folder, and comprehensive export options.
 
-**Progress Update (Jan 27):**
+**Progress Update (Feb 4):**
 - ✅ Rich text editing complete (bold, italic, underline, fonts, sizes, colors)
 - ✅ Formatting toolbar with undo/redo support
 - ✅ Paragraph formatting (first-line indent, line spacing)
@@ -29,13 +29,20 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 - ✅ Read mode (distraction-free reading)
 - ✅ Trash folder (soft-delete with restore)
 - ✅ Export: PDF, DOCX, EPUB, Markdown, Plain Text, Scrivener
+- ✅ Import: DOCX, PDF, HTML
+- ✅ Import images (as media items)
+- ✅ Keywords/tags system
+- ✅ Document links
+- ✅ Collections/filtered views
 
 **Remaining:**
-- Composition mode (distraction-free writing)
-- Print documents
-- Import documents (Word, PDF, HTML)
-- Document links
-- Keywords/tags system
+- Performance optimization
+- Accessibility audit
+- Apple Foundation Models integration
+- Writing suggestions
+- Grammar/style checking
+- App Store assets + marketing site update
+- Final bug bash + launch
 
 **Key Strategy**: Polish and prepare for launch.
 
@@ -164,14 +171,14 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 
 ### Import
 - [x] Import DOCX
-- [ ] Import PDF
-- [ ] Import HTML
-- [ ] Import images
+- [x] Import PDF
+- [x] Import HTML
+- [x] Import images
 
 ### Organization
-- [ ] Keywords/tags system
-- [ ] Document links
-- [ ] Collections/filtered views
+- [x] Keywords/tags system
+- [x] Document links
+- [x] Collections/filtered views
 
 ### Polish
 - [ ] Performance optimization
@@ -225,9 +232,11 @@ Export (PDF/DOCX/EPUB)     ✅ DONE
 Composition Mode           ✅ DONE
 Print Documents            ✅ DONE
 Import DOCX                ✅ DONE
-Import PDF/HTML            🔜 Planned
-Keywords/Tags              🔜 Planned
-Document Links             🔜 Planned
+Import PDF/HTML            ✅ DONE
+Import Images              ✅ DONE
+Keywords/Tags              ✅ DONE
+Document Links             ✅ DONE
+Collections/Filtered Views ✅ DONE
 ```
 
 ---
@@ -286,8 +295,8 @@ If we fall behind, cut in this order:
 1. [x] Implement composition mode (distraction-free writing)
 2. [x] Add print document support
 3. [x] Implement DOCX import
-4. [ ] Implement PDF and HTML import
-5. [ ] Add keywords/tags system
+4. [x] Implement PDF and HTML import
+5. [x] Add keywords/tags system + collections + document links
 6. [ ] Prepare App Store assets (icons, screenshots, metadata)
 7. [ ] Final performance audit and polish
 
@@ -310,3 +319,4 @@ If we fall behind, cut in this order:
 | Jan 2026 | Compressed to aggressive 22-week timeline |
 | Jan 22, 2026 | Updated: Rich text, comments, drag-drop, inline renaming, Scrivener import all complete |
 | Jan 27, 2026 | Major update: Find & replace, split editor, corkboard, outliner, snapshots, trash folder, export formats, writing targets, iCloud sync all complete |
+| Feb 4, 2026 | Completed: PDF/HTML import, image import, keywords/tags, collections, document links |
