@@ -137,6 +137,16 @@ class CompileService {
             )
             fileExtension = "txt"
 
+        case .html:
+            data = try await HTMLExporter.shared.export(
+                documents: compilableDocuments,
+                title: title,
+                author: author,
+                settings: settings,
+                progress: progress
+            )
+            fileExtension = "html"
+
         case .scrivener:
             // Scrivener export uses the full document, not just compilable documents
             // This is handled separately in CompileSheet since it produces a folder

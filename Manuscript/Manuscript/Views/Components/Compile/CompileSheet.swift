@@ -497,6 +497,7 @@ struct CompileSheet: View {
         case .epub: return UTType(filenameExtension: "epub") ?? .data
         case .markdown: return UTType(filenameExtension: "md") ?? .plainText
         case .plainText: return .plainText
+        case .html: return UTType.html
         case .scrivener: return UTType(filenameExtension: "scriv") ?? .folder
         }
     }
