@@ -16,7 +16,8 @@ import AppKit
 enum ImportFileType: String, CaseIterable, Identifiable {
     case docx = "Word Document (.docx)"
     case doc = "Word Document (.doc)"
-    // Future: pdf, html, txt
+    case pdf = "PDF Document (.pdf)"
+    case html = "HTML Document (.html)"
 
     var id: String { rawValue }
 
@@ -26,6 +27,10 @@ enum ImportFileType: String, CaseIterable, Identifiable {
             return [UTType(filenameExtension: "docx")].compactMap { $0 }
         case .doc:
             return [UTType(filenameExtension: "doc")].compactMap { $0 }
+        case .pdf:
+            return [.pdf]
+        case .html:
+            return [UTType.html, UTType(filenameExtension: "html"), UTType(filenameExtension: "htm")].compactMap { $0 }
         }
     }
 
@@ -37,6 +42,26 @@ enum ImportFileType: String, CaseIterable, Identifiable {
         switch self {
         case .docx, .doc:
             return "doc.fill"
+        case .pdf:
+            return "doc.richtext"
+        case .html:
+            return "chevron.left.slash.chevron.right"
+        }
+    }
+
+    static func from(url: URL) -> ImportFileType? {
+        let ext = url.pathExtension.lowercased()
+        switch ext {
+        case "docx":
+            return .docx
+        case "doc":
+            return .doc
+        case "pdf":
+            return .pdf
+        case "html", "htm":
+            return .html
+        default:
+            return nil
         }
     }
 }
@@ -53,11 +78,12 @@ struct DocumentImportView: View {
 
     @State private var importState: ImportState = .idle
     @State private var selectedURLs: [URL] = []
-    @State private var validationResult: DOCXValidationResult?
-    @State private var importResult: DOCXImportResult?
+    @State private var validationResult: DocumentValidationResult?
+    @State private var importResult: DocumentImportResult?
     @State private var progress: Double = 0
     @State private var statusMessage = ""
     @State private var error: Error?
+    @State private var isFileImporterPresented = false
 
     // Import options
     @State private var preserveFormatting = true
@@ -119,6 +145,9 @@ struct DocumentImportView: View {
                 }
             }
             #endif
+            #if os(iOS)
+            .background(fileImporterView)
+            #endif
         }
     }
 
@@ -134,7 +163,7 @@ struct DocumentImportView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Select a Word document (.docx) to import into your project. The document will be added to \"\(targetFolder.title)\".")
+            Text("Select a document to import into your project. The document will be added to \"\(targetFolder.title)\".")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -145,8 +174,8 @@ struct DocumentImportView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
-                HStack(spacing: 16) {
-                    ForEach([ImportFileType.docx], id: \.self) { type in
+                HStack(spacing: 12) {
+                    ForEach(ImportFileType.allCases, id: \.self) { type in
                         Label(type.rawValue.components(separatedBy: " ").first ?? "", systemImage: type.icon)
                             .font(.caption)
                             .padding(.horizontal, 12)
@@ -157,7 +186,13 @@ struct DocumentImportView: View {
                 }
             }
 
-            Button(action: selectFile) {
+            Button {
+                #if os(iOS)
+                isFileImporterPresented = true
+                #else
+                selectFile()
+                #endif
+            } label: {
                 Label("Select Document...", systemImage: "folder")
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
@@ -176,7 +211,7 @@ struct DocumentImportView: View {
         }
     }
 
-    private func validationResultView(_ result: DOCXValidationResult) -> some View {
+    private func validationResultView(_ result: DocumentValidationResult) -> some View {
         VStack(spacing: 20) {
             // Document info
             VStack(spacing: 8) {
@@ -246,6 +281,13 @@ struct DocumentImportView: View {
                         .font(.headline)
 
                     Toggle("Preserve formatting (bold, italic, etc.)", isOn: $preserveFormatting)
+                        .disabled(selectedFileType == .pdf)
+
+                    if selectedFileType == .pdf {
+                        Text("PDFs are imported as plain text.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
 
                     Text("Will be imported to: \(targetFolder.title)")
                         .font(.caption)
@@ -299,7 +341,7 @@ struct DocumentImportView: View {
         .padding(40)
     }
 
-    private func completeView(_ result: DOCXImportResult) -> some View {
+    private func completeView(_ result: DocumentImportResult) -> some View {
         VStack(spacing: 20) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 60))
@@ -402,12 +444,9 @@ struct DocumentImportView: View {
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        panel.allowedContentTypes = [
-            UTType(filenameExtension: "docx"),
-            UTType(filenameExtension: "doc")
-        ].compactMap { $0 }
+        panel.allowedContentTypes = ImportFileType.allUTTypes
 
-        panel.message = "Select a Word document to import"
+        panel.message = "Select a document to import"
         panel.prompt = "Import"
 
         if panel.runModal() == .OK, let url = panel.url {
@@ -415,19 +454,33 @@ struct DocumentImportView: View {
             validateSelectedFile()
         }
         #else
-        // On iOS, this would be handled by a .fileImporter modifier in the parent view
-        // For now, we'll show a note that the file picker should be triggered externally
+        // iOS uses the .fileImporter modifier via fileImporterView
         #endif
     }
 
     private func validateSelectedFile() {
         guard let url = selectedURLs.first else { return }
+        guard let fileType = ImportFileType.from(url: url) else {
+            error = ImportError.rtfConversionFailed("Unsupported file type.")
+            importState = .error
+            return
+        }
+        if fileType == .pdf {
+            preserveFormatting = false
+        }
 
         importState = .validating
 
         Task {
-            let importer = DOCXImporter()
-            let result = importer.validate(at: url)
+            let result: DocumentValidationResult
+            switch fileType {
+            case .docx, .doc:
+                result = DOCXImporter().validate(at: url)
+            case .pdf:
+                result = PDFImporter().validate(at: url)
+            case .html:
+                result = HTMLImporter().validate(at: url)
+            }
 
             await MainActor.run {
                 validationResult = result
@@ -438,24 +491,52 @@ struct DocumentImportView: View {
 
     private func startImport() {
         guard let url = selectedURLs.first else { return }
+        guard let fileType = ImportFileType.from(url: url) else {
+            error = ImportError.rtfConversionFailed("Unsupported file type.")
+            importState = .error
+            return
+        }
 
         importState = .importing
         progress = 0
 
         Task {
-            let importer = DOCXImporter()
-            let options = DOCXImportOptions(
+            let options = DocumentImportOptions(
                 preserveFormatting: preserveFormatting
             )
 
             do {
-                let result = try await importer.importDocument(
-                    from: url,
-                    options: options
-                ) { prog, status in
-                    Task { @MainActor in
-                        self.progress = prog
-                        self.statusMessage = status
+                let result: DocumentImportResult
+                switch fileType {
+                case .docx, .doc:
+                    result = try await DOCXImporter().importDocument(
+                        from: url,
+                        options: options
+                    ) { prog, status in
+                        Task { @MainActor in
+                            self.progress = prog
+                            self.statusMessage = status
+                        }
+                    }
+                case .pdf:
+                    result = try await PDFImporter().importDocument(
+                        from: url,
+                        options: options
+                    ) { prog, status in
+                        Task { @MainActor in
+                            self.progress = prog
+                            self.statusMessage = status
+                        }
+                    }
+                case .html:
+                    result = try await HTMLImporter().importDocument(
+                        from: url,
+                        options: options
+                    ) { prog, status in
+                        Task { @MainActor in
+                            self.progress = prog
+                            self.statusMessage = status
+                        }
                     }
                 }
 
@@ -473,6 +554,31 @@ struct DocumentImportView: View {
     }
 
     // MARK: - Helpers
+
+    private var selectedFileType: ImportFileType? {
+        guard let url = selectedURLs.first else { return nil }
+        return ImportFileType.from(url: url)
+    }
+
+    #if os(iOS)
+    private var fileImporterView: some View {
+        EmptyView()
+            .fileImporter(
+                isPresented: $isFileImporterPresented,
+                allowedContentTypes: ImportFileType.allUTTypes,
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    selectedURLs = urls
+                    validateSelectedFile()
+                case .failure(let error):
+                    self.error = error
+                    importState = .error
+                }
+            }
+    }
+    #endif
 
     private func warningIcon(for severity: ImportWarning.Severity) -> String {
         switch severity {
