@@ -38,6 +38,7 @@ extension ManuscriptDocument {
         var statusId: String?
         var keywords: [String]
         var linkedDocumentIds: [UUID]
+        var isFavorite: Bool
         var includeInCompile: Bool
 
         // Character/location references
@@ -65,6 +66,7 @@ extension ManuscriptDocument {
             statusId: String? = nil,
             keywords: [String] = [],
             linkedDocumentIds: [UUID] = [],
+            isFavorite: Bool = false,
             includeInCompile: Bool = true,
             characterIds: [UUID] = [],
             locationIds: [UUID] = [],
@@ -85,6 +87,7 @@ extension ManuscriptDocument {
             self.statusId = statusId
             self.keywords = keywords
             self.linkedDocumentIds = linkedDocumentIds
+            self.isFavorite = isFavorite
             self.includeInCompile = includeInCompile
             self.characterIds = characterIds
             self.locationIds = locationIds
@@ -146,6 +149,7 @@ extension ManuscriptDocument {
         var labelId: String?
         var statusId: String?
         var keywords: [String]
+        var isFavorite: Bool
         var includeInCompile: Bool
 
         // Image-specific properties (nil for PDFs)
@@ -173,6 +177,7 @@ extension ManuscriptDocument {
             labelId: String? = nil,
             statusId: String? = nil,
             keywords: [String] = [],
+            isFavorite: Bool = false,
             includeInCompile: Bool = false,
             imageWidth: Int? = nil,
             imageHeight: Int? = nil,
@@ -193,6 +198,7 @@ extension ManuscriptDocument {
             self.labelId = labelId
             self.statusId = statusId
             self.keywords = keywords
+            self.isFavorite = isFavorite
             self.includeInCompile = includeInCompile
             self.imageWidth = imageWidth
             self.imageHeight = imageHeight

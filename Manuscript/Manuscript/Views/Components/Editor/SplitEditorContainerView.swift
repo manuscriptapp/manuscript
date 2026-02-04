@@ -183,6 +183,10 @@ struct SplitEditorContainerView: View {
                     get: { detailVM.linkedDocumentIds },
                     set: { detailVM.linkedDocumentIds = $0 }
                 ),
+                isFavorite: Binding(
+                    get: { detailVM.isFavorite },
+                    set: { detailVM.isFavorite = $0 }
+                ),
                 isPromptExpanded: Binding(
                     get: { detailVM.isPromptExpanded },
                     set: { detailVM.isPromptExpanded = $0 }

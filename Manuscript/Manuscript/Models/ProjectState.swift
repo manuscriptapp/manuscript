@@ -10,6 +10,7 @@ struct ProjectState: Codable, Equatable {
         case locations
         case worldMap
         case writingHistory
+        case favorites
         case keywordCollection
         case folder
         case document
@@ -87,6 +88,8 @@ struct ProjectState: Codable, Equatable {
             state.selectionType = .worldMap
         case .writingHistory:
             state.selectionType = .writingHistory
+        case .favorites:
+            state.selectionType = .favorites
         case .keywordCollection(let keyword):
             state.selectionType = .keywordCollection
             state.selectedKeyword = keyword
@@ -128,6 +131,8 @@ struct ProjectState: Codable, Equatable {
             return .worldMap
         case .writingHistory:
             return .writingHistory
+        case .favorites:
+            return .favorites
         case .keywordCollection:
             guard let keyword = selectedKeyword else { return nil }
             return .keywordCollection(keyword)

@@ -175,6 +175,7 @@ struct DocumentDetailView: View {
             editedSynopsis: Binding(get: { vm.editedSynopsis }, set: { vm.editedSynopsis = $0 }),
             editedKeywords: Binding(get: { vm.editedKeywords }, set: { vm.editedKeywords = $0 }),
             linkedDocumentIds: Binding(get: { vm.linkedDocumentIds }, set: { vm.linkedDocumentIds = $0 }),
+            isFavorite: Binding(get: { vm.isFavorite }, set: { vm.isFavorite = $0 }),
             isPromptExpanded: Binding(get: { vm.isPromptExpanded }, set: { vm.isPromptExpanded = $0 }),
             selectedCharacters: selectedCharactersBinding,
             selectedLocations: selectedLocationsBinding,
@@ -543,6 +544,9 @@ private struct DocumentChangeObservers: ViewModifier {
             }
             .onChange(of: detailViewModel.linkedDocumentIds) { _, newValue in
                 viewModel.updateDocument(document, linkedDocumentIds: newValue)
+            }
+            .onChange(of: detailViewModel.isFavorite) { _, newValue in
+                viewModel.updateDocument(document, isFavorite: newValue)
             }
     }
 }

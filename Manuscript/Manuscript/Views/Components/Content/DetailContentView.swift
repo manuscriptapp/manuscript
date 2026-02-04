@@ -27,6 +27,8 @@ struct DetailContentView: View {
             WorldMapView(viewModel: viewModel)
         case .writingHistory:
             WritingHistoryView(writingHistory: viewModel.document.writingHistory)
+        case .favorites:
+            FavoritesCollectionView(viewModel: viewModel, selection: $selection)
         case .keywordCollection(let keyword):
             KeywordCollectionView(keyword: keyword, viewModel: viewModel, selection: $selection)
         case .folder(let folder):

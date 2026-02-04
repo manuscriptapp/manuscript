@@ -136,7 +136,14 @@ struct DocumentItemView: View {
 
     private var documentLabel: some View {
         Label {
-            titleText
+            HStack(spacing: 6) {
+                titleText
+                if document.isFavorite {
+                    Image(systemName: "star.fill")
+                        .font(.caption2)
+                        .foregroundColor(.yellow)
+                }
+            }
         } icon: {
             AdaptiveIcon(systemName: document.iconName, defaultColor: baseIconColor(for: document))
         }
@@ -171,6 +178,14 @@ struct DocumentItemView: View {
                         }
                     }
                 }
+            }
+
+            Divider()
+
+            Button(action: {
+                viewModel.updateDocument(document, isFavorite: !document.isFavorite)
+            }) {
+                Label(document.isFavorite ? "Unfavorite" : "Favorite", systemImage: document.isFavorite ? "star.slash" : "star")
             }
 
             Divider()
@@ -269,6 +284,14 @@ struct DocumentItemView: View {
                                 }
                             }
                         }
+                    }
+
+                    Divider()
+
+                    Button(action: {
+                        viewModel.updateDocument(document, isFavorite: !document.isFavorite)
+                    }) {
+                        Label(document.isFavorite ? "Unfavorite" : "Favorite", systemImage: document.isFavorite ? "star.slash" : "star")
                     }
 
                     Divider()

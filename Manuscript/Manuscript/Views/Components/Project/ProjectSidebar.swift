@@ -183,6 +183,10 @@ struct ProjectSidebar: View {
             }
 
             Section {
+                NavigationLink(value: DetailSelection.favorites) {
+                    Label("Favorites", systemImage: "star.fill")
+                }
+
                 if viewModel.allKeywords.isEmpty {
                     Label("No keywords yet", systemImage: "tag")
                         .foregroundColor(.secondary)

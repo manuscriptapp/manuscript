@@ -80,6 +80,7 @@ struct MediaInspectorView: View {
     @State private var editedTitle: String = ""
     @State private var editedSynopsis: String = ""
     @State private var editedKeywords: [String] = []
+    @State private var isFavorite: Bool = false
 
     var body: some View {
         ScrollView {
@@ -141,6 +142,9 @@ struct MediaInspectorView: View {
 
                 Divider()
 
+                Toggle("Favorite", isOn: $isFavorite)
+                    .toggleStyle(.switch)
+
                 KeywordEditorView(
                     title: "Keywords",
                     keywords: $editedKeywords,
@@ -155,14 +159,19 @@ struct MediaInspectorView: View {
             editedTitle = mediaItem.title
             editedSynopsis = mediaItem.synopsis
             editedKeywords = mediaItem.keywords
+            isFavorite = mediaItem.isFavorite
         }
         .onChange(of: mediaItem.id) { _, _ in
             editedTitle = mediaItem.title
             editedSynopsis = mediaItem.synopsis
             editedKeywords = mediaItem.keywords
+            isFavorite = mediaItem.isFavorite
         }
         .onChange(of: editedKeywords) { _, newValue in
             viewModel.updateMediaItem(mediaItem, keywords: newValue)
+        }
+        .onChange(of: isFavorite) { _, newValue in
+            viewModel.updateMediaItem(mediaItem, isFavorite: newValue)
         }
     }
 

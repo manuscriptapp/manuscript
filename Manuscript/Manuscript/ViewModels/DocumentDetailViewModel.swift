@@ -67,6 +67,7 @@ class DocumentDetailViewModel: ObservableObject {
     @Published var selectedLocations: [UUID] = []
     @Published var editedKeywords: [String] = []
     @Published var linkedDocumentIds: [UUID] = []
+    @Published var isFavorite: Bool = false
 
     enum GenerationType {
         case outline
@@ -90,6 +91,7 @@ class DocumentDetailViewModel: ObservableObject {
         self.comments = document.comments
         self.editedKeywords = document.keywords
         self.linkedDocumentIds = document.linkedDocumentIds
+        self.isFavorite = document.isFavorite
 
         // Initialize attributed strings by parsing markdown content
         // This converts markdown formatting (bold, italic, etc.) to NSAttributedString
@@ -182,7 +184,8 @@ class DocumentDetailViewModel: ObservableObject {
             characterIds: selectedCharacters,
             locationIds: selectedLocations,
             keywords: editedKeywords,
-            linkedDocumentIds: linkedDocumentIds
+            linkedDocumentIds: linkedDocumentIds,
+            isFavorite: isFavorite
         )
     }
 

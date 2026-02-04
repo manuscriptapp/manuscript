@@ -17,6 +17,7 @@ struct DocumentInspectorView: View {
     @Binding var editedSynopsis: String
     @Binding var editedKeywords: [String]
     @Binding var linkedDocumentIds: [UUID]
+    @Binding var isFavorite: Bool
     @Binding var isPromptExpanded: Bool
     @Binding var selectedCharacters: Set<UUID>
     @Binding var selectedLocations: Set<UUID>
@@ -994,6 +995,10 @@ struct DocumentInspectorView: View {
                 }
                 .padding(.horizontal)
 
+                Toggle("Favorite", isOn: $isFavorite)
+                    .toggleStyle(.switch)
+                    .padding(.horizontal)
+
                 KeywordEditorView(
                     title: "Keywords",
                     keywords: $editedKeywords,
@@ -1097,6 +1102,7 @@ struct DocumentInspectorView: View {
         editedSynopsis: .constant("Sample Outline"),
         editedKeywords: .constant([]),
         linkedDocumentIds: .constant([]),
+        isFavorite: .constant(false),
         isPromptExpanded: .constant(false),
         selectedCharacters: .constant(Set<UUID>()),
         selectedLocations: .constant(Set<UUID>()),

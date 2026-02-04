@@ -159,6 +159,16 @@ class DocumentViewModel: ObservableObject {
             .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
+    var favoriteDocuments: [ManuscriptDocument.Document] {
+        getAllDocuments(includeResearch: true, includeTrash: false)
+            .filter { $0.isFavorite }
+    }
+
+    var favoriteMediaItems: [ManuscriptDocument.MediaItem] {
+        getAllMediaItems(includeResearch: true, includeTrash: false)
+            .filter { $0.isFavorite }
+    }
+
     func documents(matching keyword: String) -> [ManuscriptDocument.Document] {
         getAllDocuments(includeResearch: true, includeTrash: false)
             .filter { $0.keywords.contains(where: { $0.caseInsensitiveCompare(keyword) == .orderedSame }) }
@@ -754,7 +764,7 @@ class DocumentViewModel: ObservableObject {
         detailSelection = .document(newDoc)
     }
 
-    func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, synopsis: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, keywords: [String]? = nil, linkedDocumentIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil, comments: [ManuscriptDocument.DocumentComment]? = nil) {
+    func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, synopsis: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, keywords: [String]? = nil, linkedDocumentIds: [UUID]? = nil, isFavorite: Bool? = nil, iconName: String? = nil, colorName: String? = nil, comments: [ManuscriptDocument.DocumentComment]? = nil) {
         // Track word count change for writing history
         let oldWordCount = docToUpdate.wordCount
 
@@ -767,6 +777,7 @@ class DocumentViewModel: ObservableObject {
         if let locationIds = locationIds { updatedDoc.locationIds = locationIds }
         if let keywords = keywords { updatedDoc.keywords = keywords }
         if let linkedDocumentIds = linkedDocumentIds { updatedDoc.linkedDocumentIds = linkedDocumentIds }
+        if let isFavorite = isFavorite { updatedDoc.isFavorite = isFavorite }
         if let iconName = iconName { updatedDoc.iconName = iconName }
         if let colorName = colorName { updatedDoc.colorName = colorName }
         if let comments = comments { updatedDoc.comments = comments }
@@ -1617,11 +1628,12 @@ class DocumentViewModel: ObservableObject {
     }
 
     /// Update a media item's properties
-    func updateMediaItem(_ mediaItem: ManuscriptDocument.MediaItem, title: String? = nil, synopsis: String? = nil, keywords: [String]? = nil) {
+    func updateMediaItem(_ mediaItem: ManuscriptDocument.MediaItem, title: String? = nil, synopsis: String? = nil, keywords: [String]? = nil, isFavorite: Bool? = nil) {
         var updatedItem = mediaItem
         if let title = title { updatedItem.title = title }
         if let synopsis = synopsis { updatedItem.synopsis = synopsis }
         if let keywords = keywords { updatedItem.keywords = keywords }
+        if let isFavorite = isFavorite { updatedItem.isFavorite = isFavorite }
 
         var doc = document
 

@@ -10,6 +10,7 @@ enum DetailSelection: Hashable, Identifiable {
         case .locations: return "locations"
         case .worldMap: return "worldMap"
         case .writingHistory: return "writingHistory"
+        case .favorites: return "favorites"
         case .keywordCollection(let keyword): return "keyword-\(keyword)"
         case .folder(let folder): return "folder-\(folder.id)"
         case .document(let document): return "document-\(document.id)"
@@ -24,6 +25,7 @@ enum DetailSelection: Hashable, Identifiable {
     case locations
     case worldMap
     case writingHistory
+    case favorites
     case keywordCollection(String)
     case folder(ManuscriptFolder)
     case document(ManuscriptDocument.Document)
@@ -44,23 +46,25 @@ enum DetailSelection: Hashable, Identifiable {
             hasher.combine(3)
         case .writingHistory:
             hasher.combine(4)
-        case .keywordCollection(let keyword):
+        case .favorites:
             hasher.combine(5)
+        case .keywordCollection(let keyword):
+            hasher.combine(6)
             hasher.combine(keyword)
         case .folder(let folder):
-            hasher.combine(6)
+            hasher.combine(7)
             hasher.combine(folder.id)
         case .document(let document):
-            hasher.combine(7)
+            hasher.combine(8)
             hasher.combine(document.id)
         case .character(let character):
-            hasher.combine(8)
+            hasher.combine(9)
             hasher.combine(character.id)
         case .location(let location):
-            hasher.combine(9)
+            hasher.combine(10)
             hasher.combine(location.id)
         case .mediaItem(let mediaItem):
-            hasher.combine(10)
+            hasher.combine(11)
             hasher.combine(mediaItem.id)
         }
     }
@@ -77,6 +81,8 @@ enum DetailSelection: Hashable, Identifiable {
         case (.worldMap, .worldMap):
             return true
         case (.writingHistory, .writingHistory):
+            return true
+        case (.favorites, .favorites):
             return true
         case (.keywordCollection(let k1), .keywordCollection(let k2)):
             return k1 == k2

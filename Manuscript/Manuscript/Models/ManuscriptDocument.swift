@@ -336,6 +336,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                             statusId: item.status,
                             keywords: item.keywords ?? [],
                             linkedDocumentIds: item.linkedDocumentIds?.compactMap { UUID(uuidString: $0) } ?? [],
+                            isFavorite: item.isFavorite ?? false,
                             includeInCompile: item.includeInCompile ?? true,
                             comments: comments
                         )
@@ -366,6 +367,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                             labelId: item.label,
                             statusId: item.status,
                             keywords: item.keywords ?? [],
+                            isFavorite: item.isFavorite ?? false,
                             includeInCompile: item.includeInCompile ?? false,
                             imageWidth: item.imageWidth,
                             imageHeight: item.imageHeight,
@@ -556,6 +558,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 status: document.statusId,
                 keywords: document.keywords.isEmpty ? nil : document.keywords,
                 linkedDocumentIds: document.linkedDocumentIds.isEmpty ? nil : document.linkedDocumentIds.map { $0.uuidString },
+                isFavorite: document.isFavorite,
                 synopsis: document.synopsis.isEmpty ? nil : document.synopsis,
                 includeInCompile: document.includeInCompile,
                 created: document.creationDate,
@@ -604,6 +607,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 status: nil,
                 keywords: nil,
                 linkedDocumentIds: nil,
+                isFavorite: nil,
                 synopsis: nil,
                 includeInCompile: true,
                 created: subfolder.creationDate,
@@ -635,6 +639,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 status: mediaItem.statusId,
                 keywords: mediaItem.keywords.isEmpty ? nil : mediaItem.keywords,
                 linkedDocumentIds: nil,
+                isFavorite: mediaItem.isFavorite,
                 synopsis: mediaItem.synopsis.isEmpty ? nil : mediaItem.synopsis,
                 includeInCompile: mediaItem.includeInCompile,
                 created: mediaItem.creationDate,
@@ -814,6 +819,7 @@ private struct FolderItem: Codable {
     var status: String?
     var keywords: [String]?
     var linkedDocumentIds: [String]?
+    var isFavorite: Bool?
     var synopsis: String?
     var includeInCompile: Bool?
     var created: Date?
