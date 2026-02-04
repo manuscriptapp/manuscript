@@ -182,6 +182,21 @@ struct ProjectSidebar: View {
                 Text("Project")
             }
 
+            Section {
+                if viewModel.allKeywords.isEmpty {
+                    Label("No keywords yet", systemImage: "tag")
+                        .foregroundColor(.secondary)
+                } else {
+                    ForEach(viewModel.allKeywords, id: \.self) { keyword in
+                        NavigationLink(value: DetailSelection.keywordCollection(keyword)) {
+                            Label(keyword, systemImage: "tag")
+                        }
+                    }
+                }
+            } header: {
+                Text("Collections")
+            }
+
             // Progress - tracking your writing
             Section(isExpanded: $isProgressExpanded) {
                 // Writing targets (if set)

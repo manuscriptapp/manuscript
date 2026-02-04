@@ -10,6 +10,7 @@ struct ProjectState: Codable, Equatable {
         case locations
         case worldMap
         case writingHistory
+        case keywordCollection
         case folder
         case document
         case character
@@ -22,6 +23,8 @@ struct ProjectState: Codable, Equatable {
 
     /// The UUID of the selected item (for folder, document, character, location)
     var selectedItemId: UUID?
+    /// Selected keyword for keyword collection views
+    var selectedKeyword: String?
 
     /// UUIDs of folders that are expanded in the sidebar
     var expandedFolderIds: [UUID]
@@ -38,6 +41,7 @@ struct ProjectState: Codable, Equatable {
     init() {
         self.selectionType = nil
         self.selectedItemId = nil
+        self.selectedKeyword = nil
         self.expandedFolderIds = []
         self.textSelectionOffset = nil
         self.textSelectionLength = nil
@@ -47,6 +51,7 @@ struct ProjectState: Codable, Equatable {
     init(
         selectionType: SelectionType?,
         selectedItemId: UUID?,
+        selectedKeyword: String? = nil,
         expandedFolderIds: [UUID],
         textSelectionOffset: Int? = nil,
         textSelectionLength: Int? = nil,
@@ -54,6 +59,7 @@ struct ProjectState: Codable, Equatable {
     ) {
         self.selectionType = selectionType
         self.selectedItemId = selectedItemId
+        self.selectedKeyword = selectedKeyword
         self.expandedFolderIds = expandedFolderIds
         self.textSelectionOffset = textSelectionOffset
         self.textSelectionLength = textSelectionLength
@@ -81,6 +87,9 @@ struct ProjectState: Codable, Equatable {
             state.selectionType = .worldMap
         case .writingHistory:
             state.selectionType = .writingHistory
+        case .keywordCollection(let keyword):
+            state.selectionType = .keywordCollection
+            state.selectedKeyword = keyword
         case .folder(let folder):
             state.selectionType = .folder
             state.selectedItemId = folder.id
@@ -119,6 +128,9 @@ struct ProjectState: Codable, Equatable {
             return .worldMap
         case .writingHistory:
             return .writingHistory
+        case .keywordCollection:
+            guard let keyword = selectedKeyword else { return nil }
+            return .keywordCollection(keyword)
         case .folder:
             guard let id = selectedItemId,
                   let folder = findFolder(withId: id, in: document.rootFolder) else {

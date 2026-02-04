@@ -335,6 +335,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                             labelId: item.label,
                             statusId: item.status,
                             keywords: item.keywords ?? [],
+                            linkedDocumentIds: item.linkedDocumentIds?.compactMap { UUID(uuidString: $0) } ?? [],
                             includeInCompile: item.includeInCompile ?? true,
                             comments: comments
                         )
@@ -554,6 +555,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 label: document.labelId,
                 status: document.statusId,
                 keywords: document.keywords.isEmpty ? nil : document.keywords,
+                linkedDocumentIds: document.linkedDocumentIds.isEmpty ? nil : document.linkedDocumentIds.map { $0.uuidString },
                 synopsis: document.synopsis.isEmpty ? nil : document.synopsis,
                 includeInCompile: document.includeInCompile,
                 created: document.creationDate,
@@ -601,6 +603,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 label: nil,
                 status: nil,
                 keywords: nil,
+                linkedDocumentIds: nil,
                 synopsis: nil,
                 includeInCompile: true,
                 created: subfolder.creationDate,
@@ -631,6 +634,7 @@ struct ManuscriptDocument: FileDocument, Equatable, Codable {
                 label: mediaItem.labelId,
                 status: mediaItem.statusId,
                 keywords: mediaItem.keywords.isEmpty ? nil : mediaItem.keywords,
+                linkedDocumentIds: nil,
                 synopsis: mediaItem.synopsis.isEmpty ? nil : mediaItem.synopsis,
                 includeInCompile: mediaItem.includeInCompile,
                 created: mediaItem.creationDate,
@@ -809,6 +813,7 @@ private struct FolderItem: Codable {
     var label: String?
     var status: String?
     var keywords: [String]?
+    var linkedDocumentIds: [String]?
     var synopsis: String?
     var includeInCompile: Bool?
     var created: Date?

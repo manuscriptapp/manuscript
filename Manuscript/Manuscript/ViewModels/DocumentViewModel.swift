@@ -127,12 +127,75 @@ class DocumentViewModel: ObservableObject {
         return collectDocumentsRecursively(from: rootFolder)
     }
 
+    /// Returns all documents in the project, optionally including research and trash
+    func getAllDocuments(includeResearch: Bool, includeTrash: Bool) -> [ManuscriptDocument.Document] {
+        var documents = collectDocumentsRecursively(from: rootFolder)
+        if includeResearch {
+            documents.append(contentsOf: collectDocumentsRecursively(from: researchFolder))
+        }
+        if includeTrash {
+            documents.append(contentsOf: collectDocumentsRecursively(from: trashFolder))
+        }
+        return documents
+    }
+
+    /// Returns all media items in the project, optionally including research and trash
+    func getAllMediaItems(includeResearch: Bool, includeTrash: Bool) -> [ManuscriptDocument.MediaItem] {
+        var items = collectMediaItemsRecursively(from: rootFolder)
+        if includeResearch {
+            items.append(contentsOf: collectMediaItemsRecursively(from: researchFolder))
+        }
+        if includeTrash {
+            items.append(contentsOf: collectMediaItemsRecursively(from: trashFolder))
+        }
+        return items
+    }
+
+    /// All unique keywords used across documents and media (excluding trash)
+    var allKeywords: [String] {
+        let documentKeywords = getAllDocuments(includeResearch: true, includeTrash: false).flatMap { $0.keywords }
+        let mediaKeywords = getAllMediaItems(includeResearch: true, includeTrash: false).flatMap { $0.keywords }
+        return uniqueKeywords(from: documentKeywords + mediaKeywords)
+            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    func documents(matching keyword: String) -> [ManuscriptDocument.Document] {
+        getAllDocuments(includeResearch: true, includeTrash: false)
+            .filter { $0.keywords.contains(where: { $0.caseInsensitiveCompare(keyword) == .orderedSame }) }
+    }
+
+    func mediaItems(matching keyword: String) -> [ManuscriptDocument.MediaItem] {
+        getAllMediaItems(includeResearch: true, includeTrash: false)
+            .filter { $0.keywords.contains(where: { $0.caseInsensitiveCompare(keyword) == .orderedSame }) }
+    }
+
     private func collectDocumentsRecursively(from folder: ManuscriptFolder) -> [ManuscriptDocument.Document] {
         var documents = folder.documents
         for subfolder in folder.subfolders {
             documents.append(contentsOf: collectDocumentsRecursively(from: subfolder))
         }
         return documents
+    }
+
+    private func collectMediaItemsRecursively(from folder: ManuscriptFolder) -> [ManuscriptDocument.MediaItem] {
+        var items = folder.mediaItems
+        for subfolder in folder.subfolders {
+            items.append(contentsOf: collectMediaItemsRecursively(from: subfolder))
+        }
+        return items
+    }
+
+    private func uniqueKeywords(from keywords: [String]) -> [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        for keyword in keywords {
+            let normalized = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+            let lower = normalized.lowercased()
+            guard !normalized.isEmpty, !seen.contains(lower) else { continue }
+            seen.insert(lower)
+            result.append(normalized)
+        }
+        return result
     }
 
     // MARK: - Folder Expansion
@@ -691,7 +754,7 @@ class DocumentViewModel: ObservableObject {
         detailSelection = .document(newDoc)
     }
 
-    func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, synopsis: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil, comments: [ManuscriptDocument.DocumentComment]? = nil) {
+    func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, synopsis: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, keywords: [String]? = nil, linkedDocumentIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil, comments: [ManuscriptDocument.DocumentComment]? = nil) {
         // Track word count change for writing history
         let oldWordCount = docToUpdate.wordCount
 
@@ -702,6 +765,8 @@ class DocumentViewModel: ObservableObject {
         if let content = content { updatedDoc.content = content }
         if let characterIds = characterIds { updatedDoc.characterIds = characterIds }
         if let locationIds = locationIds { updatedDoc.locationIds = locationIds }
+        if let keywords = keywords { updatedDoc.keywords = keywords }
+        if let linkedDocumentIds = linkedDocumentIds { updatedDoc.linkedDocumentIds = linkedDocumentIds }
         if let iconName = iconName { updatedDoc.iconName = iconName }
         if let colorName = colorName { updatedDoc.colorName = colorName }
         if let comments = comments { updatedDoc.comments = comments }
@@ -1552,10 +1617,11 @@ class DocumentViewModel: ObservableObject {
     }
 
     /// Update a media item's properties
-    func updateMediaItem(_ mediaItem: ManuscriptDocument.MediaItem, title: String? = nil, synopsis: String? = nil) {
+    func updateMediaItem(_ mediaItem: ManuscriptDocument.MediaItem, title: String? = nil, synopsis: String? = nil, keywords: [String]? = nil) {
         var updatedItem = mediaItem
         if let title = title { updatedItem.title = title }
         if let synopsis = synopsis { updatedItem.synopsis = synopsis }
+        if let keywords = keywords { updatedItem.keywords = keywords }
 
         var doc = document
 

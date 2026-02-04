@@ -192,9 +192,9 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    func updateDocument(_ doc: ManuscriptDocument.Document, title: String? = nil, synopsis: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil) {
+    func updateDocument(_ doc: ManuscriptDocument.Document, title: String? = nil, synopsis: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, keywords: [String]? = nil, linkedDocumentIds: [UUID]? = nil) {
         // Find the document in the folder structure
-        let updatedDoc = updateDocumentProperties(doc, title: title, synopsis: synopsis, notes: notes, content: content, characterIds: characterIds, locationIds: locationIds)
+        let updatedDoc = updateDocumentProperties(doc, title: title, synopsis: synopsis, notes: notes, content: content, characterIds: characterIds, locationIds: locationIds, keywords: keywords, linkedDocumentIds: linkedDocumentIds)
         
         // Update document in the folder structure
         updateDocumentInFolders(docId: doc.id, updatedDoc: updatedDoc)
@@ -205,7 +205,7 @@ class DocumentManager: ObservableObject {
         }
     }
     
-    private func updateDocumentProperties(_ doc: ManuscriptDocument.Document, title: String?, synopsis: String?, notes: String?, content: String?, characterIds: [UUID]?, locationIds: [UUID]?) -> ManuscriptDocument.Document {
+    private func updateDocumentProperties(_ doc: ManuscriptDocument.Document, title: String?, synopsis: String?, notes: String?, content: String?, characterIds: [UUID]?, locationIds: [UUID]?, keywords: [String]?, linkedDocumentIds: [UUID]?) -> ManuscriptDocument.Document {
         var updatedDoc = doc
 
         if let title = title {
@@ -230,6 +230,14 @@ class DocumentManager: ObservableObject {
         
         if let locationIds = locationIds {
             updatedDoc.locationIds = locationIds
+        }
+
+        if let keywords = keywords {
+            updatedDoc.keywords = keywords
+        }
+
+        if let linkedDocumentIds = linkedDocumentIds {
+            updatedDoc.linkedDocumentIds = linkedDocumentIds
         }
         
         return updatedDoc

@@ -79,6 +79,7 @@ struct MediaInspectorView: View {
 
     @State private var editedTitle: String = ""
     @State private var editedSynopsis: String = ""
+    @State private var editedKeywords: [String] = []
 
     var body: some View {
         ScrollView {
@@ -140,25 +141,11 @@ struct MediaInspectorView: View {
 
                 Divider()
 
-                // Keywords section
-                if !mediaItem.keywords.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Keywords")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-
-                        FlowLayout(spacing: 4) {
-                            ForEach(mediaItem.keywords, id: \.self) { keyword in
-                                Text(keyword)
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.blue.opacity(0.2))
-                                    .cornerRadius(4)
-                            }
-                        }
-                    }
-                }
+                KeywordEditorView(
+                    title: "Keywords",
+                    keywords: $editedKeywords,
+                    suggestions: viewModel.allKeywords
+                )
 
                 Spacer()
             }
@@ -167,10 +154,15 @@ struct MediaInspectorView: View {
         .onAppear {
             editedTitle = mediaItem.title
             editedSynopsis = mediaItem.synopsis
+            editedKeywords = mediaItem.keywords
         }
         .onChange(of: mediaItem.id) { _, _ in
             editedTitle = mediaItem.title
             editedSynopsis = mediaItem.synopsis
+            editedKeywords = mediaItem.keywords
+        }
+        .onChange(of: editedKeywords) { _, newValue in
+            viewModel.updateMediaItem(mediaItem, keywords: newValue)
         }
     }
 

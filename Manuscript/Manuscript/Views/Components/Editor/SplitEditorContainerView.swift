@@ -175,6 +175,14 @@ struct SplitEditorContainerView: View {
                     get: { detailVM.editedSynopsis },
                     set: { detailVM.editedSynopsis = $0 }
                 ),
+                editedKeywords: Binding(
+                    get: { detailVM.editedKeywords },
+                    set: { detailVM.editedKeywords = $0 }
+                ),
+                linkedDocumentIds: Binding(
+                    get: { detailVM.linkedDocumentIds },
+                    set: { detailVM.linkedDocumentIds = $0 }
+                ),
                 isPromptExpanded: Binding(
                     get: { detailVM.isPromptExpanded },
                     set: { detailVM.isPromptExpanded = $0 }

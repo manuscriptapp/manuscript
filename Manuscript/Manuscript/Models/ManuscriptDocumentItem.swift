@@ -37,6 +37,7 @@ extension ManuscriptDocument {
         var labelId: String?
         var statusId: String?
         var keywords: [String]
+        var linkedDocumentIds: [UUID]
         var includeInCompile: Bool
 
         // Character/location references
@@ -63,6 +64,7 @@ extension ManuscriptDocument {
             labelId: String? = nil,
             statusId: String? = nil,
             keywords: [String] = [],
+            linkedDocumentIds: [UUID] = [],
             includeInCompile: Bool = true,
             characterIds: [UUID] = [],
             locationIds: [UUID] = [],
@@ -82,6 +84,7 @@ extension ManuscriptDocument {
             self.labelId = labelId
             self.statusId = statusId
             self.keywords = keywords
+            self.linkedDocumentIds = linkedDocumentIds
             self.includeInCompile = includeInCompile
             self.characterIds = characterIds
             self.locationIds = locationIds

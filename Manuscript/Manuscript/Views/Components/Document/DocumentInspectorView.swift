@@ -15,6 +15,8 @@ struct DocumentInspectorView: View {
     @ObservedObject var detailViewModel: DocumentDetailViewModel
     @Binding var editedTitle: String
     @Binding var editedSynopsis: String
+    @Binding var editedKeywords: [String]
+    @Binding var linkedDocumentIds: [UUID]
     @Binding var isPromptExpanded: Bool
     @Binding var selectedCharacters: Set<UUID>
     @Binding var selectedLocations: Set<UUID>
@@ -53,6 +55,17 @@ struct DocumentInspectorView: View {
             return String(text[..<index]) + "..."
         }
         return text
+    }
+
+    private var linkedDocuments: [ManuscriptDocument.Document] {
+        linkedDocumentIds.compactMap { documentViewModel.findDocument(withId: $0) }
+            .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+    }
+
+    private var availableLinkTargets: [ManuscriptDocument.Document] {
+        documentViewModel.getAllDocuments(includeResearch: true, includeTrash: false)
+            .filter { $0.id != document.id && !linkedDocumentIds.contains($0.id) }
+            .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
     }
     
     // Function to dismiss keyboard
@@ -312,6 +325,15 @@ struct DocumentInspectorView: View {
                 }
             }
         }
+    }
+
+    private func addLinkedDocument(_ target: ManuscriptDocument.Document) {
+        guard !linkedDocumentIds.contains(target.id) else { return }
+        linkedDocumentIds.append(target.id)
+    }
+
+    private func removeLinkedDocument(_ target: ManuscriptDocument.Document) {
+        linkedDocumentIds.removeAll { $0 == target.id }
     }
     
     var body: some View {
@@ -972,6 +994,64 @@ struct DocumentInspectorView: View {
                 }
                 .padding(.horizontal)
 
+                KeywordEditorView(
+                    title: "Keywords",
+                    keywords: $editedKeywords,
+                    suggestions: documentViewModel.allKeywords
+                )
+                .padding(.horizontal)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Links")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    if linkedDocuments.isEmpty {
+                        Text("No linked documents")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(linkedDocuments) { linked in
+                            HStack(spacing: 8) {
+                                Button {
+                                    documentViewModel.detailSelection = .document(linked)
+                                } label: {
+                                    Label(linked.title.isEmpty ? "Untitled" : linked.title, systemImage: "link")
+                                        .font(.caption)
+                                }
+                                .buttonStyle(.plain)
+
+                                Spacer()
+
+                                Button {
+                                    removeLinkedDocument(linked)
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Remove link to \(linked.title)")
+                            }
+                        }
+                    }
+
+                    if !availableLinkTargets.isEmpty {
+                        Menu {
+                            ForEach(availableLinkTargets) { target in
+                                Button(target.title.isEmpty ? "Untitled" : target.title) {
+                                    addLinkedDocument(target)
+                                }
+                            }
+                        } label: {
+                            Label("Add Link", systemImage: "link.badge.plus")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+                .padding(.horizontal)
+
                 // Characters and Locations
                 VStack(alignment: .leading, spacing: 12) {
                     CharacterSelectionView(
@@ -1015,6 +1095,8 @@ struct DocumentInspectorView: View {
         detailViewModel: detailVM,
         editedTitle: .constant("Sample Title"),
         editedSynopsis: .constant("Sample Outline"),
+        editedKeywords: .constant([]),
+        linkedDocumentIds: .constant([]),
         isPromptExpanded: .constant(false),
         selectedCharacters: .constant(Set<UUID>()),
         selectedLocations: .constant(Set<UUID>()),

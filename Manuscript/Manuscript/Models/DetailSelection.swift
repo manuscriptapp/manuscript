@@ -10,6 +10,7 @@ enum DetailSelection: Hashable, Identifiable {
         case .locations: return "locations"
         case .worldMap: return "worldMap"
         case .writingHistory: return "writingHistory"
+        case .keywordCollection(let keyword): return "keyword-\(keyword)"
         case .folder(let folder): return "folder-\(folder.id)"
         case .document(let document): return "document-\(document.id)"
         case .character(let character): return "character-\(character.id)"
@@ -23,6 +24,7 @@ enum DetailSelection: Hashable, Identifiable {
     case locations
     case worldMap
     case writingHistory
+    case keywordCollection(String)
     case folder(ManuscriptFolder)
     case document(ManuscriptDocument.Document)
     case character(ManuscriptCharacter)
@@ -42,20 +44,23 @@ enum DetailSelection: Hashable, Identifiable {
             hasher.combine(3)
         case .writingHistory:
             hasher.combine(4)
-        case .folder(let folder):
+        case .keywordCollection(let keyword):
             hasher.combine(5)
+            hasher.combine(keyword)
+        case .folder(let folder):
+            hasher.combine(6)
             hasher.combine(folder.id)
         case .document(let document):
-            hasher.combine(6)
+            hasher.combine(7)
             hasher.combine(document.id)
         case .character(let character):
-            hasher.combine(7)
+            hasher.combine(8)
             hasher.combine(character.id)
         case .location(let location):
-            hasher.combine(8)
+            hasher.combine(9)
             hasher.combine(location.id)
         case .mediaItem(let mediaItem):
-            hasher.combine(9)
+            hasher.combine(10)
             hasher.combine(mediaItem.id)
         }
     }
@@ -73,6 +78,8 @@ enum DetailSelection: Hashable, Identifiable {
             return true
         case (.writingHistory, .writingHistory):
             return true
+        case (.keywordCollection(let k1), .keywordCollection(let k2)):
+            return k1 == k2
         case (.folder(let f1), .folder(let f2)):
             return f1.id == f2.id
         case (.document(let d1), .document(let d2)):
