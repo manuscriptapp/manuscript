@@ -643,6 +643,54 @@ class DocumentViewModel: ObservableObject {
         detailSelection = .document(newDoc)
     }
 
+    /// Adds an imported document to the specified folder
+    /// - Parameters:
+    ///   - folder: The folder to add the document to
+    ///   - importedDocument: The document to add (from DOCX, PDF, or other import)
+    func addImportedDocument(to folder: ManuscriptFolder, importedDocument: ManuscriptDocument.Document) {
+        // Create a copy with updated order
+        var newDoc = importedDocument
+        newDoc.order = folder.documents.count
+
+        var doc = document
+
+        // Determine which folder hierarchy to update
+        if let hierarchy = folderHierarchyContaining(folderId: folder.id) {
+            switch hierarchy {
+            case .root:
+                doc.rootFolder = updateFolderRecursively(doc.rootFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.documents.append(newDoc)
+                    return updated
+                }
+            case .research:
+                doc.researchFolder = updateFolderRecursively(doc.researchFolder ?? researchFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.documents.append(newDoc)
+                    return updated
+                }
+            case .trash:
+                doc.trashFolder = updateFolderRecursively(doc.trashFolder ?? trashFolder, folderId: folder.id) { f in
+                    var updated = f
+                    updated.documents.append(newDoc)
+                    return updated
+                }
+            }
+        }
+        document = doc
+
+        if let updated = findFolderInAllFolders(withId: currentFolder.id) {
+            currentFolder = updated
+        }
+
+        // Expand all ancestor folders and the target folder to show the new document
+        expandToDocument(newDoc)
+        setFolderExpanded(folder, expanded: true)
+
+        // Auto-select the new document
+        detailSelection = .document(newDoc)
+    }
+
     func updateDocument(_ docToUpdate: ManuscriptDocument.Document, title: String? = nil, synopsis: String? = nil, notes: String? = nil, content: String? = nil, characterIds: [UUID]? = nil, locationIds: [UUID]? = nil, iconName: String? = nil, colorName: String? = nil, comments: [ManuscriptDocument.DocumentComment]? = nil) {
         // Track word count change for writing history
         let oldWordCount = docToUpdate.wordCount

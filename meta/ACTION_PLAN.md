@@ -157,13 +157,13 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 
 ## Sprint 9: Remaining Features (Current)
 
-### Composition Mode
-- [ ] Fullscreen distraction-free mode
-- [ ] Customizable background
-- [ ] Fade-in controls on hover
+### Composition Mode ✅
+- [x] Fullscreen distraction-free mode
+- [x] Customizable background (12 themes)
+- [x] Fade-in controls on hover
 
 ### Import
-- [ ] Import DOCX
+- [x] Import DOCX
 - [ ] Import PDF
 - [ ] Import HTML
 - [ ] Import images
@@ -176,7 +176,7 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 ### Polish
 - [ ] Performance optimization
 - [ ] Accessibility audit
-- [ ] Print documents
+- [x] Print documents
 
 ---
 
@@ -222,8 +222,10 @@ iCloud Sync                ✅ DONE
 Snapshots                  ✅ DONE
 Trash Folder               ✅ DONE
 Export (PDF/DOCX/EPUB)     ✅ DONE
-Composition Mode           🔜 Planned
-Import Documents           🔜 Planned
+Composition Mode           ✅ DONE
+Print Documents            ✅ DONE
+Import DOCX                ✅ DONE
+Import PDF/HTML            🔜 Planned
 Keywords/Tags              🔜 Planned
 Document Links             🔜 Planned
 ```
@@ -281,12 +283,13 @@ If we fall behind, cut in this order:
 
 ## Immediate Actions (Next Steps)
 
-1. [ ] Implement composition mode (distraction-free writing)
-2. [ ] Add print document support
-3. [ ] Implement document import (DOCX, PDF, HTML)
-4. [ ] Add keywords/tags system
-5. [ ] Prepare App Store assets (icons, screenshots, metadata)
-6. [ ] Final performance audit and polish
+1. [x] Implement composition mode (distraction-free writing)
+2. [x] Add print document support
+3. [x] Implement DOCX import
+4. [ ] Implement PDF and HTML import
+5. [ ] Add keywords/tags system
+6. [ ] Prepare App Store assets (icons, screenshots, metadata)
+7. [ ] Final performance audit and polish
 
 ---
 

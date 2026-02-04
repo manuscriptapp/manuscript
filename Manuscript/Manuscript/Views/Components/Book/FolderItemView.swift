@@ -23,6 +23,7 @@ struct FolderItemView: View {
         @Binding var detailSelection: DetailSelection?
         @State private var isAddFolderSheetPresented = false
         @State private var isAddMediaSheetPresented = false
+        @State private var isImportDocumentSheetPresented = false
 
         /// Look up the current folder from all folder hierarchies to ensure we always have fresh data
         private var folder: ManuscriptFolder {
@@ -231,6 +232,32 @@ struct FolderItemView: View {
                     Divider()
 
                     Button(action: {
+                        isAddFolderSheetPresented = true
+                    }) {
+                        Label("Add Folder", systemImage: "folder.badge.plus")
+                    }
+
+                    Button(action: {
+                        viewModel.addUntitledDocument(to: folder)
+                    }) {
+                        Label("Add Document", systemImage: "doc.badge.plus")
+                    }
+
+                    Button(action: {
+                        isAddMediaSheetPresented = true
+                    }) {
+                        Label("Add Media", systemImage: "photo.badge.plus")
+                    }
+
+                    Button(action: {
+                        isImportDocumentSheetPresented = true
+                    }) {
+                        Label("Import Document...", systemImage: "square.and.arrow.down")
+                    }
+
+                    Divider()
+
+                    Button(action: {
                         viewModel.showRenameAlert(for: folder)
                     }) {
                         Label("Rename Folder", systemImage: "pencil")
@@ -312,6 +339,12 @@ struct FolderItemView: View {
                         isAddMediaSheetPresented = true
                     }) {
                         Label("Add Media", systemImage: "photo.badge.plus")
+                    }
+
+                    Button(action: {
+                        isImportDocumentSheetPresented = true
+                    }) {
+                        Label("Import Document...", systemImage: "square.and.arrow.down")
                     }
 
                     Divider()
@@ -408,10 +441,15 @@ struct FolderItemView: View {
                         targetFolder: folder
                     )
                 }
+                .sheet(isPresented: $isImportDocumentSheetPresented) {
+                    DocumentImportView(targetFolder: folder) { importedDocument in
+                        viewModel.addImportedDocument(to: folder, importedDocument: importedDocument)
+                    }
+                }
             }
         }
     }
-    
+
     var body: some View {
         RecursiveFolderView(
             folderId: folder.id,
@@ -420,4 +458,3 @@ struct FolderItemView: View {
         )
     }
 }
-
