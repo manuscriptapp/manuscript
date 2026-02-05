@@ -68,6 +68,7 @@ struct ManuscriptProjectView: View {
     @Binding var document: ManuscriptDocument
     let fileURL: URL?
     @StateObject private var viewModel = DocumentViewModel()
+    @StateObject private var backupManager = BackupManager()
     @State private var detailSelection: DetailSelection?
     @State private var isAddDocumentSheetPresented = false
     @State private var isAddFolderSheetPresented = false
@@ -78,6 +79,7 @@ struct ManuscriptProjectView: View {
     @State private var showReadingMode = false
     @State private var hasRestoredState = false
     @State private var splitEditorState = SplitEditorState()
+    @Environment(\.scenePhase) private var scenePhase
 
     /// A binding that routes document selections to the active split pane
     /// When split view is enabled and secondary pane is active, document selections
@@ -103,6 +105,7 @@ struct ManuscriptProjectView: View {
 
     var body: some View {
         mainContent
+            .environmentObject(backupManager)
             .sheet(isPresented: $isAddDocumentSheetPresented) {
                 AddDocumentSheet(viewModel: viewModel)
             }
@@ -154,9 +157,18 @@ struct ManuscriptProjectView: View {
                 viewModel.bind(to: $document)
                 checkOnboarding()
                 restoreSavedState()
+                backupManager.configure(documentURL: fileURL, documentTitle: document.title)
+            }
+            .onChange(of: document.title) { _, newTitle in
+                backupManager.updateDocumentTitle(newTitle)
             }
             .onChange(of: document) { _, newDocument in
                 viewModel.syncWithDocument(newDocument)
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .background || newPhase == .inactive {
+                    backupManager.performBackgroundBackupIfNeeded()
+                }
             }
             .onChange(of: detailSelection) { oldSelection, newSelection in
                 // When split view is active with placeholder, intercept document selection
