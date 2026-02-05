@@ -11,6 +11,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     case format = "Format"
     case ai = "AI"
     case speech = "Speech"
+    case backups = "Backups"
 
     var id: String { rawValue }
 
@@ -20,6 +21,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         case .format: return "textformat"
         case .ai: return "brain"
         case .speech: return "speaker.wave.2"
+        case .backups: return "externaldrive"
         }
     }
 }
@@ -29,6 +31,7 @@ struct SettingsView: View {
     @State private var aiSettings = AISettingsManager.shared
     @State private var elevenLabsSettings = ElevenLabsSettingsManager.shared
     @State private var selectedTab: SettingsTab = .general
+    @EnvironmentObject private var backupManager: BackupManager
 
     // Formatting defaults
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
@@ -57,6 +60,7 @@ struct SettingsView: View {
     @State private var isLoadingVoices: Bool = false
     @State private var isPreviewingVoice: Bool = false
     @State private var previewAudioPlayer: AVAudioPlayer?
+    @State private var backupToDelete: BackupRecord?
 
     enum TestResult {
         case success
@@ -71,6 +75,7 @@ struct SettingsView: View {
         ("Double", "double")
     ]
     private let indentSizeOptions = [12, 18, 24, 30, 36, 48]
+    private let backupIntervalOptions: [Double] = [5, 15, 30, 60, 120, 240, 720]
 
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -104,10 +109,17 @@ struct SettingsView: View {
                     Label(SettingsTab.speech.rawValue, systemImage: SettingsTab.speech.icon)
                 }
                 .tag(SettingsTab.speech)
+
+            backupTabContent
+                .tabItem {
+                    Label(SettingsTab.backups.rawValue, systemImage: SettingsTab.backups.icon)
+                }
+                .tag(SettingsTab.backups)
         }
         .frame(minWidth: 450, minHeight: 400)
         .onAppear {
             loadExistingKeys()
+            backupManager.refreshBackupsList()
         }
         #else
         NavigationStack {
@@ -125,6 +137,7 @@ struct SettingsView: View {
         }
         .onAppear {
             loadExistingKeys()
+            backupManager.refreshBackupsList()
         }
         #endif
     }
@@ -169,6 +182,14 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
     }
+
+    @ViewBuilder
+    private var backupTabContent: some View {
+        Form {
+            backupSettingsSection
+        }
+        .formStyle(.grouped)
+    }
     #endif
 
     // MARK: - iOS Navigation Content
@@ -196,6 +217,9 @@ struct SettingsView: View {
 
             case .speech:
                 ttsSettingsSection
+
+            case .backups:
+                backupSettingsSection
             }
         }
         .navigationTitle(tab.rawValue)
@@ -237,6 +261,110 @@ struct SettingsView: View {
                         Text("\(size) pt").tag(size)
                     }
                 }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var backupSettingsSection: some View {
+        Section("Automatic Backups") {
+            Toggle("Enable automatic backups", isOn: $backupManager.isAutoBackupEnabled)
+
+            Picker("Backup frequency", selection: $backupManager.backupIntervalMinutes) {
+                ForEach(backupIntervalOptions, id: \.self) { minutes in
+                    if minutes >= 60 {
+                        Text(String(format: "%.0f hours", minutes / 60)).tag(minutes)
+                    } else {
+                        Text(String(format: "%.0f minutes", minutes)).tag(minutes)
+                    }
+                }
+            }
+
+            Stepper(value: $backupManager.maxBackupsPerDocument, in: 1...50) {
+                Text("Keep \(backupManager.maxBackupsPerDocument) backups per manuscript")
+            }
+
+            if !backupManager.isDocumentReady {
+                Text("Save your manuscript to enable backups.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        Section("Manual Backup") {
+            Button {
+                backupManager.performManualBackup()
+            } label: {
+                if backupManager.isBackupInProgress {
+                    Label("Backing up…", systemImage: "arrow.triangle.2.circlepath")
+                } else {
+                    Label("Back Up Now", systemImage: "externaldrive.badge.plus")
+                }
+            }
+            .disabled(!backupManager.isDocumentReady || backupManager.isBackupInProgress)
+
+            if let lastBackupDate = backupManager.lastBackupDate {
+                LabeledContent("Last backup", value: formattedDate(lastBackupDate))
+            }
+
+            if let error = backupManager.lastBackupError {
+                Text(error)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            }
+        }
+
+        Section("Recent Backups") {
+            if backupManager.backups.isEmpty {
+                Text("No backups yet.")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(backupManager.backups.prefix(10)) { backup in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(backup.documentTitle.isEmpty ? "Untitled Manuscript" : backup.documentTitle)
+                            .font(.headline)
+                        Text(formattedDate(backup.createdAt))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Text(formattedSize(backup.sizeBytes))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            backupToDelete = backup
+                        } label: {
+                            Label("Delete Backup", systemImage: "trash")
+                        }
+                    }
+                }
+            }
+        }
+        .alert("Delete Backup?", isPresented: Binding<Bool>(
+            get: { backupToDelete != nil },
+            set: { if !$0 { backupToDelete = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { backupToDelete = nil }
+            Button("Delete", role: .destructive) {
+                if let backup = backupToDelete {
+                    backupManager.deleteBackup(backup)
+                }
+                backupToDelete = nil
+            }
+        } message: {
+            Text("This backup will be permanently removed.")
+        }
+
+        if let backupRootPath = backupManager.backupRootPath {
+            Section("Backup Location") {
+                Text(backupRootPath)
+                    .font(.footnote)
+                    .textSelection(.enabled)
+                #if os(macOS)
+                Button("Reveal in Finder") {
+                    NSWorkspace.shared.open(URL(fileURLWithPath: backupRootPath))
+                }
+                #endif
             }
         }
     }
@@ -759,10 +887,23 @@ struct SettingsView: View {
             isTestingClaude = false
         }
     }
+
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+
+    private func formattedSize(_ size: Int64) -> String {
+        ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+    }
 }
 
 #Preview {
     NavigationStack {
         SettingsView()
+            .environmentObject(BackupManager())
     }
 }
