@@ -61,7 +61,7 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 - Typewriter scrolling
 - ~~Corkboard view~~ ✅
 - ~~Outliner view~~ ✅
-- Import DOCX
+- ~~Import DOCX~~ ✅ (macOS-only)
 - ~~Export EPUB~~ ✅
 - ~~Writing goals/targets~~ ✅
 - Version comparison (diff view)

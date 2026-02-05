@@ -34,7 +34,7 @@ Think Scrivener or Ulysses, but free and open source.
 | Comments system | ✅ | Inline comments with chat bubble UI and inspector |
 | Templates | ✅ | 9 story structure templates (Hero's Journey, Save the Cat, Three-Act, etc.) |
 | Scrivener import | ✅ | Full .scriv import with RTF conversion and comments |
-| Export | ✅ | PDF, Word, EPUB, Markdown, Plain Text, Scrivener |
+| Export | ✅ | PDF, Word, EPUB, Markdown, Plain Text, HTML, Scrivener |
 | AI assistance | ✅ | Text generation with custom API keys (OpenAI, Anthropic) |
 | State restoration | ✅ | Remembers last open document and expanded folders |
 | Paragraph formatting | ✅ | First-line indentation, line spacing |
@@ -45,16 +45,17 @@ Think Scrivener or Ulysses, but free and open source.
 | Split editor | ✅ | View two documents side-by-side (macOS) |
 | Read mode | ✅ | Distraction-free reading with prose typography |
 | Outliner view | ✅ | Hierarchical outline with sortable metadata columns |
-| Composition mode | 🔜 | Distraction-free full-screen writing |
+| Composition mode | ✅ | Distraction-free full-screen writing |
 | Compile presets | 🔜 | Save and reuse export configurations |
-| Print | 🔜 | Print documents directly |
-| Import documents | 🔜 | Import Word, PDF, HTML files |
-| Import images | 🔜 | Import and embed images in research |
+| Print | ✅ | Print documents directly |
+| Import documents | ✅ | DOCX (macOS only), PDF, HTML |
+| Import images | ✅ | Import images and PDFs into research/media |
 | Auto backups | 🔜 | Automatic backup on close |
 | Trash folder | ✅ | Soft-delete with restore capability |
-| Document links | 🔜 | Internal links between documents |
-| Keywords/tags | 🔜 | Tagging system for organization |
-| Collections | 🔜 | Saved searches and filtered views |
+| Document links | ✅ | Internal links between documents |
+| Keywords/tags | ✅ | Tagging system for organization |
+| Favorites | ✅ | Star documents and media for quick access |
+| Collections | ✅ | Saved searches and filtered views |
 
 ## Requirements
 
@@ -166,6 +167,7 @@ It was a dark and stormy night...
 - [x] Word (DOCX) export
 - [x] EPUB export
 - [x] Markdown export with optional frontmatter
+- [x] HTML export
 - [x] Plain text export
 - [x] Scrivener (.scriv) export
 
@@ -196,10 +198,10 @@ It was a dark and stormy night...
 - [x] Read mode (distraction-free reading)
 - [x] Exclude files from compile (per-document include/exclude)
 - [x] Trash folder (soft-delete with restore)
-- [ ] Composition mode (distraction-free writing)
-- [ ] Print documents
-- [ ] Import documents (Word, PDF, HTML)
-- [ ] Import images
+- [x] Composition mode (distraction-free writing)
+- [x] Print documents
+- [x] Import documents (Word, PDF, HTML)
+- [x] Import images
 - [ ] Auto backups
 - [ ] Snapshot comparison/diff view
 

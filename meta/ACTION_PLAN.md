@@ -1,6 +1,6 @@
 # Manuscript Action Plan
 
-*Last updated: February 4, 2026*
+*Last updated: February 5, 2026*
 
 This document outlines the prioritized next steps for Manuscript development. **Near feature parity with Scrivener achieved.**
 
@@ -10,7 +10,7 @@ This document outlines the prioritized next steps for Manuscript development. **
 
 Manuscript has achieved near-complete feature parity with Scrivener. Most core features are **complete** including rich text editing, split editor, corkboard, outliner, snapshots, trash folder, and comprehensive export options.
 
-**Progress Update (Feb 4):**
+**Progress Update (Feb 5):**
 - ✅ Rich text editing complete (bold, italic, underline, fonts, sizes, colors)
 - ✅ Formatting toolbar with undo/redo support
 - ✅ Paragraph formatting (first-line indent, line spacing)
@@ -29,7 +29,7 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 - ✅ Read mode (distraction-free reading)
 - ✅ Trash folder (soft-delete with restore)
 - ✅ Export: PDF, DOCX, EPUB, Markdown, Plain Text, HTML, Scrivener
-- ✅ Import: DOCX, PDF, HTML
+- ✅ Import: DOCX (macOS only), PDF, HTML
 - ✅ Import images (as media items)
 - ✅ Keywords/tags system
 - ✅ Favorites
@@ -39,6 +39,7 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 **Remaining:**
 - Performance optimization
 - Accessibility audit
+- iOS DOCX import support
 - Apple Foundation Models integration
 - Writing suggestions
 - Grammar/style checking
@@ -157,6 +158,7 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 - [x] DOCX export
 - [x] EPUB export
 - [x] Markdown export
+- [x] HTML export
 - [x] Plain Text export
 - [x] Scrivener (.scriv) export
 - [x] Exclude files from compile
@@ -171,7 +173,8 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 - [x] Fade-in controls on hover
 
 ### Import
-- [x] Import DOCX
+- [x] Import DOCX (macOS)
+- [ ] Import DOCX (iOS)
 - [x] Import PDF
 - [x] Import HTML
 - [x] Import images

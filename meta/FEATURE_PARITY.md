@@ -132,7 +132,7 @@ Manuscript vs Scrivener vs Ulysses.
 
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
-| Import DOCX | ✅ | ✅ | ✅ |
+| Import DOCX | ✅ | ✅ | ⚡ |
 | Import PDF | ✅ | ❌ | ✅ |
 | Import Markdown | ✅ | ✅ | ✅ |
 | Import HTML | ✅ | ✅ | ✅ |
@@ -140,6 +140,8 @@ Manuscript vs Scrivener vs Ulysses.
 | Import folder | ✅ | ✅ | 🔜 |
 | Import & split | ✅ | ❌ | 🔜 |
 | Import Scrivener | ➖ | ❌ | ✅ |
+
+Note: Manuscript DOCX import is currently macOS-only; iOS support is pending.
 
 ---
 
@@ -204,4 +206,4 @@ Manuscript vs Scrivener vs Ulysses.
 
 ---
 
-*Last updated: February 4, 2026*
+*Last updated: February 5, 2026*
