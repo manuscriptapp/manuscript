@@ -13,6 +13,7 @@ private struct AdaptiveSidebarIcon: View {
 }
 
 struct ProjectSidebar: View {
+    @Environment(\.appTheme) private var appTheme
     @ObservedObject var viewModel: DocumentViewModel
     @Binding var detailSelection: DetailSelection?
     @Binding var isAddDocumentSheetPresented: Bool
@@ -414,11 +415,33 @@ struct ProjectSidebar: View {
         List {
             content
         }
+        .scrollContentBackground(.hidden)
+        .background(
+            ZStack {
+                if let overlayMaterial = appTheme.overlayMaterial, appTheme.material.opacity > 0 {
+                    Rectangle()
+                        .fill(overlayMaterial)
+                        .opacity(appTheme.material.opacity)
+                }
+                appTheme.groupedBackgroundColor.opacity(appTheme.usesSystemColors ? 0.2 : 0.7)
+            }
+        )
         .listStyle(.sidebar)
         #else
         List(selection: selection) {
             content
         }
+        .scrollContentBackground(.hidden)
+        .background(
+            ZStack {
+                if let overlayMaterial = appTheme.overlayMaterial, appTheme.material.opacity > 0 {
+                    Rectangle()
+                        .fill(overlayMaterial)
+                        .opacity(appTheme.material.opacity)
+                }
+                appTheme.groupedBackgroundColor.opacity(appTheme.usesSystemColors ? 0.2 : 0.7)
+            }
+        )
         .listStyle(.sidebar)
         .navigationTitle(viewModel.documentTitle.isEmpty ? "Untitled" : viewModel.documentTitle)
         .toolbar {

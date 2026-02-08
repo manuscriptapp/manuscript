@@ -32,6 +32,7 @@ struct SettingsView: View {
     @State private var elevenLabsSettings = ElevenLabsSettingsManager.shared
     @State private var selectedTab: SettingsTab = .general
     @EnvironmentObject private var backupManager: BackupManager
+    @EnvironmentObject private var themeManager: ThemeManager
 
     // Formatting defaults
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
@@ -81,6 +82,13 @@ struct SettingsView: View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
+    }
+
+    private var themeSelection: Binding<String> {
+        Binding(
+            get: { themeManager.selectedThemeID },
+            set: { themeManager.selectedThemeID = $0 }
+        )
     }
 
     var body: some View {
@@ -152,6 +160,8 @@ struct SettingsView: View {
                 TextField("Name", text: $defaultAuthorName, prompt: Text("Enter default author name"))
             }
 
+            appearanceSection
+
             Section("About") {
                 LabeledContent("Version", value: appVersion)
             }
@@ -205,6 +215,8 @@ struct SettingsView: View {
                         .textInputAutocapitalization(.words)
                 }
 
+                appearanceSection
+
                 Section("About") {
                     LabeledContent("Version", value: appVersion)
                 }
@@ -225,6 +237,31 @@ struct SettingsView: View {
         .navigationTitle(tab.rawValue)
     }
     #endif
+
+    @ViewBuilder
+    private var appearanceSection: some View {
+        Section("Appearance") {
+            Picker("Theme", selection: themeSelection) {
+                ForEach(themeManager.themes) { theme in
+                    Text(theme.name).tag(theme.id)
+                }
+            }
+
+            Button("Reload Themes") {
+                themeManager.reloadThemes()
+            }
+
+            #if os(macOS)
+            Button("Open Themes Folder") {
+                NSWorkspace.shared.open(themeManager.themesDirectoryURL)
+            }
+            #endif
+
+            Text("Themes folder: \(themeManager.themesDirectoryURL.path)")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
 
     @ViewBuilder
     private var formattingSection: some View {

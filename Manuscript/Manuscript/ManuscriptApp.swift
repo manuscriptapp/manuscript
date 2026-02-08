@@ -151,32 +151,18 @@ struct FormattingToolbarMenuCommands: View {
 #if os(iOS)
 /// Adaptive background for the document launch scene
 struct LaunchSceneBackground: View {
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.appTheme) private var appTheme
 
     var body: some View {
         ZStack {
-            // Base gradient that adapts to color scheme
-            if colorScheme == .dark {
-                // Dark mode: subtle dark gradient with slight warmth
-                LinearGradient(
-                    colors: [
-                        Color(white: 0.12),
-                        Color(white: 0.08)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            } else {
-                // Light mode: soft warm gradient
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.97, green: 0.96, blue: 0.94),
-                        Color(red: 0.93, green: 0.91, blue: 0.88)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            }
+            LinearGradient(
+                colors: [
+                    appTheme.backgroundColor,
+                    appTheme.groupedBackgroundColor
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
         }
         .ignoresSafeArea()
     }
@@ -865,6 +851,7 @@ struct WelcomeWindowContent: View {
 struct ManuscriptApp: App {
     @StateObject private var notificationManager = NotificationManager()
     @StateObject private var recentDocumentsManager = RecentDocumentsManager()
+    @StateObject private var themeManager = ThemeManager()
     @State private var isShowingWelcomeScreen = true
     @State private var documentURL: URL?
     #if os(iOS)
@@ -946,13 +933,16 @@ struct ManuscriptApp: App {
         #if os(macOS)
         // Welcome window (macOS only)
         WindowGroup("Welcome to Manuscript", id: "welcome") {
-            WelcomeWindowContent(
-                recentDocumentsManager: recentDocumentsManager,
-                notificationManager: notificationManager
-            )
-            .frame(width: 850, height: 500)
-            .containerBackground(.ultraThinMaterial, for: .window)
-            .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+            AppThemeContainer(theme: themeManager.selectedTheme) {
+                WelcomeWindowContent(
+                    recentDocumentsManager: recentDocumentsManager,
+                    notificationManager: notificationManager
+                )
+                .frame(width: 850, height: 500)
+                .containerBackground(.ultraThinMaterial, for: .window)
+                .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+            }
+            .environmentObject(themeManager)
         }
         .windowStyle(.hiddenTitleBar)
         .windowBackgroundDragBehavior(.enabled)
@@ -961,47 +951,50 @@ struct ManuscriptApp: App {
 
         // Document-based app structure
         DocumentGroup(newDocument: ManuscriptDocument()) { file in
-            ManuscriptProjectView(document: file.$document, fileURL: file.fileURL)
-                .environmentObject(notificationManager)
-                .environmentObject(recentDocumentsManager)
-                .withErrorAlert()
-                #if os(macOS)
-                .frame(minWidth: 900, minHeight: 600)
-                #endif
-                .onAppear {
-                    print("📂 [DocumentGroup] Document opened")
-                    print("   - fileURL: \(file.fileURL?.path ?? "nil (new document)")")
-                    print("   - title: \(file.document.title.isEmpty ? "(empty)" : file.document.title)")
-                    print("   - rootFolder documents: \(file.document.rootFolder.documents.count)")
-                    print("   - characters: \(file.document.characters.count)")
-                    print("   - locations: \(file.document.locations.count)")
+            AppThemeContainer(theme: themeManager.selectedTheme) {
+                ManuscriptProjectView(document: file.$document, fileURL: file.fileURL)
+                    .environmentObject(notificationManager)
+                    .environmentObject(recentDocumentsManager)
+                    .environmentObject(themeManager)
+                    .withErrorAlert()
+                    #if os(macOS)
+                    .frame(minWidth: 900, minHeight: 600)
+                    #endif
+                    .onAppear {
+                        print("📂 [DocumentGroup] Document opened")
+                        print("   - fileURL: \(file.fileURL?.path ?? "nil (new document)")")
+                        print("   - title: \(file.document.title.isEmpty ? "(empty)" : file.document.title)")
+                        print("   - rootFolder documents: \(file.document.rootFolder.documents.count)")
+                        print("   - characters: \(file.document.characters.count)")
+                        print("   - locations: \(file.document.locations.count)")
 
+                        #if os(iOS)
+                        handleDocumentOpen(
+                            fileURL: file.fileURL,
+                            title: file.document.title
+                        )
+                        #else
+                        if let url = file.fileURL {
+                            recentDocumentsManager.addDocument(url: url, title: file.document.title.isEmpty ? "Untitled" : file.document.title)
+                        }
+                        #endif
+                    }
                     #if os(iOS)
-                    handleDocumentOpen(
-                        fileURL: file.fileURL,
-                        title: file.document.title
-                    )
-                    #else
-                    if let url = file.fileURL {
-                        recentDocumentsManager.addDocument(url: url, title: file.document.title.isEmpty ? "Untitled" : file.document.title)
+                    .onChange(of: file.fileURL) { _, newURL in
+                        guard let newURL else { return }
+                        handleDocumentOpen(
+                            fileURL: newURL,
+                            title: file.document.title
+                        )
+                    }
+                    .onChange(of: file.document.title) { _, newTitle in
+                        handleDocumentOpen(
+                            fileURL: file.fileURL,
+                            title: newTitle
+                        )
                     }
                     #endif
-                }
-                #if os(iOS)
-                .onChange(of: file.fileURL) { _, newURL in
-                    guard let newURL else { return }
-                    handleDocumentOpen(
-                        fileURL: newURL,
-                        title: file.document.title
-                    )
-                }
-                .onChange(of: file.document.title) { _, newTitle in
-                    handleDocumentOpen(
-                        fileURL: file.fileURL,
-                        title: newTitle
-                    )
-                }
-                #endif
+            }
         }
         #if os(macOS)
         .defaultWindowPlacement { content, context in
@@ -1089,6 +1082,7 @@ struct ManuscriptApp: App {
             }
         } background: {
             LaunchSceneBackground()
+                .applyAppTheme(themeManager.selectedTheme)
                 .onAppear {
                     print("📱 [DocumentGroupLaunchScene] Launch scene background appeared")
                 }
@@ -1105,8 +1099,11 @@ struct ManuscriptApp: App {
         #if os(macOS)
         // Settings window
         Settings {
-            SettingsView()
-                .environmentObject(notificationManager)
+            AppThemeContainer(theme: themeManager.selectedTheme) {
+                SettingsView()
+                    .environmentObject(notificationManager)
+                    .environmentObject(themeManager)
+            }
         }
         #endif
     }

@@ -12,33 +12,43 @@ struct PlainTextEditor: ViewModifier {
 
 struct BorderedTextEditor: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.appTheme) private var appTheme
     
     var backgroundColor: Color {
-        if colorScheme == .dark {
-            return Color.white.opacity(0.05)
-        } else {
-            #if os(macOS)
-            return Color(nsColor: .controlBackgroundColor)
-            #else
-            return Color(uiColor: .systemBackground)
-            #endif
+        if appTheme.usesSystemColors {
+            if colorScheme == .dark {
+                return Color.white.opacity(0.05)
+            } else {
+                #if os(macOS)
+                return Color(nsColor: .controlBackgroundColor)
+                #else
+                return Color(uiColor: .systemBackground)
+                #endif
+            }
         }
+        return appTheme.surfaceColor
     }
     
     var borderColor: Color {
-        if colorScheme == .dark {
-            return Color.gray.opacity(0.3)
-        } else {
-            return Color.black.opacity(0.15)
+        if appTheme.usesSystemColors {
+            if colorScheme == .dark {
+                return Color.gray.opacity(0.3)
+            } else {
+                return Color.black.opacity(0.15)
+            }
         }
+        return appTheme.secondaryTextColor.opacity(0.2)
     }
     
     var innerShadowColor: Color {
-        if colorScheme == .dark {
-            return Color.white.opacity(0.2)
-        } else {
-            return Color.black.opacity(0.2)
+        if appTheme.usesSystemColors {
+            if colorScheme == .dark {
+                return Color.white.opacity(0.2)
+            } else {
+                return Color.black.opacity(0.2)
+            }
         }
+        return appTheme.secondaryTextColor.opacity(0.35)
     }
     
     func body(content: Content) -> some View {
