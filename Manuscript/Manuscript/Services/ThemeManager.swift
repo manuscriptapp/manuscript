@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 enum ThemeAppearance: String, Codable, CaseIterable {
