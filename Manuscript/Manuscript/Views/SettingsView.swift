@@ -32,7 +32,7 @@ struct SettingsView: View {
     @State private var elevenLabsSettings = ElevenLabsSettingsManager.shared
     @State private var selectedTab: SettingsTab = .general
     @EnvironmentObject private var backupManager: BackupManager
-    @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(ThemeManager.self) private var themeManager
 
     // Formatting defaults
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
@@ -942,5 +942,6 @@ struct SettingsView: View {
     NavigationStack {
         SettingsView()
             .environmentObject(BackupManager())
+            .environment(ThemeManager())
     }
 }

@@ -851,7 +851,7 @@ struct WelcomeWindowContent: View {
 struct ManuscriptApp: App {
     @StateObject private var notificationManager = NotificationManager()
     @StateObject private var recentDocumentsManager = RecentDocumentsManager()
-    @StateObject private var themeManager = ThemeManager()
+    @State private var themeManager = ThemeManager()
     @State private var isShowingWelcomeScreen = true
     @State private var documentURL: URL?
     #if os(iOS)
@@ -942,7 +942,7 @@ struct ManuscriptApp: App {
                 .containerBackground(.ultraThinMaterial, for: .window)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
             }
-            .environmentObject(themeManager)
+            .environment(themeManager)
         }
         .windowStyle(.hiddenTitleBar)
         .windowBackgroundDragBehavior(.enabled)
@@ -955,7 +955,7 @@ struct ManuscriptApp: App {
                 ManuscriptProjectView(document: file.$document, fileURL: file.fileURL)
                     .environmentObject(notificationManager)
                     .environmentObject(recentDocumentsManager)
-                    .environmentObject(themeManager)
+                    .environment(themeManager)
                     .withErrorAlert()
                     #if os(macOS)
                     .frame(minWidth: 900, minHeight: 600)
@@ -1102,7 +1102,7 @@ struct ManuscriptApp: App {
             AppThemeContainer(theme: themeManager.selectedTheme) {
                 SettingsView()
                     .environmentObject(notificationManager)
-                    .environmentObject(themeManager)
+                    .environment(themeManager)
             }
         }
         #endif

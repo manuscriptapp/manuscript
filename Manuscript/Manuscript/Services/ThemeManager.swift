@@ -1,4 +1,3 @@
-import Combine
 import SwiftUI
 
 enum ThemeAppearance: String, Codable, CaseIterable {
@@ -186,9 +185,11 @@ struct AppTheme: Identifiable, Codable, Equatable {
     }
 }
 
-final class ThemeManager: ObservableObject {
-    @Published private(set) var themes: [AppTheme] = []
-    @Published var selectedThemeID: String {
+@MainActor
+@Observable
+final class ThemeManager {
+    private(set) var themes: [AppTheme] = []
+    var selectedThemeID: String {
         didSet {
             UserDefaults.standard.set(selectedThemeID, forKey: Self.selectedThemeKey)
         }
