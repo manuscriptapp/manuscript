@@ -233,7 +233,7 @@ final class BackupManager: ObservableObject {
         return folderURL
     }
 
-    private static func performBackup(
+    private nonisolated static func performBackup(
         documentURL: URL,
         documentTitle: String,
         reason: BackupReason,
@@ -304,7 +304,7 @@ final class BackupManager: ObservableObject {
         return record
     }
 
-    private static func readBackupRecord(from folderURL: URL, documentURL: URL) -> BackupRecord? {
+    private nonisolated static func readBackupRecord(from folderURL: URL, documentURL: URL) -> BackupRecord? {
         let metadataURL = folderURL.appendingPathComponent(BackupMetadata.filename)
         if let metadata = try? readMetadata(from: metadataURL) {
             let packageURL = folderURL.appendingPathComponent(metadata.originalFileName, isDirectory: true)
@@ -333,7 +333,7 @@ final class BackupManager: ObservableObject {
         )
     }
 
-    private static func directorySize(at url: URL, fileManager: FileManager) -> Int64 {
+    private nonisolated static func directorySize(at url: URL, fileManager: FileManager) -> Int64 {
         guard let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey]) else {
             return 0
         }
@@ -345,7 +345,7 @@ final class BackupManager: ObservableObject {
         return total
     }
 
-    private static func writeMetadata(_ metadata: BackupMetadata, to folderURL: URL) throws {
+    private nonisolated static func writeMetadata(_ metadata: BackupMetadata, to folderURL: URL) throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         let data = try encoder.encode(metadata)
@@ -353,14 +353,14 @@ final class BackupManager: ObservableObject {
         try data.write(to: metadataURL, options: [.atomic])
     }
 
-    private static func readMetadata(from url: URL) throws -> BackupMetadata {
+    private nonisolated static func readMetadata(from url: URL) throws -> BackupMetadata {
         let data = try Data(contentsOf: url)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode(BackupMetadata.self, from: data)
     }
 
-    private static func backupRootURL(fileManager: FileManager) throws -> URL {
+    private nonisolated static func backupRootURL(fileManager: FileManager) throws -> URL {
         guard let baseURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             throw BackupError.missingApplicationSupportDirectory
         }
@@ -372,7 +372,7 @@ final class BackupManager: ObservableObject {
         return rootURL
     }
 
-    private static func documentIdentifier(for documentURL: URL) -> String {
+    private nonisolated static func documentIdentifier(for documentURL: URL) -> String {
         let baseName = documentURL.deletingPathExtension().lastPathComponent
         let sanitized = baseName.replacingOccurrences(of: "[^A-Za-z0-9_-]", with: "-", options: .regularExpression)
         let hash = SHA256.hash(data: Data(documentURL.path.utf8))
@@ -382,14 +382,14 @@ final class BackupManager: ObservableObject {
         return "\(sanitized)-\(hash)"
     }
 
-    private static func timestampString(from date: Date) -> String {
+    private nonisolated static func timestampString(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
         return formatter.string(from: date)
     }
 
-    private static func appVersionString() -> String {
+    private nonisolated static func appVersionString() -> String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
