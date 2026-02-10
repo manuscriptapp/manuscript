@@ -62,6 +62,7 @@ A soft launch allows us to:
 |------|:------:|
 | Create TestFlight group | 🟡 |
 | Write beta tester invitation | 🟡 |
+| Create Discord server for beta community | 🔴 |
 | Create feedback survey | 🔴 |
 | Set up crash reporting | 🟡 |
 | Define beta version numbering | ✅ |
@@ -71,6 +72,18 @@ A soft launch allows us to:
 - TestFlight feedback mechanism
 - Short survey (Google Forms/Typeform)
 - Discord or Slack channel for discussion
+
+### Discord Server Setup (for Soft Launch)
+
+If Discord is chosen over Slack, set up the server before inviting beta users.
+
+| Task | Status |
+|------|:------:|
+| Create server `Manuscript Beta` | 🔴 |
+| Add channels (`#announcements`, `#bug-reports`, `#feature-feedback`, `#general`) | 🔴 |
+| Add channel guidelines and bug report template | 🔴 |
+| Create roles (`Maintainer`, `Beta Tester`) | 🔴 |
+| Post invite link in TestFlight onboarding email | 🔴 |
 
 ### Beta Duration
 - **Minimum**: 2 weeks
