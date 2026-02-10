@@ -128,6 +128,7 @@ struct ManuscriptProjectView: View {
             .sheet(isPresented: $showSettings) {
                 NavigationStack {
                     SettingsView()
+                        .environmentObject(backupManager)
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
                                 Button("Done") {

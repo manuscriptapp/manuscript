@@ -851,6 +851,7 @@ struct WelcomeWindowContent: View {
 struct ManuscriptApp: App {
     @StateObject private var notificationManager = NotificationManager()
     @StateObject private var recentDocumentsManager = RecentDocumentsManager()
+    @StateObject private var backupManager = BackupManager()
     @State private var themeManager = ThemeManager()
     @State private var isShowingWelcomeScreen = true
     @State private var documentURL: URL?
@@ -1101,6 +1102,7 @@ struct ManuscriptApp: App {
         Settings {
             AppThemeContainer(theme: themeManager.selectedTheme) {
                 SettingsView()
+                    .environmentObject(backupManager)
                     .environmentObject(notificationManager)
                     .environment(themeManager)
             }
