@@ -271,7 +271,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Auto-increment build number using git commit count\nBUILD_NUMBER=$(git rev-list --count HEAD)\n\n# Update the Info.plist in the built product\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n\necho \"Build number set to $BUILD_NUMBER\"\n";
+			shellScript = "# Set build number from Xcode Cloud run number when available
+if [ -n \"$CI_BUILD_NUMBER\" ]; then
+  BUILD_NUMBER=\"$CI_BUILD_NUMBER\"
+else
+  BUILD_NUMBER=\"$CURRENT_PROJECT_VERSION\"
+fi
+
+/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"
+
+echo \"Build number set to $BUILD_NUMBER\"
+";
 		};
 /* End PBXShellScriptBuildPhase section */
 
