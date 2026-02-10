@@ -71,7 +71,7 @@ struct AppTheme: Identifiable, Codable, Equatable {
     }
 
     var accentColor: Color {
-        color(for: palette.accent, fallback: .accentColor)
+        color(for: palette.accent, fallback: .brown)
     }
 
     var overlayMaterial: Material? {
@@ -106,7 +106,7 @@ struct AppTheme: Identifiable, Codable, Equatable {
             surface: "#F2F2F7",
             text: "#000000",
             secondaryText: "#3C3C43",
-            accent: "#0A84FF"
+            accent: "#A2845E"
         )
     )
 
