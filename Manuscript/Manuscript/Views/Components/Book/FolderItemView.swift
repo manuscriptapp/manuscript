@@ -87,14 +87,24 @@ struct FolderItemView: View {
             viewModel.updateFolderIconColor(folder, hexColor: hexColor?.isEmpty == true ? nil : hexColor)
         }
 
+        @ViewBuilder
+        private func menuActionLabel(_ title: String, systemImage: String) -> some View {
+            Label {
+                Text(title)
+            } icon: {
+                Image(systemName: systemImage)
+                    .foregroundStyle(Color.accentColor)
+            }
+        }
+
         /// Returns the base icon color for the folder
         private func baseIconColor(for folder: ManuscriptFolder) -> Color {
             // Use icon-specific color if available
             if let hexColor = folder.iconColor, let color = Color(hex: hexColor) {
                 return color
             }
-            // Default to blue
-            return .blue
+            // Default to brown accent
+            return .brown
         }
 
         private func colorForDocument(_ document: ManuscriptDocument.Document) -> Color {
@@ -234,25 +244,25 @@ struct FolderItemView: View {
                     Button(action: {
                         isAddFolderSheetPresented = true
                     }) {
-                        Label("Add Folder", systemImage: "folder.badge.plus")
+                        menuActionLabel("Add Folder", systemImage: "folder.badge.plus")
                     }
 
                     Button(action: {
                         viewModel.addUntitledDocument(to: folder)
                     }) {
-                        Label("Add Document", systemImage: "doc.badge.plus")
+                        menuActionLabel("Add Document", systemImage: "doc.badge.plus")
                     }
 
                     Button(action: {
                         isAddMediaSheetPresented = true
                     }) {
-                        Label("Add Media", systemImage: "photo.badge.plus")
+                        menuActionLabel("Add Media", systemImage: "photo.badge.plus")
                     }
 
                     Button(action: {
                         isImportDocumentSheetPresented = true
                     }) {
-                        Label("Import Document...", systemImage: "square.and.arrow.down")
+                        menuActionLabel("Import Document...", systemImage: "square.and.arrow.down")
                     }
 
                     Divider()
@@ -260,7 +270,7 @@ struct FolderItemView: View {
                     Button(action: {
                         viewModel.showRenameAlert(for: folder)
                     }) {
-                        Label("Rename Folder", systemImage: "pencil")
+                        menuActionLabel("Rename Folder", systemImage: "pencil")
                     }
 
                     // Trash folder gets "Empty Trash" option
@@ -276,7 +286,7 @@ struct FolderItemView: View {
                         Button(action: {
                             viewModel.restoreFolderFromTrash(folder)
                         }) {
-                            Label("Restore", systemImage: "arrow.uturn.backward")
+                            menuActionLabel("Restore", systemImage: "arrow.uturn.backward")
                         }
 
                         Button(role: .destructive, action: {
@@ -298,7 +308,7 @@ struct FolderItemView: View {
                     Button(action: {
                         detailSelection = .folder(folder)
                     }) {
-                        Label("View Details", systemImage: "info.circle")
+                        menuActionLabel("View Details", systemImage: "info.circle")
                     }
 
                     Menu("Change Icon") {
@@ -326,25 +336,25 @@ struct FolderItemView: View {
                     Button(action: {
                         isAddFolderSheetPresented = true
                     }) {
-                        Label("Add Folder", systemImage: "folder.badge.plus")
+                        menuActionLabel("Add Folder", systemImage: "folder.badge.plus")
                     }
 
                     Button(action: {
                         viewModel.addUntitledDocument(to: folder)
                     }) {
-                        Label("Add Document", systemImage: "doc.badge.plus")
+                        menuActionLabel("Add Document", systemImage: "doc.badge.plus")
                     }
 
                     Button(action: {
                         isAddMediaSheetPresented = true
                     }) {
-                        Label("Add Media", systemImage: "photo.badge.plus")
+                        menuActionLabel("Add Media", systemImage: "photo.badge.plus")
                     }
 
                     Button(action: {
                         isImportDocumentSheetPresented = true
                     }) {
-                        Label("Import Document...", systemImage: "square.and.arrow.down")
+                        menuActionLabel("Import Document...", systemImage: "square.and.arrow.down")
                     }
 
                     Divider()
@@ -352,7 +362,7 @@ struct FolderItemView: View {
                     Button(action: {
                         viewModel.showRenameAlert(for: folder)
                     }) {
-                        Label("Rename Folder", systemImage: "pencil")
+                        menuActionLabel("Rename Folder", systemImage: "pencil")
                     }
 
                     // Trash folder gets "Empty Trash" option
@@ -368,7 +378,7 @@ struct FolderItemView: View {
                         Button(action: {
                             viewModel.restoreFolderFromTrash(folder)
                         }) {
-                            Label("Restore", systemImage: "arrow.uturn.backward")
+                            menuActionLabel("Restore", systemImage: "arrow.uturn.backward")
                         }
 
                         Button(role: .destructive, action: {
@@ -412,7 +422,7 @@ struct FolderItemView: View {
                         }) {
                             Label("Rename", systemImage: "pencil")
                         }
-                        .tint(.blue)
+                        .tint(.accentColor)
 
                         Button(role: .destructive, action: {
                             viewModel.moveFolderToTrash(folder)
@@ -425,7 +435,7 @@ struct FolderItemView: View {
                         }) {
                             Label("Rename", systemImage: "pencil")
                         }
-                        .tint(.blue)
+                        .tint(.accentColor)
                     }
                 }
                 #endif

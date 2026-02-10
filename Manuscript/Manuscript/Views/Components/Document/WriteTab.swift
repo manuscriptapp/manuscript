@@ -22,6 +22,7 @@ struct WriteTab: View {
     @StateObject private var findReplaceViewModel = FindReplaceViewModel()
     @State private var hasInitialized = false
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.appTheme) private var appTheme
 
     /// Returns the active RichTextContext (external if provided, otherwise local)
     private var richTextContext: RichTextContext {
@@ -143,6 +144,16 @@ struct WriteTab: View {
             }
 
         }
+        .background(
+            ZStack {
+                appTheme.backgroundColor
+                if let overlayMaterial = appTheme.overlayMaterial, appTheme.material.opacity > 0 {
+                    Rectangle()
+                        .fill(overlayMaterial)
+                        .opacity(appTheme.material.opacity)
+                }
+            }
+        )
         .onAppear {
             if !hasInitialized {
                 setupContext()

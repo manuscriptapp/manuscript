@@ -404,7 +404,7 @@ struct AddLocationSheet: View {
                     Button("Allow Location Access") {
                         locationManager.requestLocationPermission()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .manuscriptPrimaryButton()
                     .padding(.bottom, 200)
                 }
             }

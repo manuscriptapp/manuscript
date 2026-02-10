@@ -32,6 +32,7 @@ struct SettingsView: View {
     @State private var elevenLabsSettings = ElevenLabsSettingsManager.shared
     @State private var selectedTab: SettingsTab = .general
     @EnvironmentObject private var backupManager: BackupManager
+    @Environment(ThemeManager.self) private var themeManager
 
     // Formatting defaults
     @AppStorage("defaultFontName") private var defaultFontName: String = "Palatino"
@@ -77,10 +78,35 @@ struct SettingsView: View {
     private let indentSizeOptions = [12, 18, 24, 30, 36, 48]
     private let backupIntervalOptions: [Double] = [5, 15, 30, 60, 120, 240, 720]
 
+    @ViewBuilder
+    private func settingsNavigationLabel(_ title: String, systemImage: String) -> some View {
+        HStack {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
+            Text(title)
+        }
+    }
+
+    @ViewBuilder
+    private func settingsActionLabel(_ title: String, systemImage: String) -> some View {
+        HStack {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
+            Text(title)
+        }
+    }
+
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
+    }
+
+    private var themeSelection: Binding<String> {
+        Binding(
+            get: { themeManager.selectedThemeID },
+            set: { themeManager.selectedThemeID = $0 }
+        )
     }
 
     var body: some View {
@@ -88,31 +114,31 @@ struct SettingsView: View {
         TabView(selection: $selectedTab) {
             generalTabContent
                 .tabItem {
-                    Label(SettingsTab.general.rawValue, systemImage: SettingsTab.general.icon)
+                    settingsNavigationLabel(SettingsTab.general.rawValue, systemImage: SettingsTab.general.icon)
                 }
                 .tag(SettingsTab.general)
 
             formatTabContent
                 .tabItem {
-                    Label(SettingsTab.format.rawValue, systemImage: SettingsTab.format.icon)
+                    settingsNavigationLabel(SettingsTab.format.rawValue, systemImage: SettingsTab.format.icon)
                 }
                 .tag(SettingsTab.format)
 
             aiTabContent
                 .tabItem {
-                    Label(SettingsTab.ai.rawValue, systemImage: SettingsTab.ai.icon)
+                    settingsNavigationLabel(SettingsTab.ai.rawValue, systemImage: SettingsTab.ai.icon)
                 }
                 .tag(SettingsTab.ai)
 
             speechTabContent
                 .tabItem {
-                    Label(SettingsTab.speech.rawValue, systemImage: SettingsTab.speech.icon)
+                    settingsNavigationLabel(SettingsTab.speech.rawValue, systemImage: SettingsTab.speech.icon)
                 }
                 .tag(SettingsTab.speech)
 
             backupTabContent
                 .tabItem {
-                    Label(SettingsTab.backups.rawValue, systemImage: SettingsTab.backups.icon)
+                    settingsNavigationLabel(SettingsTab.backups.rawValue, systemImage: SettingsTab.backups.icon)
                 }
                 .tag(SettingsTab.backups)
         }
@@ -126,7 +152,7 @@ struct SettingsView: View {
             List {
                 ForEach(SettingsTab.allCases) { tab in
                     NavigationLink(value: tab) {
-                        Label(tab.rawValue, systemImage: tab.icon)
+                        settingsNavigationLabel(tab.rawValue, systemImage: tab.icon)
                     }
                 }
             }
@@ -151,6 +177,8 @@ struct SettingsView: View {
             Section("Author") {
                 TextField("Name", text: $defaultAuthorName, prompt: Text("Enter default author name"))
             }
+
+            appearanceSection
 
             Section("About") {
                 LabeledContent("Version", value: appVersion)
@@ -205,6 +233,8 @@ struct SettingsView: View {
                         .textInputAutocapitalization(.words)
                 }
 
+                appearanceSection
+
                 Section("About") {
                     LabeledContent("Version", value: appVersion)
                 }
@@ -225,6 +255,31 @@ struct SettingsView: View {
         .navigationTitle(tab.rawValue)
     }
     #endif
+
+    @ViewBuilder
+    private var appearanceSection: some View {
+        Section("Appearance") {
+            Picker("Theme", selection: themeSelection) {
+                ForEach(themeManager.themes) { theme in
+                    Text(theme.name).tag(theme.id)
+                }
+            }
+
+            Button("Reload Themes") {
+                themeManager.reloadThemes()
+            }
+
+            #if os(macOS)
+            Button("Open Themes Folder") {
+                NSWorkspace.shared.open(themeManager.themesDirectoryURL)
+            }
+            #endif
+
+            Text("Themes folder: \(themeManager.themesDirectoryURL.path)")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
 
     @ViewBuilder
     private var formattingSection: some View {
@@ -296,9 +351,9 @@ struct SettingsView: View {
                 backupManager.performManualBackup()
             } label: {
                 if backupManager.isBackupInProgress {
-                    Label("Backing up…", systemImage: "arrow.triangle.2.circlepath")
+                    settingsActionLabel("Backing up…", systemImage: "arrow.triangle.2.circlepath")
                 } else {
-                    Label("Back Up Now", systemImage: "externaldrive.badge.plus")
+                    settingsActionLabel("Back Up Now", systemImage: "externaldrive.badge.plus")
                 }
             }
             .disabled(!backupManager.isDocumentReady || backupManager.isBackupInProgress)
@@ -484,6 +539,7 @@ struct SettingsView: View {
                                 .controlSize(.small)
                         } else {
                             Image(systemName: "arrow.clockwise")
+                                .foregroundStyle(Color.accentColor)
                         }
                     }
                     .buttonStyle(.plain)
@@ -502,6 +558,7 @@ struct SettingsView: View {
                                     .controlSize(.small)
                             } else {
                                 Image(systemName: "play.fill")
+                                    .foregroundStyle(Color.accentColor)
                             }
                             Text("Preview")
                         }
@@ -535,6 +592,7 @@ struct SettingsView: View {
                     Text("Testing...")
                 } else {
                     Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundStyle(Color.accentColor)
                     Text("Test Connection")
                 }
             }
@@ -590,7 +648,7 @@ struct SettingsView: View {
                 Button("Save") {
                     saveElevenLabsKey()
                 }
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
                 .controlSize(.small)
             }
         }
@@ -640,7 +698,7 @@ struct SettingsView: View {
                 Button("Save") {
                     saveOpenAIKey()
                 }
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
                 .controlSize(.small)
             }
         }
@@ -694,7 +752,7 @@ struct SettingsView: View {
                 Button("Save") {
                     saveClaudeKey()
                 }
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
                 .controlSize(.small)
             }
         }
@@ -718,6 +776,7 @@ struct SettingsView: View {
                     Text("Testing...")
                 } else {
                     Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundStyle(Color.accentColor)
                     Text("Test Connection")
                 }
             }
@@ -905,5 +964,6 @@ struct SettingsView: View {
     NavigationStack {
         SettingsView()
             .environmentObject(BackupManager())
+            .environment(ThemeManager())
     }
 }

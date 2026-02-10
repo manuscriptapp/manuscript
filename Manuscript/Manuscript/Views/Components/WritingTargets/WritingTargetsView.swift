@@ -184,9 +184,9 @@ struct WritingTargetsView: View {
             Button {
                 showingEditor = true
             } label: {
-                Label("Set Targets", systemImage: "plus.circle.fill")
+                Label("Set Targets", systemImage: "plus")
             }
-            .buttonStyle(.borderedProminent)
+            .manuscriptPrimaryButton()
             .padding(.top, 8)
         }
         .padding()

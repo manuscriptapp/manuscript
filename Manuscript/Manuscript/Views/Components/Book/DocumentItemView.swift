@@ -163,7 +163,6 @@ struct DocumentItemView: View {
                 ForEach(iconOptions, id: \.0) { name, icon in
                     Button(action: { updateIcon(icon) }) {
                         Label(name, systemImage: icon)
-                            .foregroundStyle(colorForDocument(document))
                     }
                 }
             }
@@ -185,7 +184,7 @@ struct DocumentItemView: View {
             Button(action: {
                 viewModel.updateDocument(document, isFavorite: !document.isFavorite)
             }) {
-                Label(document.isFavorite ? "Unfavorite" : "Favorite", systemImage: document.isFavorite ? "star.slash" : "star")
+                menuActionLabel(document.isFavorite ? "Unfavorite" : "Favorite", systemImage: document.isFavorite ? "star.slash" : "star")
             }
 
             Divider()
@@ -193,7 +192,7 @@ struct DocumentItemView: View {
             Button(action: {
                 viewModel.takeSnapshotOfDocument(document)
             }) {
-                Label("Take Snapshot", systemImage: "camera.circle")
+                menuActionLabel("Take Snapshot", systemImage: "camera.circle")
             }
 
             Divider()
@@ -201,14 +200,14 @@ struct DocumentItemView: View {
             Button(action: {
                 viewModel.showRenameAlert(for: document)
             }) {
-                Label("Rename Document", systemImage: "pencil")
+                menuActionLabel("Rename Document", systemImage: "pencil")
             }
 
             if viewModel.isDocumentInTrash(document) {
                 Button(action: {
                     viewModel.restoreDocumentFromTrash(document)
                 }) {
-                    Label("Restore", systemImage: "arrow.uturn.backward")
+                    menuActionLabel("Restore", systemImage: "arrow.uturn.backward")
                 }
 
                 Button(role: .destructive, action: {
@@ -244,7 +243,7 @@ struct DocumentItemView: View {
                 } label: {
                     Label("Rename", systemImage: "pencil")
                 }
-                .tint(.blue)
+                .tint(.accentColor)
 
                 Button(role: .destructive, action: {
                     viewModel.moveDocumentToTrash(document)
@@ -269,7 +268,6 @@ struct DocumentItemView: View {
                         ForEach(iconOptions, id: \.0) { name, icon in
                             Button(action: { updateIcon(icon) }) {
                                 Label(name, systemImage: icon)
-                                    .foregroundStyle(colorForDocument(document))
                             }
                         }
                     }
@@ -291,7 +289,7 @@ struct DocumentItemView: View {
                     Button(action: {
                         viewModel.updateDocument(document, isFavorite: !document.isFavorite)
                     }) {
-                        Label(document.isFavorite ? "Unfavorite" : "Favorite", systemImage: document.isFavorite ? "star.slash" : "star")
+                        menuActionLabel(document.isFavorite ? "Unfavorite" : "Favorite", systemImage: document.isFavorite ? "star.slash" : "star")
                     }
 
                     Divider()
@@ -299,7 +297,7 @@ struct DocumentItemView: View {
                     Button(action: {
                         viewModel.takeSnapshotOfDocument(document)
                     }) {
-                        Label("Take Snapshot", systemImage: "camera.circle")
+                        menuActionLabel("Take Snapshot", systemImage: "camera.circle")
                     }
 
                     Divider()
@@ -308,14 +306,14 @@ struct DocumentItemView: View {
                         editingTitle = document.title
                         viewModel.documentIdBeingRenamed = documentId
                     }) {
-                        Label("Rename Document", systemImage: "pencil")
+                        menuActionLabel("Rename Document", systemImage: "pencil")
                     }
 
                     if viewModel.isDocumentInTrash(document) {
                         Button(action: {
                             viewModel.restoreDocumentFromTrash(document)
                         }) {
-                            Label("Restore", systemImage: "arrow.uturn.backward")
+                            menuActionLabel("Restore", systemImage: "arrow.uturn.backward")
                         }
 
                         Button(role: .destructive, action: {
@@ -360,5 +358,15 @@ struct DocumentItemView: View {
     private func updateNoteColor(_ newColor: Color) {
         let colorName = colorOptions.first { $0.1 == newColor }?.0 ?? "Brown"
         viewModel.updateDocumentColor(document, colorName: colorName)
+    }
+
+    @ViewBuilder
+    private func menuActionLabel(_ title: String, systemImage: String) -> some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
+        }
     }
 }

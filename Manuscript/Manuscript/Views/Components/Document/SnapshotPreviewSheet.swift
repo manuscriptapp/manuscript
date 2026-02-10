@@ -126,8 +126,8 @@ struct SnapshotPreviewSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
+                ToolbarItem(placement: .confirmationAction) {
+                    ManuscriptDoneButton {
                         isPresented = false
                     }
                 }

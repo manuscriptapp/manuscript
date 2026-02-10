@@ -182,7 +182,7 @@ struct WorldMapView: View {
                         Text("Static preview")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Button("Done") {
+                        ManuscriptDoneButton {
                             showLookAround = false
                         }
                         .keyboardShortcut(.escape, modifiers: [])

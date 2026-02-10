@@ -128,9 +128,10 @@ struct ManuscriptProjectView: View {
             .sheet(isPresented: $showSettings) {
                 NavigationStack {
                     SettingsView()
+                        .environmentObject(backupManager)
                         .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Done") {
+                            ToolbarItem(placement: .confirmationAction) {
+                                ManuscriptDoneButton {
                                     showSettings = false
                                 }
                             }
@@ -145,8 +146,8 @@ struct ManuscriptProjectView: View {
                         .navigationBarTitleDisplayMode(.inline)
                         #endif
                         .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Done") {
+                            ToolbarItem(placement: .confirmationAction) {
+                                ManuscriptDoneButton {
                                     showReadingMode = false
                                 }
                             }

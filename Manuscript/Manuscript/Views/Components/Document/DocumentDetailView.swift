@@ -16,6 +16,7 @@ struct DocumentDetailView: View {
     @State private var elevenLabsSettings = ElevenLabsSettingsManager.shared
     @State private var showAudioPlayer = false
     @State private var showExportSheet = false
+    @EnvironmentObject private var backupManager: BackupManager
     #if os(macOS)
     @AppStorage("showFormattingToolbar") private var showFormattingToolbar: Bool = true
     @StateObject private var syncService = ICloudSyncService()
@@ -135,9 +136,10 @@ struct DocumentDetailView: View {
     private var settingsSheet: some View {
         NavigationStack {
             SettingsView()
+                .environmentObject(backupManager)
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Done") { showSettings = false }
+                    ToolbarItem(placement: .confirmationAction) {
+                        ManuscriptDoneButton { showSettings = false }
                     }
                 }
         }

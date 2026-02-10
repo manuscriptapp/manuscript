@@ -44,7 +44,7 @@ struct MediaItemView: View {
         if let hexColor = mediaItem.iconColor {
             return Color(hex: hexColor) ?? .accentColor
         }
-        return mediaItem.mediaType == .image ? .purple : .orange
+        return .brown
     }
 
     @ViewBuilder
@@ -53,7 +53,7 @@ struct MediaItemView: View {
         Button {
             selection = .mediaItem(mediaItem)
         } label: {
-            Label("View", systemImage: "eye")
+            menuActionLabel("View", systemImage: "eye")
         }
 
         Divider()
@@ -62,7 +62,7 @@ struct MediaItemView: View {
         Button {
             viewModel.showRenameAlert(for: mediaItem)
         } label: {
-            Label("Rename", systemImage: "pencil")
+            menuActionLabel("Rename", systemImage: "pencil")
         }
 
         Divider()
@@ -72,7 +72,7 @@ struct MediaItemView: View {
             Button {
                 viewModel.restoreMediaItemFromTrash(mediaItem)
             } label: {
-                Label("Restore", systemImage: "arrow.uturn.backward")
+                menuActionLabel("Restore", systemImage: "arrow.uturn.backward")
             }
 
             Button(role: .destructive) {
@@ -86,6 +86,16 @@ struct MediaItemView: View {
             } label: {
                 Label("Move to Trash", systemImage: "trash")
             }
+        }
+    }
+
+    @ViewBuilder
+    private func menuActionLabel(_ title: String, systemImage: String) -> some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
         }
     }
 }
@@ -150,7 +160,7 @@ struct MediaItemCard: View {
             Button {
                 viewModel.showRenameAlert(for: mediaItem)
             } label: {
-                Label("Rename", systemImage: "pencil")
+                menuActionLabel("Rename", systemImage: "pencil")
             }
 
             Button(role: .destructive) {
@@ -165,7 +175,17 @@ struct MediaItemCard: View {
         if let hexColor = mediaItem.iconColor {
             return Color(hex: hexColor) ?? .accentColor
         }
-        return mediaItem.mediaType == .image ? .purple : .orange
+        return .brown
+    }
+
+    @ViewBuilder
+    private func menuActionLabel(_ title: String, systemImage: String) -> some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
+        }
     }
 
     @ViewBuilder
