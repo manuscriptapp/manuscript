@@ -14,6 +14,7 @@ private struct AdaptiveSidebarIcon: View {
 
 struct ProjectSidebar: View {
     @Environment(\.appTheme) private var appTheme
+    @Environment(\.editMode) private var editMode
     @ObservedObject var viewModel: DocumentViewModel
     @Binding var detailSelection: DetailSelection?
     @Binding var isAddDocumentSheetPresented: Bool
@@ -52,6 +53,9 @@ struct ProjectSidebar: View {
     }
 
     private let brownColor: Color = .brown
+    private var isReordering: Bool {
+        editMode?.wrappedValue == .active
+    }
 
     var body: some View {
         // Create a typed binding to help with type inference
@@ -263,7 +267,11 @@ struct ProjectSidebar: View {
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) {
-                EditButton()
+                Button(isReordering ? "Done" : "Reorder") {
+                    withAnimation {
+                        editMode?.wrappedValue = isReordering ? .inactive : .active
+                    }
+                }
             }
 
             // iOS: Quick actions in bottom bar
@@ -276,44 +284,51 @@ struct ProjectSidebar: View {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button(action: { showReadingMode = true }) {
-                        Label("Read Mode", systemImage: "book")
+                        menuActionLabel("Read Mode", systemImage: "book")
                     }
 
                     Divider()
 
                     Button(action: { isAddFolderSheetPresented.toggle() }) {
-                        Label("Add Folder", systemImage: "folder.badge.plus")
+                        menuActionLabel("Add Folder", systemImage: "folder.badge.plus")
                     }
 
                     Button(action: { addDocumentToSelectedFolder() }) {
-                        Label("Add Document", systemImage: "doc.badge.plus")
+                        menuActionLabel("Add Document", systemImage: "doc.badge.plus")
                     }
 
                     Button(action: { showImportDocumentSheet = true }) {
-                        Label("Import Document...", systemImage: "square.and.arrow.down")
+                        menuActionLabel("Import Document...", systemImage: "square.and.arrow.down")
                     }
 
                     Divider()
 
                     Button(action: { isAddCharacterSheetPresented.toggle() }) {
-                        Label("Add Character", systemImage: "person.badge.plus")
+                        menuActionLabel("Add Character", systemImage: "person.badge.plus")
                     }
 
                     Button(action: { isAddLocationSheetPresented.toggle() }) {
-                        Label("Add Location", systemImage: "mappin.and.ellipse")
+                        menuActionLabel("Add Location", systemImage: "mappin.and.ellipse")
                     }
 
                     Divider()
 
                     Button(action: { detailSelection = .projectInfo }) {
-                        Label("Project Info", systemImage: "info.circle")
+                        menuActionLabel("Project Info", systemImage: "info.circle")
                     }
 
                     Button(action: { showSettings = true }) {
-                        Label("Settings", systemImage: "gear")
+                        menuActionLabel("Settings", systemImage: "gear")
                     }
                 } label: {
-                    Label("More", systemImage: "ellipsis.circle")
+                    Image(systemName: "plus")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 30, height: 30)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(brownColor)
+                        )
                 }
             }
             #endif
@@ -495,6 +510,16 @@ struct ProjectSidebar: View {
             return viewModel.findParentFolder(of: doc) ?? viewModel.rootFolder
         }
         return viewModel.rootFolder
+    }
+
+    @ViewBuilder
+    private func menuActionLabel(_ title: String, systemImage: String) -> some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(brownColor)
+        }
     }
 }
 
