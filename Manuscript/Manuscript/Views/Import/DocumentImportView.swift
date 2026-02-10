@@ -2,7 +2,7 @@
 //  DocumentImportView.swift
 //  Manuscript
 //
-//  View for importing external documents (DOCX, PDF, HTML) into a Manuscript project.
+//  View for importing external documents (DOCX, PDF, HTML, Markdown, Text) into a Manuscript project.
 //
 
 import SwiftUI
@@ -18,6 +18,8 @@ enum ImportFileType: String, CaseIterable, Identifiable {
     case doc = "Word Document (.doc)"
     case pdf = "PDF Document (.pdf)"
     case html = "HTML Document (.html)"
+    case markdown = "Markdown (.md)"
+    case text = "Text Document (.txt)"
 
     var id: String { rawValue }
 
@@ -31,6 +33,10 @@ enum ImportFileType: String, CaseIterable, Identifiable {
             return [.pdf]
         case .html:
             return [UTType.html, UTType(filenameExtension: "html"), UTType(filenameExtension: "htm")].compactMap { $0 }
+        case .markdown:
+            return [UTType(filenameExtension: "md"), UTType(filenameExtension: "markdown")].compactMap { $0 }
+        case .text:
+            return [.plainText, UTType(filenameExtension: "txt")].compactMap { $0 }
         }
     }
 
@@ -40,7 +46,7 @@ enum ImportFileType: String, CaseIterable, Identifiable {
 
     static var availableCases: [ImportFileType] {
         #if os(iOS)
-        return [.pdf, .html]
+        return [.pdf, .html, .markdown, .text]
         #else
         return allCases
         #endif
@@ -58,6 +64,10 @@ enum ImportFileType: String, CaseIterable, Identifiable {
             return "doc.richtext"
         case .html:
             return "chevron.left.slash.chevron.right"
+        case .markdown:
+            return "doc.text"
+        case .text:
+            return "doc.plaintext"
         }
     }
 
@@ -72,6 +82,10 @@ enum ImportFileType: String, CaseIterable, Identifiable {
             return .pdf
         case "html", "htm":
             return .html
+        case "md", "markdown":
+            return .markdown
+        case "txt":
+            return .text
         default:
             return nil
         }
@@ -492,6 +506,8 @@ struct DocumentImportView: View {
                 result = PDFImporter().validate(at: url)
             case .html:
                 result = HTMLImporter().validate(at: url)
+            case .markdown, .text:
+                result = TextMarkdownImporter().validate(at: url)
             }
 
             await MainActor.run {
@@ -542,6 +558,16 @@ struct DocumentImportView: View {
                     }
                 case .html:
                     result = try await HTMLImporter().importDocument(
+                        from: url,
+                        options: options
+                    ) { prog, status in
+                        Task { @MainActor in
+                            self.progress = prog
+                            self.statusMessage = status
+                        }
+                    }
+                case .markdown, .text:
+                    result = try await TextMarkdownImporter().importDocument(
                         from: url,
                         options: options
                     ) { prog, status in
