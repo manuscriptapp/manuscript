@@ -154,7 +154,7 @@ struct WelcomeView: View {
                         #endif
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
-                                Button("Done") {
+                                ManuscriptDoneButton {
                                     isShowingHowItWorks = false
                                 }
                             }

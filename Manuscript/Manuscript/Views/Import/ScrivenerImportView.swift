@@ -293,11 +293,13 @@ struct ScrivenerImportView: View {
 
             Spacer()
 
-            Button("Done") {
-                onImportComplete?(result.document)
-                dismiss()
+            HStack {
+                Spacer()
+                ManuscriptDoneButton {
+                    onImportComplete?(result.document)
+                    dismiss()
+                }
             }
-            .manuscriptPrimaryButton()
         }
     }
 

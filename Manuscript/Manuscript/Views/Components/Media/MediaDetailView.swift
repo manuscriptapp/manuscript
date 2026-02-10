@@ -51,7 +51,7 @@ struct MediaDetailView: View {
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
-                                Button("Done") {
+                                ManuscriptDoneButton {
                                     showInspector = false
                                 }
                             }

@@ -138,8 +138,8 @@ struct DocumentDetailView: View {
             SettingsView()
                 .environmentObject(backupManager)
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Done") { showSettings = false }
+                    ToolbarItem(placement: .confirmationAction) {
+                        ManuscriptDoneButton { showSettings = false }
                     }
                 }
         }
