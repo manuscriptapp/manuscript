@@ -182,6 +182,9 @@ struct SettingsView: View {
 
             Section("About") {
                 LabeledContent("Version", value: appVersion)
+                Link("Privacy Policy", destination: URL(string: "https://manuscriptapp.github.io/manuscript/privacy")!)
+                Link("Terms of Service", destination: URL(string: "https://manuscriptapp.github.io/manuscript/terms")!)
+                Link("Support", destination: URL(string: "https://manuscriptapp.github.io/manuscript/support")!)
             }
         }
         .formStyle(.grouped)
@@ -237,6 +240,9 @@ struct SettingsView: View {
 
                 Section("About") {
                     LabeledContent("Version", value: appVersion)
+                    Link("Privacy Policy", destination: URL(string: "https://manuscriptapp.github.io/manuscript/privacy")!)
+                    Link("Terms of Service", destination: URL(string: "https://manuscriptapp.github.io/manuscript/terms")!)
+                    Link("Support", destination: URL(string: "https://manuscriptapp.github.io/manuscript/support")!)
                 }
 
             case .format:
