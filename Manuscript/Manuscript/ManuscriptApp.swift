@@ -229,9 +229,36 @@ struct LaunchNewDocumentView: View {
     @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
+    @State private var selectedTemplateId: String?
 
     private var trimmedTitle: String {
         title.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func createDocument() {
+        if let selectedTemplateId,
+           let template = BookTemplate.templates.first(where: { $0.id == selectedTemplateId }) {
+            print("📝 [LaunchNewDocumentView] Creating document from template: \(template.name)")
+            let document = ManuscriptDocument.fromTemplate(template, title: trimmedTitle)
+            print("   - Document created with title: '\(document.title)'")
+            print("   - Continuation available: \(continuation != nil)")
+            continuation?.resume(returning: document)
+        } else {
+            print("📝 [LaunchNewDocumentView] Creating blank document")
+            var document = ManuscriptDocument()
+            document.title = trimmedTitle
+            print("   - Document created with title: '\(document.title)'")
+            print("   - Continuation available: \(continuation != nil)")
+            continuation?.resume(returning: document)
+        }
+
+        continuation = nil
+        dismiss()
+    }
+
+    private func selectionOverlay(isSelected: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 16)
+            .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 3)
     }
 
     var body: some View {
@@ -252,33 +279,22 @@ struct LaunchNewDocumentView: View {
                     }
                     .padding(.bottom, 4)
 
-                    // Blank option - styled like a template card
+                    // Blank option - default selected
                     Button {
-                        print("📝 [LaunchNewDocumentView] Creating blank document")
-                        var document = ManuscriptDocument()
-                        document.title = trimmedTitle
-                        print("   - Document created with title: '\(document.title)'")
-                        print("   - Continuation available: \(continuation != nil)")
-                        continuation?.resume(returning: document)
-                        continuation = nil
-                        dismiss()
+                        selectedTemplateId = nil
                     } label: {
                         LaunchBlankCard()
+                            .overlay(selectionOverlay(isSelected: selectedTemplateId == nil))
                     }
                     .buttonStyle(.plain)
 
                     // Template options - reuse LaunchTemplateCard
                     ForEach(BookTemplate.templates) { template in
                         Button {
-                            print("📝 [LaunchNewDocumentView] Creating document from template: \(template.name)")
-                            let document = ManuscriptDocument.fromTemplate(template, title: trimmedTitle)
-                            print("   - Document created with title: '\(document.title)'")
-                            print("   - Continuation available: \(continuation != nil)")
-                            continuation?.resume(returning: document)
-                            continuation = nil
-                            dismiss()
+                            selectedTemplateId = template.id
                         } label: {
                             LaunchTemplateCard(template: template)
+                                .overlay(selectionOverlay(isSelected: selectedTemplateId == template.id))
                         }
                         .buttonStyle(.plain)
                     }
@@ -297,11 +313,19 @@ struct LaunchNewDocumentView: View {
                         dismiss()
                     }
                 }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Create") {
+                        createDocument()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
         }
         .onAppear {
             print("📝 [LaunchNewDocumentView] Sheet appeared")
             print("   - Continuation available: \(continuation != nil)")
+            selectedTemplateId = nil
         }
     }
 }
@@ -857,6 +881,8 @@ struct ManuscriptApp: App {
 
     // iOS 18 DocumentGroupLaunchScene state
     #if os(iOS)
+    @State private var newDocContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
+    @State private var isNewDocPresented = false
     @State private var importContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @State private var isScrivenerImportPresented = false
     #endif
@@ -1039,8 +1065,22 @@ struct ManuscriptApp: App {
         #if os(iOS)
         DocumentGroupLaunchScene("") {
             NewDocumentButton("New Manuscript", for: ManuscriptDocument.self) {
-                print("🆕 [DocumentGroupLaunchScene] Creating blank manuscript")
-                return ManuscriptDocument()
+                print("🆕 [DocumentGroupLaunchScene] 'New Manuscript' button tapped")
+                do {
+                    let result = try await withCheckedThrowingContinuation { continuation in
+                        print("   - Setting up continuation for new document")
+                        self.newDocContinuation = continuation
+                        self.isNewDocPresented = true
+                    }
+                    print("   - Continuation resolved with document: \(result?.title ?? "nil")")
+                    return result
+                } catch {
+                    print("❌ [DocumentGroupLaunchScene] Error creating new document: \(error)")
+                    throw error
+                }
+            }
+            .sheet(isPresented: $isNewDocPresented) {
+                LaunchNewDocumentView(continuation: $newDocContinuation)
             }
 
             NewDocumentButton("Import Scrivener Project", for: ManuscriptDocument.self) {
