@@ -386,7 +386,7 @@ struct LaunchScrivenerImportView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
             }
-            .buttonStyle(.borderedProminent)
+            .manuscriptPrimaryButton()
 
             Spacer()
             Spacer()
@@ -468,7 +468,7 @@ struct LaunchScrivenerImportView: View {
                         } label: {
                             Label("Import", systemImage: "square.and.arrow.down")
                         }
-                        .buttonStyle(.borderedProminent)
+                        .manuscriptPrimaryButton()
                     }
                 }
             }
@@ -523,7 +523,7 @@ struct LaunchScrivenerImportView: View {
                 selectedURL = nil
                 validationResult = nil
             }
-            .buttonStyle(.borderedProminent)
+            .manuscriptPrimaryButton()
 
             Spacer()
         }

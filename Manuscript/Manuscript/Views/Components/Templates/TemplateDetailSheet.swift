@@ -474,7 +474,7 @@ struct TemplateDetailSheet: View {
                     Button("Create Book") {
                         showingNewBookSheet = true
                     }
-                    .buttonStyle(.borderedProminent)
+                    .manuscriptPrimaryButton()
                 }
             }
             .sheet(isPresented: $showingNewBookSheet) {

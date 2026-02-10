@@ -107,7 +107,7 @@ struct ScrivenerImportView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
             }
-            .buttonStyle(.borderedProminent)
+            .manuscriptPrimaryButton()
         }
     }
 
@@ -216,7 +216,7 @@ struct ScrivenerImportView: View {
                     Button(action: startImport) {
                         Label("Import Project", systemImage: "square.and.arrow.down")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .manuscriptPrimaryButton()
                 }
             }
         }
@@ -297,7 +297,7 @@ struct ScrivenerImportView: View {
                 onImportComplete?(result.document)
                 dismiss()
             }
-            .buttonStyle(.borderedProminent)
+            .manuscriptPrimaryButton()
         }
     }
 
@@ -331,7 +331,7 @@ struct ScrivenerImportView: View {
                 Button("Close") {
                     dismiss()
                 }
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
             }
         }
     }

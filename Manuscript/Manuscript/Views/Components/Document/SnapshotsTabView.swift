@@ -59,7 +59,7 @@ struct SnapshotsTabView: View {
                     } label: {
                         Label("Take Snapshot", systemImage: "camera.circle")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .manuscriptPrimaryButton()
                     .padding(.top, 8)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

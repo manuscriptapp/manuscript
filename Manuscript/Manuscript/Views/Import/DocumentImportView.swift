@@ -223,7 +223,7 @@ struct DocumentImportView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
             }
-            .buttonStyle(.borderedProminent)
+            .manuscriptPrimaryButton()
         }
     }
 
@@ -341,7 +341,7 @@ struct DocumentImportView: View {
                     Button(action: startImport) {
                         Label("Import Document", systemImage: "square.and.arrow.down")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .manuscriptPrimaryButton()
                 }
             }
         }
@@ -423,7 +423,7 @@ struct DocumentImportView: View {
                 onImportComplete?(result.document)
                 dismiss()
             }
-            .buttonStyle(.borderedProminent)
+            .manuscriptPrimaryButton()
         }
     }
 
@@ -457,7 +457,7 @@ struct DocumentImportView: View {
                 Button("Close") {
                     dismiss()
                 }
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
             }
         }
     }

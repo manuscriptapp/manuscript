@@ -281,7 +281,7 @@ struct ProjectInfoView: View {
                                     .padding(10)
                                     .frame(maxWidth: .infinity)
                             }
-                            .buttonStyle(.borderedProminent)
+                            .manuscriptPrimaryButton()
                         } else {
                             Button(action: {
                                 if selectedGenres.contains(genre) {
@@ -491,7 +491,7 @@ struct ProjectInfoView: View {
                                         .padding(10)
                                         .frame(maxWidth: .infinity)
                                 }
-                                .buttonStyle(.borderedProminent)
+                                .manuscriptPrimaryButton()
                             } else {
                                 Button(action: {
                                     if selectedGenres.contains(genre) {
@@ -689,7 +689,7 @@ struct ProjectInfoView: View {
                             .padding(10)
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .manuscriptPrimaryButton()
                 } else {
                     Button(action: { 
                         selectedStyle.wrappedValue = style == selectedStyle.wrappedValue ? "" : style

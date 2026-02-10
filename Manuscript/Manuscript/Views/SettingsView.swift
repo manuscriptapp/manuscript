@@ -627,7 +627,7 @@ struct SettingsView: View {
                 Button("Save") {
                     saveElevenLabsKey()
                 }
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
                 .controlSize(.small)
             }
         }
@@ -677,7 +677,7 @@ struct SettingsView: View {
                 Button("Save") {
                     saveOpenAIKey()
                 }
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
                 .controlSize(.small)
             }
         }
@@ -731,7 +731,7 @@ struct SettingsView: View {
                 Button("Save") {
                     saveClaudeKey()
                 }
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
                 .controlSize(.small)
             }
         }

@@ -610,7 +610,7 @@ struct DocumentInspectorView: View {
                                     Label("Generate", systemImage: "arrow.up.circle.fill")
                                         .font(.headline)
                                 }
-                                .buttonStyle(.borderedProminent)
+                                .manuscriptPrimaryButton()
                                 .tint(.accentColor)
                                 .disabled(chatText.isEmpty || isGenerating)
                             }
@@ -721,7 +721,7 @@ struct DocumentInspectorView: View {
                                             isAddingComment = false
                                         }
                                     }
-                                    .buttonStyle(.borderedProminent)
+                                    .manuscriptPrimaryButton()
                                     .disabled(newCommentText.isEmpty)
                                 }
                             }

@@ -43,7 +43,7 @@ struct AddMediaSheet: View {
                     Label("Choose Files", systemImage: "folder")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
                 .padding(.horizontal, 40)
 
                 Spacer()

@@ -57,7 +57,7 @@ struct FeedbackView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .controlSize(.large)
-                .buttonStyle(.borderedProminent)
+                .manuscriptPrimaryButton()
                 .disabled(title.isEmpty || description.isEmpty)
             }
             
