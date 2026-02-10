@@ -24,13 +24,13 @@ A soft launch allows us to:
 ### Actions
 | Task | Owner | Status |
 |------|-------|:------:|
-| Test document creation/editing | Internal | 🔴 |
-| Test save/load cycle | Internal | 🔴 |
+| Test document creation/editing | Internal | 🟡 |
+| Test save/load cycle | Internal | 🟡 |
 | Test on iPhone (multiple sizes) | Internal | 🔴 |
 | Test on iPad | Internal | 🔴 |
 | Test on Mac (Intel + Apple Silicon) | Internal | 🔴 |
 | Test CloudKit sync between devices | Internal | 🔴 |
-| Create bug tracking system | Internal | 🔴 |
+| Create bug tracking system | Internal | ✅ |
 
 ### Success Criteria
 - [ ] No crashes in 24 hours of normal use
@@ -60,11 +60,11 @@ A soft launch allows us to:
 ### TestFlight Setup
 | Task | Status |
 |------|:------:|
-| Create TestFlight group | 🔴 |
-| Write beta tester invitation | 🔴 |
+| Create TestFlight group | 🟡 |
+| Write beta tester invitation | 🟡 |
 | Create feedback survey | 🔴 |
-| Set up crash reporting | 🔴 |
-| Define beta version numbering | 🔴 |
+| Set up crash reporting | 🟡 |
+| Define beta version numbering | ✅ |
 
 ### Feedback Collection
 - In-app feedback button (FeedbackView.swift exists)
@@ -247,4 +247,4 @@ The soft launch is successful if:
 
 ---
 
-*Last updated: January 22, 2026*
+*Last updated: February 10, 2026*
