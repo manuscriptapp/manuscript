@@ -229,9 +229,36 @@ struct LaunchNewDocumentView: View {
     @Binding var continuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
+    @State private var selectedTemplateId: String?
 
     private var trimmedTitle: String {
         title.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func createDocument() {
+        if let selectedTemplateId,
+           let template = BookTemplate.templates.first(where: { $0.id == selectedTemplateId }) {
+            print("📝 [LaunchNewDocumentView] Creating document from template: \(template.name)")
+            let document = ManuscriptDocument.fromTemplate(template, title: trimmedTitle)
+            print("   - Document created with title: '\(document.title)'")
+            print("   - Continuation available: \(continuation != nil)")
+            continuation?.resume(returning: document)
+        } else {
+            print("📝 [LaunchNewDocumentView] Creating blank document")
+            var document = ManuscriptDocument()
+            document.title = trimmedTitle
+            print("   - Document created with title: '\(document.title)'")
+            print("   - Continuation available: \(continuation != nil)")
+            continuation?.resume(returning: document)
+        }
+
+        continuation = nil
+        dismiss()
+    }
+
+    private func selectionOverlay(isSelected: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 16)
+            .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 3)
     }
 
     var body: some View {
@@ -246,44 +273,29 @@ struct LaunchNewDocumentView: View {
                             .textFieldStyle(.roundedBorder)
                             .textInputAutocapitalization(.words)
 
-                        if trimmedTitle.isEmpty {
-                            Text("Title is required to create a new manuscript.")
-                                .font(.caption)
-                                .foregroundStyle(.red)
-                        }
+                        Text("Optional — you can add a title later.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.bottom, 4)
 
-                    // Blank option - styled like a template card
+                    // Blank option - default selected
                     Button {
-                        print("📝 [LaunchNewDocumentView] Creating blank document")
-                        var document = ManuscriptDocument()
-                        document.title = trimmedTitle
-                        print("   - Document created with title: '\(document.title)'")
-                        print("   - Continuation available: \(continuation != nil)")
-                        continuation?.resume(returning: document)
-                        continuation = nil
-                        dismiss()
+                        selectedTemplateId = nil
                     } label: {
                         LaunchBlankCard()
+                            .overlay(selectionOverlay(isSelected: selectedTemplateId == nil))
                     }
-                    .disabled(trimmedTitle.isEmpty)
                     .buttonStyle(.plain)
 
                     // Template options - reuse LaunchTemplateCard
                     ForEach(BookTemplate.templates) { template in
                         Button {
-                            print("📝 [LaunchNewDocumentView] Creating document from template: \(template.name)")
-                            let document = ManuscriptDocument.fromTemplate(template, title: trimmedTitle)
-                            print("   - Document created with title: '\(document.title)'")
-                            print("   - Continuation available: \(continuation != nil)")
-                            continuation?.resume(returning: document)
-                            continuation = nil
-                            dismiss()
+                            selectedTemplateId = template.id
                         } label: {
                             LaunchTemplateCard(template: template)
+                                .overlay(selectionOverlay(isSelected: selectedTemplateId == template.id))
                         }
-                        .disabled(trimmedTitle.isEmpty)
                         .buttonStyle(.plain)
                     }
                 }
@@ -301,11 +313,19 @@ struct LaunchNewDocumentView: View {
                         dismiss()
                     }
                 }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Create") {
+                        createDocument()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
         }
         .onAppear {
             print("📝 [LaunchNewDocumentView] Sheet appeared")
             print("   - Continuation available: \(continuation != nil)")
+            selectedTemplateId = nil
         }
     }
 }
