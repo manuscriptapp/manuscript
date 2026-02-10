@@ -26,7 +26,7 @@ struct CharactersView: View {
                     Button {
                         viewModel.showRenameAlert(for: character)
                     } label: {
-                        Label("Rename", systemImage: "pencil")
+                        menuActionLabel("Rename", systemImage: "pencil")
                     }
                     
                     Button(role: .destructive) {
@@ -43,9 +43,19 @@ struct CharactersView: View {
                 Button {
                     viewModel.addCharacter(name: "New Character")
                 } label: {
-                    Label("Add Character", systemImage: "plus")
+                    menuActionLabel("Add Character", systemImage: "plus")
                 }
             }
         }
     }
-} 
+
+    @ViewBuilder
+    private func menuActionLabel(_ title: String, systemImage: String) -> some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
+        }
+    }
+}

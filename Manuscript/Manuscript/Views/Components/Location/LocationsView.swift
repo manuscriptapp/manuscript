@@ -20,7 +20,7 @@ struct LocationsView: View {
                     Button {
                         viewModel.showRenameAlert(for: location)
                     } label: {
-                        Label("Rename", systemImage: "pencil")
+                        menuActionLabel("Rename", systemImage: "pencil")
                     }
                     
                     Button(role: .destructive) {
@@ -37,9 +37,19 @@ struct LocationsView: View {
                 Button {
                     viewModel.addLocation(name: "New Location", latitude: 0, longitude: 0)
                 } label: {
-                    Label("Add Location", systemImage: "plus")
+                    menuActionLabel("Add Location", systemImage: "plus")
                 }
             }
         }
     }
-} 
+
+    @ViewBuilder
+    private func menuActionLabel(_ title: String, systemImage: String) -> some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
+        }
+    }
+}

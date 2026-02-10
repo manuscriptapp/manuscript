@@ -193,7 +193,7 @@ struct ProjectSidebar: View {
 
             Section {
                 NavigationLink(value: DetailSelection.favorites) {
-                    Label("Favorites", systemImage: "star.fill")
+                    menuActionLabel("Favorites", systemImage: "star.fill")
                 }
 
                 if viewModel.allKeywords.isEmpty {
@@ -202,7 +202,7 @@ struct ProjectSidebar: View {
                 } else {
                     ForEach(viewModel.allKeywords, id: \.self) { keyword in
                         NavigationLink(value: DetailSelection.keywordCollection(keyword)) {
-                            Label(keyword, systemImage: "tag")
+                            menuActionLabel(keyword, systemImage: "tag")
                         }
                     }
                 }
@@ -467,34 +467,34 @@ struct ProjectSidebar: View {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button(action: { isAddFolderSheetPresented.toggle() }) {
-                        Label("Add Folder", systemImage: "folder.badge.plus")
+                        menuActionLabel("Add Folder", systemImage: "folder.badge.plus")
                     }
 
                     Button(action: { addDocumentToSelectedFolder() }) {
-                        Label("Add Document", systemImage: "doc.badge.plus")
+                        menuActionLabel("Add Document", systemImage: "doc.badge.plus")
                     }
 
                     Button(action: { showImportDocumentSheet = true }) {
-                        Label("Import Document...", systemImage: "square.and.arrow.down")
+                        menuActionLabel("Import Document...", systemImage: "square.and.arrow.down")
                     }
 
                     Divider()
 
                     Button(action: { isAddCharacterSheetPresented.toggle() }) {
-                        Label("Add Character", systemImage: "person.badge.plus")
+                        menuActionLabel("Add Character", systemImage: "person.badge.plus")
                     }
 
                     Button(action: { isAddLocationSheetPresented.toggle() }) {
-                        Label("Add Location", systemImage: "mappin.and.ellipse")
+                        menuActionLabel("Add Location", systemImage: "mappin.and.ellipse")
                     }
 
                     Divider()
 
                     Button(action: { detailSelection = .projectInfo }) {
-                        Label("Project Info", systemImage: "info.circle")
+                        menuActionLabel("Project Info", systemImage: "info.circle")
                     }
                 } label: {
-                    Label("Add", systemImage: "plus")
+                    menuActionLabel("Add", systemImage: "plus")
                 }
             }
         }
