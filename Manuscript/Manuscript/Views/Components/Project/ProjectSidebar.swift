@@ -14,7 +14,9 @@ private struct AdaptiveSidebarIcon: View {
 
 struct ProjectSidebar: View {
     @Environment(\.appTheme) private var appTheme
+    #if os(iOS)
     @Environment(\.editMode) private var editMode
+    #endif
     @ObservedObject var viewModel: DocumentViewModel
     @Binding var detailSelection: DetailSelection?
     @Binding var isAddDocumentSheetPresented: Bool
@@ -53,9 +55,11 @@ struct ProjectSidebar: View {
     }
 
     private let brownColor: Color = .brown
+    #if os(iOS)
     private var isReordering: Bool {
         editMode?.wrappedValue == .active
     }
+    #endif
 
     var body: some View {
         // Create a typed binding to help with type inference

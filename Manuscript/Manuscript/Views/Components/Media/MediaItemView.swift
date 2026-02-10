@@ -44,7 +44,7 @@ struct MediaItemView: View {
         if let hexColor = mediaItem.iconColor {
             return Color(hex: hexColor) ?? .accentColor
         }
-        return mediaItem.mediaType == .image ? .purple : .orange
+        return .brown
     }
 
     @ViewBuilder
@@ -165,7 +165,7 @@ struct MediaItemCard: View {
         if let hexColor = mediaItem.iconColor {
             return Color(hex: hexColor) ?? .accentColor
         }
-        return mediaItem.mediaType == .image ? .purple : .orange
+        return .brown
     }
 
     @ViewBuilder

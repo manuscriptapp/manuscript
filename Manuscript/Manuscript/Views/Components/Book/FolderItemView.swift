@@ -93,8 +93,8 @@ struct FolderItemView: View {
             if let hexColor = folder.iconColor, let color = Color(hex: hexColor) {
                 return color
             }
-            // Default to blue
-            return .blue
+            // Default to brown accent
+            return .brown
         }
 
         private func colorForDocument(_ document: ManuscriptDocument.Document) -> Color {

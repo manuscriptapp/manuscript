@@ -163,7 +163,6 @@ struct DocumentItemView: View {
                 ForEach(iconOptions, id: \.0) { name, icon in
                     Button(action: { updateIcon(icon) }) {
                         Label(name, systemImage: icon)
-                            .foregroundStyle(colorForDocument(document))
                     }
                 }
             }
@@ -269,7 +268,6 @@ struct DocumentItemView: View {
                         ForEach(iconOptions, id: \.0) { name, icon in
                             Button(action: { updateIcon(icon) }) {
                                 Label(name, systemImage: icon)
-                                    .foregroundStyle(colorForDocument(document))
                             }
                         }
                     }
