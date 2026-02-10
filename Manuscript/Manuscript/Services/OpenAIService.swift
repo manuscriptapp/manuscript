@@ -113,7 +113,7 @@ actor OpenAIService {
     func generateText(
         prompt: String,
         systemPrompt: String? = nil,
-        model: OpenAIModel = .gpt4o,
+        model: OpenAIModel = .gpt5,
         temperature: Double = 0.7,
         maxTokens: Int? = nil
     ) async throws -> String {
@@ -147,7 +147,7 @@ actor OpenAIService {
         }
 
         let request = ChatCompletionRequest(
-            model: OpenAIModel.gpt4oMini.rawValue,
+            model: OpenAIModel.gpt5Mini.rawValue,
             messages: [.init(role: "user", content: "Hi")],
             temperature: 0,
             maxTokens: 5

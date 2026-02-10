@@ -29,92 +29,84 @@ enum AIModelProvider: String, CaseIterable, Identifiable {
 
 /// Available OpenAI models
 enum OpenAIModel: String, CaseIterable, Identifiable {
-    case gpt4o = "gpt-4o"
-    case gpt4oMini = "gpt-4o-mini"
-    case gpt4Turbo = "gpt-4-turbo"
-    case gpt4 = "gpt-4"
-    case gpt35Turbo = "gpt-3.5-turbo"
-    case o1 = "o1"
-    case o1Mini = "o1-mini"
-    case o1Pro = "o1-pro"
-    case o3Mini = "o3-mini"
+    case gpt5 = "gpt-5"
+    case gpt5Mini = "gpt-5-mini"
+    case gpt5Nano = "gpt-5-nano"
+    case o3 = "o3"
+    case o4Mini = "o4-mini"
+    case gpt41 = "gpt-4.1"
+    case gpt41Mini = "gpt-4.1-mini"
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
-        case .gpt4o:
-            return "GPT-4o (Recommended)"
-        case .gpt4oMini:
-            return "GPT-4o Mini (Fast & Affordable)"
-        case .gpt4Turbo:
-            return "GPT-4 Turbo"
-        case .gpt4:
-            return "GPT-4"
-        case .gpt35Turbo:
-            return "GPT-3.5 Turbo (Budget)"
-        case .o1:
-            return "o1 (Reasoning)"
-        case .o1Mini:
-            return "o1-mini (Fast Reasoning)"
-        case .o1Pro:
-            return "o1-pro (Advanced Reasoning)"
-        case .o3Mini:
-            return "o3-mini (Latest Reasoning)"
+        case .gpt5:
+            return "GPT-5 (Recommended)"
+        case .gpt5Mini:
+            return "GPT-5 Mini (Fast & Affordable)"
+        case .gpt5Nano:
+            return "GPT-5 Nano (Lowest Cost)"
+        case .o3:
+            return "o3 (Advanced Reasoning)"
+        case .o4Mini:
+            return "o4-mini (Fast Reasoning)"
+        case .gpt41:
+            return "GPT-4.1"
+        case .gpt41Mini:
+            return "GPT-4.1 Mini"
         }
     }
 
     var description: String {
         switch self {
-        case .gpt4o:
-            return "Most capable model, great for creative writing"
-        case .gpt4oMini:
-            return "Fast responses, lower cost"
-        case .gpt4Turbo:
-            return "Previous flagship model"
-        case .gpt4:
-            return "Original GPT-4"
-        case .gpt35Turbo:
-            return "Good for simple tasks, very affordable"
-        case .o1:
-            return "Advanced reasoning capabilities"
-        case .o1Mini:
-            return "Faster reasoning model"
-        case .o1Pro:
-            return "Most advanced reasoning"
-        case .o3Mini:
-            return "Latest compact reasoning model"
+        case .gpt5:
+            return "Most capable general-purpose model"
+        case .gpt5Mini:
+            return "Great balance of speed, quality, and cost"
+        case .gpt5Nano:
+            return "Ultra-fast responses at the lowest cost"
+        case .o3:
+            return "Best for deep reasoning and multi-step tasks"
+        case .o4Mini:
+            return "Fast reasoning model for everyday tasks"
+        case .gpt41:
+            return "High-quality previous-generation flagship"
+        case .gpt41Mini:
+            return "Efficient previous-generation general model"
         }
     }
 }
 
 /// Available Claude models
 enum ClaudeModel: String, CaseIterable, Identifiable {
+    case claude45Sonnet = "claude-sonnet-4-5"
     case claude4Opus = "claude-opus-4-20250514"
     case claude4Sonnet = "claude-sonnet-4-20250514"
     case claude35Sonnet = "claude-3-5-sonnet-20241022"
     case claude35Haiku = "claude-3-5-haiku-20241022"
-    case claude3Opus = "claude-3-opus-20240229"
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
+        case .claude45Sonnet:
+            return "Claude 4.5 Sonnet (Recommended)"
         case .claude4Opus:
             return "Claude 4 Opus (Most Capable)"
         case .claude4Sonnet:
-            return "Claude 4 Sonnet (Recommended)"
+            return "Claude 4 Sonnet"
         case .claude35Sonnet:
             return "Claude 3.5 Sonnet"
         case .claude35Haiku:
             return "Claude 3.5 Haiku (Fast)"
-        case .claude3Opus:
-            return "Claude 3 Opus"
         }
     }
 
     var description: String {
         switch self {
+        case .claude45Sonnet:
+            return "Best balance of quality, speed, and cost"
         case .claude4Opus:
             return "Most intelligent, best for complex creative writing"
         case .claude4Sonnet:
@@ -123,8 +115,6 @@ enum ClaudeModel: String, CaseIterable, Identifiable {
             return "Great all-around model"
         case .claude35Haiku:
             return "Fast responses, lower cost"
-        case .claude3Opus:
-            return "Previous generation flagship"
         }
     }
 }
@@ -226,14 +216,14 @@ final class AISettingsManager {
            let model = OpenAIModel(rawValue: modelRaw) {
             self.selectedOpenAIModel = model
         } else {
-            self.selectedOpenAIModel = .gpt4o
+            self.selectedOpenAIModel = .gpt5
         }
 
         if let modelRaw = userDefaults.string(forKey: DefaultsKey.claudeModel),
            let model = ClaudeModel(rawValue: modelRaw) {
             self.selectedClaudeModel = model
         } else {
-            self.selectedClaudeModel = .claude4Sonnet
+            self.selectedClaudeModel = .claude45Sonnet
         }
     }
 

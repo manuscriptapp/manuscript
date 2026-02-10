@@ -110,7 +110,7 @@ actor ClaudeAPIService {
     func generateText(
         prompt: String,
         systemPrompt: String? = nil,
-        model: ClaudeModel = .claude4Sonnet,
+        model: ClaudeModel = .claude45Sonnet,
         temperature: Double = 0.7,
         maxTokens: Int = 4096
     ) async throws -> String {
