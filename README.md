@@ -187,7 +187,7 @@ It was a dark and stormy night...
 - [x] Drag & drop reorder in sidebar
 - [x] Move documents/folders between locations
 
-**Phase 7: Advanced** (In Progress)
+**Phase 7: Advanced & Launch Prep** (In Progress)
 - [x] Find & replace
 - [x] Snapshots (version history)
 - [x] Corkboard view
@@ -204,6 +204,21 @@ It was a dark and stormy night...
 - [x] Import images
 - [ ] Auto backups
 - [ ] Snapshot comparison/diff view
+
+## Current Priorities (Q1 2026)
+
+The app is now focused on launch polish and stability.
+
+- **Performance pass** across large projects and long-form documents
+- **Accessibility audit** (VoiceOver, Dynamic Type, keyboard navigation)
+- **iOS DOCX import parity** with macOS
+- **AI expansion** with Apple Foundation Models and writing suggestions
+- **Launch readiness**: App Store assets, website updates, and bug bash
+
+For detailed execution planning, see:
+
+- [`meta/ACTION_PLAN.md`](meta/ACTION_PLAN.md)
+- [`meta/SOFT_LAUNCH_PLAN.md`](meta/SOFT_LAUNCH_PLAN.md)
 
 ## Contributing
 

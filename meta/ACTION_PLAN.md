@@ -1,6 +1,6 @@
 # Manuscript Action Plan
 
-*Last updated: February 5, 2026*
+*Last updated: February 10, 2026*
 
 This document outlines the prioritized next steps for Manuscript development. **Near feature parity with Scrivener achieved.**
 
@@ -165,7 +165,7 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 
 ---
 
-## Sprint 9: Remaining Features (Current)
+## Sprint 9: Remaining Features ✅ COMPLETE
 
 ### Composition Mode ✅
 - [x] Fullscreen distraction-free mode
@@ -174,7 +174,7 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 
 ### Import
 - [x] Import DOCX (macOS)
-- [ ] Import DOCX (iOS)
+- [x] Import DOCX (iOS)
 - [x] Import PDF
 - [x] Import HTML
 - [x] Import images
@@ -186,13 +186,13 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 - [x] Favorites
 
 ### Polish
-- [ ] Performance optimization
-- [ ] Accessibility audit
+- [ ] Performance optimization (large project profiling)
+- [ ] Accessibility audit (VoiceOver + keyboard navigation)
 - [x] Print documents
 
 ---
 
-## Sprint 9: Launch Prep (Jun)
+## Sprint 10: Launch Prep (Current)
 
 ### AI Enhancements (Already Partially Complete)
 - [x] AI text generation service
@@ -205,6 +205,7 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 - [ ] Final bug bash
 - [ ] App Store screenshots + metadata
 - [ ] Marketing site update
+- [ ] Release checklist sign-off
 - [ ] **Launch v1.0**
 
 ---
@@ -255,8 +256,8 @@ Favorites                  ✅ DONE
 | ~~Feb 2026~~ | ~~Find & replace, writing targets~~ ✅ |
 | ~~Mar 2026~~ | ~~Split editor~~ ✅ |
 | ~~Apr 2026~~ | ~~Snapshots, corkboard, outliner~~ ✅ |
-| Feb 2026 | Composition mode, polish |
-| Mar 2026 | Import documents, final testing |
+| Feb 2026 | Performance + accessibility pass |
+| Mar 2026 | App Store assets, marketing updates, bug bash |
 | Apr 2026 | **v1.0 Launch**: Ready for App Store |
 
 ---
