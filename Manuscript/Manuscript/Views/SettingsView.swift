@@ -78,6 +78,24 @@ struct SettingsView: View {
     private let indentSizeOptions = [12, 18, 24, 30, 36, 48]
     private let backupIntervalOptions: [Double] = [5, 15, 30, 60, 120, 240, 720]
 
+    @ViewBuilder
+    private func settingsNavigationLabel(_ title: String, systemImage: String) -> some View {
+        HStack {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
+            Text(title)
+        }
+    }
+
+    @ViewBuilder
+    private func settingsActionLabel(_ title: String, systemImage: String) -> some View {
+        HStack {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
+            Text(title)
+        }
+    }
+
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
@@ -96,31 +114,31 @@ struct SettingsView: View {
         TabView(selection: $selectedTab) {
             generalTabContent
                 .tabItem {
-                    Label(SettingsTab.general.rawValue, systemImage: SettingsTab.general.icon)
+                    settingsNavigationLabel(SettingsTab.general.rawValue, systemImage: SettingsTab.general.icon)
                 }
                 .tag(SettingsTab.general)
 
             formatTabContent
                 .tabItem {
-                    Label(SettingsTab.format.rawValue, systemImage: SettingsTab.format.icon)
+                    settingsNavigationLabel(SettingsTab.format.rawValue, systemImage: SettingsTab.format.icon)
                 }
                 .tag(SettingsTab.format)
 
             aiTabContent
                 .tabItem {
-                    Label(SettingsTab.ai.rawValue, systemImage: SettingsTab.ai.icon)
+                    settingsNavigationLabel(SettingsTab.ai.rawValue, systemImage: SettingsTab.ai.icon)
                 }
                 .tag(SettingsTab.ai)
 
             speechTabContent
                 .tabItem {
-                    Label(SettingsTab.speech.rawValue, systemImage: SettingsTab.speech.icon)
+                    settingsNavigationLabel(SettingsTab.speech.rawValue, systemImage: SettingsTab.speech.icon)
                 }
                 .tag(SettingsTab.speech)
 
             backupTabContent
                 .tabItem {
-                    Label(SettingsTab.backups.rawValue, systemImage: SettingsTab.backups.icon)
+                    settingsNavigationLabel(SettingsTab.backups.rawValue, systemImage: SettingsTab.backups.icon)
                 }
                 .tag(SettingsTab.backups)
         }
@@ -134,7 +152,7 @@ struct SettingsView: View {
             List {
                 ForEach(SettingsTab.allCases) { tab in
                     NavigationLink(value: tab) {
-                        Label(tab.rawValue, systemImage: tab.icon)
+                        settingsNavigationLabel(tab.rawValue, systemImage: tab.icon)
                     }
                 }
             }
@@ -333,9 +351,9 @@ struct SettingsView: View {
                 backupManager.performManualBackup()
             } label: {
                 if backupManager.isBackupInProgress {
-                    Label("Backing up…", systemImage: "arrow.triangle.2.circlepath")
+                    settingsActionLabel("Backing up…", systemImage: "arrow.triangle.2.circlepath")
                 } else {
-                    Label("Back Up Now", systemImage: "externaldrive.badge.plus")
+                    settingsActionLabel("Back Up Now", systemImage: "externaldrive.badge.plus")
                 }
             }
             .disabled(!backupManager.isDocumentReady || backupManager.isBackupInProgress)
@@ -521,6 +539,7 @@ struct SettingsView: View {
                                 .controlSize(.small)
                         } else {
                             Image(systemName: "arrow.clockwise")
+                                .foregroundStyle(Color.accentColor)
                         }
                     }
                     .buttonStyle(.plain)
@@ -539,6 +558,7 @@ struct SettingsView: View {
                                     .controlSize(.small)
                             } else {
                                 Image(systemName: "play.fill")
+                                    .foregroundStyle(Color.accentColor)
                             }
                             Text("Preview")
                         }
@@ -572,6 +592,7 @@ struct SettingsView: View {
                     Text("Testing...")
                 } else {
                     Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundStyle(Color.accentColor)
                     Text("Test Connection")
                 }
             }
@@ -755,6 +776,7 @@ struct SettingsView: View {
                     Text("Testing...")
                 } else {
                     Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundStyle(Color.accentColor)
                     Text("Test Connection")
                 }
             }
