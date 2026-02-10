@@ -246,11 +246,9 @@ struct LaunchNewDocumentView: View {
                             .textFieldStyle(.roundedBorder)
                             .textInputAutocapitalization(.words)
 
-                        if trimmedTitle.isEmpty {
-                            Text("Title is required to create a new manuscript.")
-                                .font(.caption)
-                                .foregroundStyle(.red)
-                        }
+                        Text("Optional — you can add a title later.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.bottom, 4)
 
@@ -267,7 +265,6 @@ struct LaunchNewDocumentView: View {
                     } label: {
                         LaunchBlankCard()
                     }
-                    .disabled(trimmedTitle.isEmpty)
                     .buttonStyle(.plain)
 
                     // Template options - reuse LaunchTemplateCard
@@ -283,7 +280,6 @@ struct LaunchNewDocumentView: View {
                         } label: {
                             LaunchTemplateCard(template: template)
                         }
-                        .disabled(trimmedTitle.isEmpty)
                         .buttonStyle(.plain)
                     }
                 }
@@ -861,8 +857,6 @@ struct ManuscriptApp: App {
 
     // iOS 18 DocumentGroupLaunchScene state
     #if os(iOS)
-    @State private var newDocContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
-    @State private var isNewDocPresented = false
     @State private var importContinuation: CheckedContinuation<ManuscriptDocument?, any Error>?
     @State private var isScrivenerImportPresented = false
     #endif
@@ -1045,22 +1039,8 @@ struct ManuscriptApp: App {
         #if os(iOS)
         DocumentGroupLaunchScene("") {
             NewDocumentButton("New Manuscript", for: ManuscriptDocument.self) {
-                print("🆕 [DocumentGroupLaunchScene] 'New Manuscript' button tapped")
-                do {
-                    let result = try await withCheckedThrowingContinuation { continuation in
-                        print("   - Setting up continuation for new document")
-                        self.newDocContinuation = continuation
-                        self.isNewDocPresented = true
-                    }
-                    print("   - Continuation resolved with document: \(result?.title ?? "nil")")
-                    return result
-                } catch {
-                    print("❌ [DocumentGroupLaunchScene] Error creating new document: \(error)")
-                    throw error
-                }
-            }
-            .sheet(isPresented: $isNewDocPresented) {
-                LaunchNewDocumentView(continuation: $newDocContinuation)
+                print("🆕 [DocumentGroupLaunchScene] Creating blank manuscript")
+                return ManuscriptDocument()
             }
 
             NewDocumentButton("Import Scrivener Project", for: ManuscriptDocument.self) {
