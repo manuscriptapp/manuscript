@@ -76,22 +76,6 @@ struct DocumentInspectorView: View {
         #endif
     }
     
-    #if os(iOS)
-    // Create a toolbar with a dismiss button for the keyboard
-    private var keyboardToolbar: some View {
-        HStack {
-            Spacer()
-            Button(action: dismissKeyboard) {
-                Text("Done")
-                    .fontWeight(.semibold)
-            }
-            .padding(.horizontal)
-        }
-        .frame(height: 44)
-        .background(Color(UIColor.systemGray6))
-    }
-    #endif
-    
     private func wrappedGenerateAction(style: GenerationStyle, prompt: String?) async {
         await generateAction(.outline, prompt)
     }
@@ -590,7 +574,7 @@ struct DocumentInspectorView: View {
                                 .toolbar {
                                     ToolbarItemGroup(placement: .keyboard) {
                                         Spacer()
-                                        Button("Done") {
+                                        ManuscriptDoneButton {
                                             dismissKeyboard()
                                         }
                                     }
@@ -913,7 +897,7 @@ struct DocumentInspectorView: View {
                         .toolbar {
                             ToolbarItemGroup(placement: .keyboard) {
                                 Spacer()
-                                Button("Done") {
+                                ManuscriptDoneButton {
                                     dismissKeyboard()
                                 }
                             }
@@ -940,7 +924,7 @@ struct DocumentInspectorView: View {
                         .toolbar {
                             ToolbarItemGroup(placement: .keyboard) {
                                 Spacer()
-                                Button("Done") {
+                                ManuscriptDoneButton {
                                     dismissKeyboard()
                                 }
                             }
