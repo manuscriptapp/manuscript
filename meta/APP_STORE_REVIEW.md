@@ -2,7 +2,7 @@
 
 A comprehensive guide for Manuscript's App Store submission, covering Apple's 2025-2026 requirements and specific action items.
 
-**Last Updated:** January 28, 2026
+**Last Updated:** February 10, 2026
 **Target Submission:** TBD
 **Current Readiness:** ~35-40%
 
@@ -16,6 +16,30 @@ Manuscript has solid core functionality but requires significant work on complia
 2. **App Icons** - Done (using Xcode 15+ single-source format)
 3. **Legal Documents** - Privacy Policy and Terms of Service
 4. **App Store Metadata** - Description, keywords, screenshots
+
+---
+
+## Submission Readiness Plan (Updated)
+
+This is the execution plan to move from the current state to "Ready to Submit." Treat each row as a gate for App Store Connect submission.
+
+| Gate | Owner | Deliverable | Status | Exit Criteria |
+|------|-------|-------------|:------:|---------------|
+| Legal | Team | Public Privacy Policy + Terms URLs | 🔴 | Both pages are live and linked in App Store Connect |
+| Product metadata | Team | Final name, subtitle, keywords, description | 🟡 | Copy finalized, reviewed against implemented features |
+| Visual assets | Team | iPhone + iPad + Mac screenshots | 🔴 | All required sizes exported with approved marketing captions |
+| Review metadata | Team | Age rating, support URL, marketing URL | 🔴 | Questionnaire completed and no required field missing |
+| Release quality | Team | Smoke-tested release build | 🟡 | No blocker bugs on iPhone, iPad, macOS |
+| Submission operations | Team | TestFlight build + notes | 🔴 | External-ready build uploaded and validated |
+
+### 30-Day Delivery Track
+
+| Week | Focus | Deliverables |
+|------|-------|--------------|
+| Week 1 | Compliance + legal | Privacy policy, terms, support page, privacy data confirmation |
+| Week 2 | Metadata | Finalized description, subtitle, keywords, category, age rating |
+| Week 3 | Screenshots + marketing copy | Approved screenshot set and localized captions |
+| Week 4 | Release prep | TestFlight round, bug triage, final App Store Connect entry |
 
 ---
 
@@ -278,23 +302,52 @@ writing,novel,screenplay,markdown,scrivener,author,manuscript,book,editor,distra
 | iPad Pro 12.9" | 2048 x 2732 | Landscape/Portrait |
 | Mac | 2880 x 1800 (or 1280x800 min) | Landscape |
 
-#### 4.2 Screenshot Scenes to Capture
+#### 4.2 App Store Screenshot Narrative Plan (Imagery + Copywriting)
 
-1. **Editor View** - Writing experience with formatted text
-2. **Binder/Sidebar** - Project organization
-3. **Character Database** - Character management
-4. **Corkboard View** - Visual story planning
-5. **Export Options** - PDF, EPUB, Markdown
-6. **Dark Mode** - Late-night writing
-7. **Focus Mode** - Distraction-free writing
-8. **Writing Targets** - Progress tracking
+Use a consistent visual system across all device classes:
+- **Palette:** warm paper tones + Manuscript blue accent
+- **Typography:** bold headline + short support line
+- **Composition:** app UI should remain primary (no heavy framing)
+- **Tone:** calm, ownership-focused, craft-oriented writing workflow
+- **Copy style:** 2-6 words headline, optional 6-10 words subline
 
-**Actions:**
-- [ ] Set up demo project with compelling content
-- [ ] Capture iPhone screenshots (Simulator)
-- [ ] Capture iPad screenshots (Simulator)
-- [ ] Capture Mac screenshots
-- [ ] Create App Store-ready frames with captions
+##### Suggested sequence (iPhone/iPad/Mac variants)
+
+| # | Feature Focus | Imagery Direction | Headline Copy | Optional Supporting Copy |
+|---|---------------|-------------------|---------------|--------------------------|
+| 1 | Core editor | Open manuscript draft with clean typography and active cursor | **Write without distractions** | Native editor built for long-form writing |
+| 2 | Binder organization | Sidebar showing chapters/scenes hierarchy | **Organize every chapter** | Keep projects structured from idea to final draft |
+| 3 | Character management | Character sheet with bio, traits, and notes | **Know your characters** | Track people, arcs, and details in one place |
+| 4 | Corkboard planning | Card-based scene board with statuses | **Plan visually with corkboard** | Rearrange scenes before you rewrite |
+| 5 | Focus mode / dark mode | Minimal UI writing surface in dark theme | **Stay in the writing flow** | Focus mode keeps attention on your words |
+| 6 | Export + ownership | Export sheet with Markdown, PDF, EPUB options | **Your files, your format** | Export anytime—no lock-in |
+
+##### Alternate copy variants (A/B options)
+
+- "Your story, your files"
+- "Built for serious drafting"
+- "From outline to final draft"
+- "Native on iPhone, iPad, Mac"
+- "Markdown you own forever"
+- "Privacy-first writing app"
+
+##### Capture direction by platform
+
+| Platform | Visual Notes |
+|----------|--------------|
+| iPhone | Prioritize editor readability and one clear UI action per shot |
+| iPad | Showcase split view, binder depth, and planning workflows |
+| Mac | Highlight dense project management + keyboard-first writing context |
+
+##### Screenshot production checklist
+
+- [ ] Create a single demo project used across all screenshots (same story world and names)
+- [ ] Prepare clean sample manuscript text (no lorem ipsum, no placeholder strings)
+- [ ] Capture raw screenshots for each required device size
+- [ ] Apply approved caption templates and safe margins
+- [ ] Verify no system alerts, debug UI, or inconsistent timestamps
+- [ ] Review metadata/copy parity with actual implemented features
+- [ ] Export final PNG sets by device class for App Store Connect upload
 
 ### Phase 5: Testing & Quality (Week 3)
 
