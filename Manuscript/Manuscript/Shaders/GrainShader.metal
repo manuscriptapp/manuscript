@@ -21,13 +21,13 @@ using namespace metal;
     half3 gradientColor;
     if (pos < 0.33) {
         float t = pos * 3.0;
-        gradientColor = mix(color1, color2, t);
+        gradientColor = mix(color1, color2, half(t));
     } else if (pos < 0.66) {
         float t = (pos - 0.33) * 3.0;
-        gradientColor = mix(color2, color3, t);
+        gradientColor = mix(color2, color3, half(t));
     } else {
         float t = (pos - 0.66) * 3.0;
-        gradientColor = mix(color3, color1, t);
+        gradientColor = mix(color3, color1, half(t));
     }
 
     // Apply gradient to text (multiply with original alpha)
