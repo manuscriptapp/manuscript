@@ -13,6 +13,9 @@ final class KeychainService {
     enum KeychainKey: String {
         case openAIAPIKey = "openai_api_key"
         case claudeAPIKey = "claude_api_key"
+        case geminiAPIKey = "gemini_api_key"
+        case grokAPIKey = "grok_api_key"
+        case deepSeekAPIKey = "deepseek_api_key"
         case elevenLabsAPIKey = "elevenlabs_api_key"
     }
 

@@ -44,17 +44,37 @@ struct SettingsView: View {
     // API Key input states
     @State private var openAIKeyInput: String = ""
     @State private var claudeKeyInput: String = ""
+    @State private var geminiKeyInput: String = ""
+    @State private var grokKeyInput: String = ""
+    @State private var deepSeekKeyInput: String = ""
     @State private var elevenLabsKeyInput: String = ""
     @State private var showOpenAIKey: Bool = false
     @State private var showClaudeKey: Bool = false
+    @State private var showGeminiKey: Bool = false
+    @State private var showGrokKey: Bool = false
+    @State private var showDeepSeekKey: Bool = false
     @State private var showElevenLabsKey: Bool = false
+
+    // Ollama configuration
+    @State private var ollamaEndpointInput: String = ""
+    @State private var ollamaCustomModelInput: String = ""
+    @State private var ollamaLocalModels: [String] = []
+    @State private var isLoadingOllamaModels: Bool = false
 
     // Connection test states
     @State private var isTestingOpenAI: Bool = false
     @State private var isTestingClaude: Bool = false
+    @State private var isTestingGemini: Bool = false
+    @State private var isTestingGrok: Bool = false
+    @State private var isTestingDeepSeek: Bool = false
+    @State private var isTestingOllama: Bool = false
     @State private var isTestingElevenLabs: Bool = false
     @State private var openAITestResult: TestResult?
     @State private var claudeTestResult: TestResult?
+    @State private var geminiTestResult: TestResult?
+    @State private var grokTestResult: TestResult?
+    @State private var deepSeekTestResult: TestResult?
+    @State private var ollamaTestResult: TestResult?
     @State private var elevenLabsTestResult: TestResult?
 
     // ElevenLabs voice loading state
@@ -455,57 +475,219 @@ struct SettingsView: View {
     @ViewBuilder
     private var aiSettingsSection: some View {
         Section("AI Provider") {
-            Picker("Provider", selection: $aiSettings.selectedProvider) {
-                ForEach(AIModelProvider.allCases) { provider in
-                    Text(provider.displayName).tag(provider)
+            Picker("Provider", selection: $aiSettings.selectedProviderKind) {
+                ForEach(ModelProviderKind.allCases) { provider in
+                    Label(provider.displayName, systemImage: provider.iconName)
+                        .tag(provider)
                 }
             }
             #if os(iOS)
             .pickerStyle(.navigationLink)
             #endif
 
-            Text(aiSettings.selectedProvider.description)
+            Text(aiSettings.selectedProviderKind.description)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
 
-        if aiSettings.selectedProvider == .openAI {
-            Section("OpenAI") {
-                openAIKeyField
+        // Model selection (shown for all providers)
+        Section("Model") {
+            anyModelPicker
 
-                Picker("Model", selection: $aiSettings.selectedOpenAIModel) {
-                    ForEach(OpenAIModel.allCases) { model in
-                        Text(model.displayName).tag(model)
-                    }
+            if aiSettings.selectedProviderKind == .local {
+                ollamaConfigSection
+            }
+        }
+
+        // API Key section (shown for cloud providers)
+        if aiSettings.selectedProviderKind.requiresAPIKey {
+            Section("\(aiSettings.selectedProviderKind.displayName) API Key") {
+                providerKeyField(for: aiSettings.selectedProviderKind)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var anyModelPicker: some View {
+        let modelBinding = Binding<String>(
+            get: { aiSettings.selectedModelId ?? "" },
+            set: { aiSettings.selectedModelId = $0 }
+        )
+
+        Picker("Model", selection: modelBinding) {
+            ForEach(aiSettings.availableModels) { model in
+                VStack(alignment: .leading) {
+                    Text(model.displayName)
                 }
-                #if os(iOS)
-                .pickerStyle(.navigationLink)
-                #endif
+                .tag(model.id)
+            }
+        }
+        #if os(iOS)
+        .pickerStyle(.navigationLink)
+        #endif
 
-                if aiSettings.hasOpenAIKey {
-                    testConnectionButton(for: .openAI)
+        Text(aiSettings.selectedModel.subtitle)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+
+    @ViewBuilder
+    private var ollamaConfigSection: some View {
+        TextField("Ollama Endpoint", text: $ollamaEndpointInput, prompt: Text("http://localhost:11434"))
+            #if os(iOS)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .keyboardType(.URL)
+            #endif
+            .onSubmit {
+                if !ollamaEndpointInput.isEmpty {
+                    aiSettings.ollamaEndpoint = ollamaEndpointInput
+                }
+            }
+
+        TextField("Custom Model Name", text: $ollamaCustomModelInput, prompt: Text("Leave empty to use selection above"))
+            #if os(iOS)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            #endif
+            .onSubmit {
+                aiSettings.ollamaCustomModel = ollamaCustomModelInput
+            }
+
+        if !ollamaLocalModels.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Installed Models")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ForEach(ollamaLocalModels, id: \.self) { model in
+                    Button {
+                        aiSettings.ollamaCustomModel = model
+                        ollamaCustomModelInput = model
+                    } label: {
+                        HStack {
+                            Text(model)
+                                .font(.caption)
+                            Spacer()
+                            if model == aiSettings.ollamaCustomModel || model == aiSettings.selectedModel.id {
+                                Image(systemName: "checkmark")
+                                    .font(.caption)
+                                    .foregroundStyle(.green)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
 
-        if aiSettings.selectedProvider == .claude {
-            Section("Claude") {
-                claudeKeyField
-
-                Picker("Model", selection: $aiSettings.selectedClaudeModel) {
-                    ForEach(ClaudeModel.allCases) { model in
-                        Text(model.displayName).tag(model)
+        HStack {
+            Button {
+                Task { await refreshOllamaModels() }
+            } label: {
+                HStack {
+                    if isLoadingOllamaModels {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundStyle(Color.accentColor)
                     }
+                    Text("Detect Models")
                 }
-                #if os(iOS)
-                .pickerStyle(.navigationLink)
-                #endif
+            }
+            .disabled(isLoadingOllamaModels)
 
-                if aiSettings.hasClaudeKey {
-                    testConnectionButton(for: .claude)
+            Spacer()
+
+            testProviderConnectionButton(for: .local)
+        }
+
+        if let result = ollamaTestResult {
+            testResultView(result)
+        }
+    }
+
+    @ViewBuilder
+    private func providerKeyField(for provider: ModelProviderKind) -> some View {
+        let keyInput = keyInputBinding(for: provider)
+        let showKey = showKeyBinding(for: provider)
+        let hasKey = aiSettings.hasAPIKey(for: provider)
+        let preview = aiSettings.keyPreview(for: provider)
+
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                if showKey.wrappedValue {
+                    TextField("API Key", text: keyInput)
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        #endif
+                } else {
+                    SecureField("API Key", text: keyInput)
+                }
+
+                Button {
+                    showKey.wrappedValue.toggle()
+                } label: {
+                    Image(systemName: showKey.wrappedValue ? "eye.slash" : "eye")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if hasKey && keyInput.wrappedValue.isEmpty {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text(preview)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Button("Remove", role: .destructive) {
+                        removeAPIKey(for: provider)
+                    }
+                    .font(.caption)
+                }
+            }
+
+            if !keyInput.wrappedValue.isEmpty {
+                Button("Save") {
+                    saveAPIKey(for: provider)
+                }
+                .manuscriptPrimaryButton()
+                .controlSize(.small)
+            }
+        }
+
+        if hasKey {
+            testProviderConnectionButton(for: provider)
+        }
+
+        if let result = testResult(for: provider) {
+            testResultView(result)
+        }
+    }
+
+    @ViewBuilder
+    private func testProviderConnectionButton(for provider: ModelProviderKind) -> some View {
+        let isTesting = isTestingProvider(provider)
+
+        Button {
+            Task { await testProviderConnection(provider) }
+        } label: {
+            HStack {
+                if isTesting {
+                    ProgressView().controlSize(.small)
+                    Text("Testing...")
+                } else {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundStyle(Color.accentColor)
+                    Text("Test Connection")
                 }
             }
         }
+        .disabled(isTesting)
     }
 
     @ViewBuilder
@@ -661,136 +843,6 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
-    private var openAIKeyField: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                if showOpenAIKey {
-                    TextField("API Key", text: $openAIKeyInput)
-                        #if os(iOS)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        #endif
-                } else {
-                    SecureField("API Key", text: $openAIKeyInput)
-                }
-
-                Button {
-                    showOpenAIKey.toggle()
-                } label: {
-                    Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
-
-            if aiSettings.hasOpenAIKey && openAIKeyInput.isEmpty {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    Text(aiSettings.openAIKeyPreview)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
-                    Button("Remove", role: .destructive) {
-                        removeOpenAIKey()
-                    }
-                    .font(.caption)
-                }
-            }
-
-            if !openAIKeyInput.isEmpty {
-                Button("Save") {
-                    saveOpenAIKey()
-                }
-                .manuscriptPrimaryButton()
-                .controlSize(.small)
-            }
-        }
-
-        if let result = openAITestResult {
-            testResultView(result)
-        }
-    }
-
-    @ViewBuilder
-    private var claudeKeyField: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                if showClaudeKey {
-                    TextField("API Key", text: $claudeKeyInput)
-                        #if os(iOS)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        #endif
-                } else {
-                    SecureField("API Key", text: $claudeKeyInput)
-                }
-
-                Button {
-                    showClaudeKey.toggle()
-                } label: {
-                    Image(systemName: showClaudeKey ? "eye.slash" : "eye")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
-
-            if aiSettings.hasClaudeKey && claudeKeyInput.isEmpty {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    Text(aiSettings.claudeKeyPreview)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
-                    Button("Remove", role: .destructive) {
-                        removeClaudeKey()
-                    }
-                    .font(.caption)
-                }
-            }
-
-            if !claudeKeyInput.isEmpty {
-                Button("Save") {
-                    saveClaudeKey()
-                }
-                .manuscriptPrimaryButton()
-                .controlSize(.small)
-            }
-        }
-
-        if let result = claudeTestResult {
-            testResultView(result)
-        }
-    }
-
-    @ViewBuilder
-    private func testConnectionButton(for provider: AIModelProvider) -> some View {
-        Button {
-            Task {
-                await testConnection(for: provider)
-            }
-        } label: {
-            HStack {
-                if (provider == .openAI && isTestingOpenAI) || (provider == .claude && isTestingClaude) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text("Testing...")
-                } else {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .foregroundStyle(Color.accentColor)
-                    Text("Test Connection")
-                }
-            }
-        }
-        .disabled((provider == .openAI && isTestingOpenAI) || (provider == .claude && isTestingClaude))
-    }
-
-    @ViewBuilder
     private func testResultView(_ result: TestResult) -> some View {
         HStack {
             switch result {
@@ -810,59 +862,144 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Binding Helpers for Provider Key Fields
+
+    private func keyInputBinding(for provider: ModelProviderKind) -> Binding<String> {
+        switch provider {
+        case .local:     return .constant("")
+        case .openAI:    return $openAIKeyInput
+        case .anthropic: return $claudeKeyInput
+        case .gemini:    return $geminiKeyInput
+        case .grok:      return $grokKeyInput
+        case .deepSeek:  return $deepSeekKeyInput
+        }
+    }
+
+    private func showKeyBinding(for provider: ModelProviderKind) -> Binding<Bool> {
+        switch provider {
+        case .local:     return .constant(false)
+        case .openAI:    return $showOpenAIKey
+        case .anthropic: return $showClaudeKey
+        case .gemini:    return $showGeminiKey
+        case .grok:      return $showGrokKey
+        case .deepSeek:  return $showDeepSeekKey
+        }
+    }
+
+    private func isTestingProvider(_ provider: ModelProviderKind) -> Bool {
+        switch provider {
+        case .local:     return isTestingOllama
+        case .openAI:    return isTestingOpenAI
+        case .anthropic: return isTestingClaude
+        case .gemini:    return isTestingGemini
+        case .grok:      return isTestingGrok
+        case .deepSeek:  return isTestingDeepSeek
+        }
+    }
+
+    private func testResult(for provider: ModelProviderKind) -> TestResult? {
+        switch provider {
+        case .local:     return ollamaTestResult
+        case .openAI:    return openAITestResult
+        case .anthropic: return claudeTestResult
+        case .gemini:    return geminiTestResult
+        case .grok:      return grokTestResult
+        case .deepSeek:  return deepSeekTestResult
+        }
+    }
+
+    // MARK: - Key & Connection Management
+
     private func loadExistingKeys() {
-        // Clear input fields - we show preview of saved keys separately
         openAIKeyInput = ""
         claudeKeyInput = ""
+        geminiKeyInput = ""
+        grokKeyInput = ""
+        deepSeekKeyInput = ""
         elevenLabsKeyInput = ""
+        ollamaEndpointInput = aiSettings.ollamaEndpoint
+        ollamaCustomModelInput = aiSettings.ollamaCustomModel
     }
 
-    private func saveOpenAIKey() {
+    private func saveAPIKey(for provider: ModelProviderKind) {
+        let keyInput = keyInputBinding(for: provider)
         do {
-            try aiSettings.saveOpenAIKey(openAIKeyInput)
-            openAIKeyInput = ""
-            openAITestResult = nil
+            try aiSettings.saveAPIKey(keyInput.wrappedValue, for: provider)
+            keyInput.wrappedValue = ""
+            setTestResult(nil, for: provider)
         } catch {
-            openAITestResult = .failure("Failed to save key: \(error.localizedDescription)")
+            setTestResult(.failure("Failed to save key: \(error.localizedDescription)"), for: provider)
         }
     }
 
-    private func saveClaudeKey() {
+    private func removeAPIKey(for provider: ModelProviderKind) {
+        let keyInput = keyInputBinding(for: provider)
         do {
-            try aiSettings.saveClaudeKey(claudeKeyInput)
-            claudeKeyInput = ""
-            claudeTestResult = nil
+            try aiSettings.deleteAPIKey(for: provider)
+            keyInput.wrappedValue = ""
+            setTestResult(nil, for: provider)
         } catch {
-            claudeTestResult = .failure("Failed to save key: \(error.localizedDescription)")
+            setTestResult(.failure("Failed to remove key: \(error.localizedDescription)"), for: provider)
         }
     }
 
-    private func removeOpenAIKey() {
-        do {
-            try aiSettings.deleteOpenAIKey()
-            openAIKeyInput = ""
-            openAITestResult = nil
-        } catch {
-            openAITestResult = .failure("Failed to remove key: \(error.localizedDescription)")
+    private func setTestResult(_ result: TestResult?, for provider: ModelProviderKind) {
+        switch provider {
+        case .local:     ollamaTestResult = result
+        case .openAI:    openAITestResult = result
+        case .anthropic: claudeTestResult = result
+        case .gemini:    geminiTestResult = result
+        case .grok:      grokTestResult = result
+        case .deepSeek:  deepSeekTestResult = result
         }
     }
 
-    private func removeClaudeKey() {
-        do {
-            try aiSettings.deleteClaudeKey()
-            claudeKeyInput = ""
-            claudeTestResult = nil
-        } catch {
-            claudeTestResult = .failure("Failed to remove key: \(error.localizedDescription)")
+    private func setTesting(_ testing: Bool, for provider: ModelProviderKind) {
+        switch provider {
+        case .local:     isTestingOllama = testing
+        case .openAI:    isTestingOpenAI = testing
+        case .anthropic: isTestingClaude = testing
+        case .gemini:    isTestingGemini = testing
+        case .grok:      isTestingGrok = testing
+        case .deepSeek:  isTestingDeepSeek = testing
         }
     }
+
+    private func testProviderConnection(_ provider: ModelProviderKind) async {
+        setTesting(true, for: provider)
+        setTestResult(nil, for: provider)
+        do {
+            _ = try await TextGenerationService.shared.testConnection(for: provider)
+            setTestResult(.success, for: provider)
+        } catch {
+            setTestResult(.failure(error.localizedDescription), for: provider)
+        }
+        setTesting(false, for: provider)
+    }
+
+    private func refreshOllamaModels() async {
+        isLoadingOllamaModels = true
+        ollamaTestResult = nil
+        do {
+            ollamaLocalModels = try await OllamaService.shared.fetchLocalModels()
+            if ollamaLocalModels.isEmpty {
+                ollamaTestResult = .failure("No models found. Pull a model with: ollama pull llama3.2")
+            } else {
+                ollamaTestResult = .success
+            }
+        } catch {
+            ollamaTestResult = .failure(error.localizedDescription)
+        }
+        isLoadingOllamaModels = false
+    }
+
+    // MARK: - ElevenLabs Helpers
 
     private func saveElevenLabsKey() {
         do {
             try elevenLabsSettings.saveAPIKey(elevenLabsKeyInput)
             elevenLabsKeyInput = ""
             elevenLabsTestResult = nil
-            // Load voices after saving key
             Task {
                 await loadVoices()
             }
@@ -885,7 +1022,6 @@ struct SettingsView: View {
         isLoadingVoices = true
         do {
             let voices = try await ElevenLabsService.shared.fetchVoices()
-            // Auto-select a voice if none selected
             if elevenLabsSettings.selectedVoiceId == nil {
                 elevenLabsSettings.autoSelectVoice(from: voices)
             }
@@ -901,7 +1037,6 @@ struct SettingsView: View {
         isPreviewingVoice = true
         elevenLabsTestResult = nil
 
-        // Preview text in Swedish
         let previewText = "Hej! Det här är en förhandsvisning av rösten. Så här kommer din text att låta."
 
         do {
@@ -925,32 +1060,6 @@ struct SettingsView: View {
             elevenLabsTestResult = .failure(error.localizedDescription)
         }
         isTestingElevenLabs = false
-    }
-
-    private func testConnection(for provider: AIModelProvider) async {
-        switch provider {
-        case .openAI:
-            isTestingOpenAI = true
-            openAITestResult = nil
-            do {
-                _ = try await OpenAIService.shared.testConnection()
-                openAITestResult = .success
-            } catch {
-                openAITestResult = .failure(error.localizedDescription)
-            }
-            isTestingOpenAI = false
-
-        case .claude:
-            isTestingClaude = true
-            claudeTestResult = nil
-            do {
-                _ = try await ClaudeAPIService.shared.testConnection()
-                claudeTestResult = .success
-            } catch {
-                claudeTestResult = .failure(error.localizedDescription)
-            }
-            isTestingClaude = false
-        }
     }
 
     private func formattedDate(_ date: Date) -> String {
