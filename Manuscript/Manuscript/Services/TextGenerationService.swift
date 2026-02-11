@@ -5,7 +5,7 @@ import AnyLanguageModel
 enum TextGenerationError: LocalizedError {
     case noAPIKey(AIModelProvider)
     case generationFailed(String)
-    case ollamaUnavailable
+    case foundationModelsUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -13,8 +13,8 @@ enum TextGenerationError: LocalizedError {
             return "No API key configured for \(provider.displayName). Please add your API key in Settings."
         case .generationFailed(let message):
             return "Text generation failed: \(message)"
-        case .ollamaUnavailable:
-            return "Ollama is not running. Please start Ollama on your Mac and try again."
+        case .foundationModelsUnavailable:
+            return "Apple Intelligence is not available on this device. Please update to iOS 26 or macOS 26, or configure a cloud AI provider in Settings."
         }
     }
 }
@@ -53,11 +53,13 @@ actor TextGenerationService {
             let languageModel = GeminiLanguageModel(apiKey: apiKey, model: model.id)
             return try await generate(with: languageModel, prompt: prompt, systemPrompt: systemPrompt)
 
-        case .ollama:
-            let host = settings.ollamaHost
-            let baseURL = URL(string: host) ?? URL(string: "http://localhost:11434")!
-            let languageModel = OllamaLanguageModel(baseURL: baseURL, model: model.id)
-            return try await generate(with: languageModel, prompt: prompt, systemPrompt: systemPrompt)
+        case .apple:
+            if #available(iOS 26, macOS 26, *) {
+                let languageModel = SystemLanguageModel.default
+                return try await generate(with: languageModel, prompt: prompt, systemPrompt: systemPrompt)
+            } else {
+                throw TextGenerationError.foundationModelsUnavailable
+            }
         }
     }
 
@@ -95,13 +97,14 @@ actor TextGenerationService {
             _ = try await generate(with: languageModel, prompt: "Hi", systemPrompt: nil)
             return true
 
-        case .ollama:
-            let host = settings.ollamaHost
-            let baseURL = URL(string: host) ?? URL(string: "http://localhost:11434")!
-            let selectedModel = settings.selectedModel(for: .ollama)
-            let languageModel = OllamaLanguageModel(baseURL: baseURL, model: selectedModel.id)
-            _ = try await generate(with: languageModel, prompt: "Hi", systemPrompt: nil)
-            return true
+        case .apple:
+            if #available(iOS 26, macOS 26, *) {
+                let languageModel = SystemLanguageModel.default
+                _ = try await generate(with: languageModel, prompt: "Hi", systemPrompt: nil)
+                return true
+            } else {
+                throw TextGenerationError.foundationModelsUnavailable
+            }
         }
     }
 
