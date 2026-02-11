@@ -110,12 +110,12 @@ actor TextGenerationService {
 
     // MARK: - Private
 
-    private nonisolated func generate<M: LanguageModel>(
-        with model: M,
+    private nonisolated func generate(
+        with model: any LanguageModel,
         prompt: String,
         systemPrompt: String?
     ) async throws -> String {
-        let session: LanguageModelSession<M>
+        let session: LanguageModelSession
         if let systemPrompt, !systemPrompt.isEmpty {
             session = LanguageModelSession(model: model, instructions: systemPrompt)
         } else {
