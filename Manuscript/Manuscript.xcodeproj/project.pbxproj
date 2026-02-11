@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E66CB0022F22689C00A30EDB /* RichTextKit in Frameworks */ = {isa = PBXBuildFile; productRef = E6RICH0012F22000000000002 /* RichTextKit */; };
+		E6ALM00012F30000000000003 /* AnyLanguageModel in Frameworks */ = {isa = PBXBuildFile; productRef = E6ALM00012F30000000000002 /* AnyLanguageModel */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E66CB0022F22689C00A30EDB /* RichTextKit in Frameworks */,
+				E6ALM00012F30000000000003 /* AnyLanguageModel in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,6 +134,7 @@
 			name = manuscript;
 			packageProductDependencies = (
 				E6RICH0012F22000000000002 /* RichTextKit */,
+				E6ALM00012F30000000000002 /* AnyLanguageModel */,
 			);
 			productName = manuscript;
 			productReference = E629AD532F13CBC700C8831E /* Manuscript.app */;
@@ -217,6 +220,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				E6RICH0012F22000000000001 /* XCRemoteSwiftPackageReference "RichTextKit" */,
+				E6ALM00012F30000000000001 /* XCRemoteSwiftPackageReference "AnyLanguageModel" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E629AD542F13CBC700C8831E /* Products */;
@@ -685,6 +689,14 @@ echo \"Build number set to $BUILD_NUMBER\"
 				minimumVersion = 1.0.0;
 			};
 		};
+		E6ALM00012F30000000000001 /* XCRemoteSwiftPackageReference "AnyLanguageModel" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mattt/AnyLanguageModel.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.6.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -692,6 +704,11 @@ echo \"Build number set to $BUILD_NUMBER\"
 			isa = XCSwiftPackageProductDependency;
 			package = E6RICH0012F22000000000001 /* XCRemoteSwiftPackageReference "RichTextKit" */;
 			productName = RichTextKit;
+		};
+		E6ALM00012F30000000000002 /* AnyLanguageModel */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E6ALM00012F30000000000001 /* XCRemoteSwiftPackageReference "AnyLanguageModel" */;
+			productName = AnyLanguageModel;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
