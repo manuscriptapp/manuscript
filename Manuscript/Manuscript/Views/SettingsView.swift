@@ -450,10 +450,34 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var aiSettingsSection: some View {
+        if !aiSettings.hasAnyProviderAvailable {
+            Section {
+                Label {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("No AI Provider Available")
+                            .font(.headline)
+                        Text("Apple Intelligence requires iOS 26 or macOS 26. Alternatively, configure a cloud provider API key below.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                }
+            }
+        }
+
         Section("AI Provider") {
             Picker("Provider", selection: $aiSettings.selectedProvider) {
                 ForEach(AIModelProvider.allCases) { provider in
-                    Text(provider.displayName).tag(provider)
+                    HStack {
+                        Text(provider.displayName)
+                        if !provider.isAvailable {
+                            Text("(Unavailable)")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .tag(provider)
                 }
             }
             #if os(iOS)
@@ -473,24 +497,32 @@ struct SettingsView: View {
         let models = AIModelCatalog.models(for: provider)
 
         Section(provider.displayName) {
+            if provider == .apple && !provider.isAvailable {
+                Label {
+                    Text("Apple Intelligence is not available on this device. Update to iOS 26 or macOS 26 to use on-device AI.")
+                        .font(.caption)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                }
+            }
+
             if provider.requiresAPIKey {
                 apiKeyField(for: provider)
             }
 
-            if provider == .ollama {
-                ollamaHostField
-            }
-
-            Picker("Model", selection: modelBinding(for: provider)) {
-                ForEach(models) { model in
-                    Text(model.displayName).tag(model.id)
+            if models.count > 1 {
+                Picker("Model", selection: modelBinding(for: provider)) {
+                    ForEach(models) { model in
+                        Text(model.displayName).tag(model.id)
+                    }
                 }
+                #if os(iOS)
+                .pickerStyle(.navigationLink)
+                #endif
             }
-            #if os(iOS)
-            .pickerStyle(.navigationLink)
-            #endif
 
-            if aiSettings.hasAPIKey(for: provider) {
+            if aiSettings.hasAPIKey(for: provider) && provider.isAvailable {
                 testConnectionButton(for: provider)
             }
         }
@@ -505,22 +537,6 @@ struct SettingsView: View {
                 aiSettings.selectedModelId[provider] = newValue
             }
         )
-    }
-
-    @ViewBuilder
-    private var ollamaHostField: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            TextField("Host", text: $aiSettings.ollamaHost, prompt: Text("http://localhost:11434"))
-                #if os(iOS)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .keyboardType(.URL)
-                #endif
-
-            Text("Default: http://localhost:11434")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
     }
 
     @ViewBuilder

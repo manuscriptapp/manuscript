@@ -6,7 +6,7 @@ enum AIModelProvider: String, CaseIterable, Identifiable {
     case openAI = "openai"
     case anthropic = "anthropic"
     case gemini = "gemini"
-    case ollama = "ollama"
+    case apple = "apple"
 
     var id: String { rawValue }
 
@@ -15,7 +15,7 @@ enum AIModelProvider: String, CaseIterable, Identifiable {
         case .openAI: return "OpenAI"
         case .anthropic: return "Anthropic"
         case .gemini: return "Google Gemini"
-        case .ollama: return "Ollama (Local)"
+        case .apple: return "Apple Intelligence"
         }
     }
 
@@ -27,15 +27,27 @@ enum AIModelProvider: String, CaseIterable, Identifiable {
             return "Claude models via your Anthropic API key."
         case .gemini:
             return "Gemini models via your Google AI API key."
-        case .ollama:
-            return "Run models locally with Ollama. No API key needed."
+        case .apple:
+            return "On-device AI powered by Apple Intelligence. No API key or internet required."
         }
     }
 
     var requiresAPIKey: Bool {
         switch self {
         case .openAI, .anthropic, .gemini: return true
-        case .ollama: return false
+        case .apple: return false
+        }
+    }
+
+    /// Whether this provider is available on the current device
+    var isAvailable: Bool {
+        switch self {
+        case .openAI, .anthropic, .gemini: return true
+        case .apple:
+            if #available(iOS 26, macOS 26, *) {
+                return true
+            }
+            return false
         }
     }
 }
@@ -84,13 +96,8 @@ enum AIModelCatalog {
         AIModel(id: "gemini-1.5-flash", displayName: "Gemini 1.5 Flash", description: "Fast and cost effective", provider: .gemini),
     ]
 
-    static let ollama: [AIModel] = [
-        AIModel(id: "llama3.3", displayName: "Llama 3.3 (Recommended)", description: "Meta's latest open model, great quality", provider: .ollama),
-        AIModel(id: "llama3.2", displayName: "Llama 3.2", description: "Compact and fast local model", provider: .ollama),
-        AIModel(id: "mistral", displayName: "Mistral", description: "Strong European open model", provider: .ollama),
-        AIModel(id: "qwen2.5", displayName: "Qwen 2.5", description: "Alibaba's high-quality open model", provider: .ollama),
-        AIModel(id: "phi-4", displayName: "Phi-4", description: "Microsoft's compact reasoning model", provider: .ollama),
-        AIModel(id: "gemma2", displayName: "Gemma 2", description: "Google's open model for local use", provider: .ollama),
+    static let apple: [AIModel] = [
+        AIModel(id: "default", displayName: "Apple Foundation Model", description: "On-device language model via Apple Intelligence", provider: .apple),
     ]
 
     static func models(for provider: AIModelProvider) -> [AIModel] {
@@ -98,7 +105,7 @@ enum AIModelCatalog {
         case .openAI: return openAI
         case .anthropic: return anthropic
         case .gemini: return gemini
-        case .ollama: return ollama
+        case .apple: return apple
         }
     }
 
@@ -121,8 +128,6 @@ final class AISettingsManager {
         static let openAIModel = "ai_openai_model"
         static let anthropicModel = "ai_anthropic_model"
         static let geminiModel = "ai_gemini_model"
-        static let ollamaModel = "ai_ollama_model"
-        static let ollamaHost = "ai_ollama_host"
     }
 
     // MARK: - Properties
@@ -141,16 +146,10 @@ final class AISettingsManager {
                 case .openAI: key = DefaultsKey.openAIModel
                 case .anthropic: key = DefaultsKey.anthropicModel
                 case .gemini: key = DefaultsKey.geminiModel
-                case .ollama: key = DefaultsKey.ollamaModel
+                case .apple: continue
                 }
                 userDefaults.set(modelId, forKey: key)
             }
-        }
-    }
-
-    var ollamaHost: String {
-        didSet {
-            userDefaults.set(ollamaHost, forKey: DefaultsKey.ollamaHost)
         }
     }
 
@@ -177,8 +176,13 @@ final class AISettingsManager {
         case .openAI: return hasOpenAIKey
         case .anthropic: return hasAnthropicKey
         case .gemini: return hasGeminiKey
-        case .ollama: return true
+        case .apple: return true
         }
+    }
+
+    /// Whether any AI provider is usable (has API key or Foundation Models available)
+    var hasAnyProviderAvailable: Bool {
+        hasAnyAPIKey || AIModelProvider.apple.isAvailable
     }
 
     var hasAnyAPIKey: Bool {
@@ -193,7 +197,7 @@ final class AISettingsManager {
         case .openAI: keychainKey = .openAIAPIKey
         case .anthropic: keychainKey = .claudeAPIKey
         case .gemini: keychainKey = .geminiAPIKey
-        case .ollama: return ""
+        case .apple: return ""
         }
 
         guard let key = try? keychain.retrieve(keychainKey), !key.isEmpty else {
@@ -208,32 +212,31 @@ final class AISettingsManager {
     // MARK: - Initialization
 
     private init() {
-        // Load Ollama host
-        self.ollamaHost = userDefaults.string(forKey: DefaultsKey.ollamaHost) ?? "http://localhost:11434"
-
         // Load selected models per provider
         var modelIds: [AIModelProvider: String] = [:]
         if let id = userDefaults.string(forKey: DefaultsKey.openAIModel) { modelIds[.openAI] = id }
         if let id = userDefaults.string(forKey: DefaultsKey.anthropicModel) { modelIds[.anthropic] = id }
         if let id = userDefaults.string(forKey: DefaultsKey.geminiModel) { modelIds[.gemini] = id }
-        if let id = userDefaults.string(forKey: DefaultsKey.ollamaModel) { modelIds[.ollama] = id }
         self.selectedModelId = modelIds
 
-        // Load provider - default to Ollama if no API keys are configured
+        // Load provider - default to Apple Intelligence if available, else first configured cloud provider
         if let providerRaw = userDefaults.string(forKey: DefaultsKey.modelProvider),
            let provider = AIModelProvider(rawValue: providerRaw) {
             self.selectedProvider = provider
         } else {
-            // Smart default: use the first provider that has an API key, or Ollama if none
+            // Smart default: use Apple Intelligence if available, else first provider with an API key
             let keychain = KeychainService.shared
-            if keychain.exists(.openAIAPIKey) {
+            if AIModelProvider.apple.isAvailable {
+                self.selectedProvider = .apple
+            } else if keychain.exists(.openAIAPIKey) {
                 self.selectedProvider = .openAI
             } else if keychain.exists(.claudeAPIKey) {
                 self.selectedProvider = .anthropic
             } else if keychain.exists(.geminiAPIKey) {
                 self.selectedProvider = .gemini
             } else {
-                self.selectedProvider = .ollama
+                // No provider available - default to Apple (will show warning)
+                self.selectedProvider = .apple
             }
         }
     }
@@ -246,7 +249,7 @@ final class AISettingsManager {
         case .openAI: keychainKey = .openAIAPIKey
         case .anthropic: keychainKey = .claudeAPIKey
         case .gemini: keychainKey = .geminiAPIKey
-        case .ollama: return
+        case .apple: return
         }
 
         if key.isEmpty {
@@ -262,7 +265,7 @@ final class AISettingsManager {
         case .openAI: keychainKey = .openAIAPIKey
         case .anthropic: keychainKey = .claudeAPIKey
         case .gemini: keychainKey = .geminiAPIKey
-        case .ollama: return nil
+        case .apple: return nil
         }
         return try? keychain.retrieve(keychainKey)
     }
@@ -273,7 +276,7 @@ final class AISettingsManager {
         case .openAI: keychainKey = .openAIAPIKey
         case .anthropic: keychainKey = .claudeAPIKey
         case .gemini: keychainKey = .geminiAPIKey
-        case .ollama: return
+        case .apple: return
         }
         try keychain.delete(keychainKey)
     }
@@ -283,7 +286,7 @@ final class AISettingsManager {
         case .openAI: return hasOpenAIKey
         case .anthropic: return hasAnthropicKey
         case .gemini: return hasGeminiKey
-        case .ollama: return true
+        case .apple: return true
         }
     }
 }
