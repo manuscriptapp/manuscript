@@ -13,7 +13,8 @@ A native SwiftUI writing app with:
 - **Free forever** — No purchase, no subscription
 - **Open source** — MPL-2.0 licensed, full source code available
 - **Standard files** — Markdown-based format, portable and future-proof
-- **AI assistance** — Bring-your-own API keys for text generation
+- **AI assistance** — On-device Apple Foundation Models plus optional cloud AI (BYOK)
+- **Text-to-speech** — ElevenLabs voice integration for reading your work aloud
 - **Scrivener import** — Migrate your existing projects with full history
 
 Think Scrivener or Ulysses, but free and open source.
@@ -35,7 +36,8 @@ Think Scrivener or Ulysses, but free and open source.
 | Templates | ✅ | 9 story structure templates (Hero's Journey, Save the Cat, Three-Act, etc.) |
 | Scrivener import | ✅ | Full .scriv import with RTF conversion and comments |
 | Export | ✅ | PDF, Word, EPUB, Markdown, Plain Text, HTML, Scrivener |
-| AI assistance | ✅ | Text generation with custom API keys (OpenAI, Anthropic) |
+| AI assistance | ✅ | On-device (Apple Foundation Models) + cloud AI (OpenAI, Anthropic, Google Gemini) |
+| Text-to-speech | ✅ | ElevenLabs voice integration with voice selection and playback |
 | State restoration | ✅ | Remembers last open document and expanded folders |
 | Paragraph formatting | ✅ | First-line indentation, line spacing |
 | Find & replace | ✅ | Search, highlight matches, navigate, replace single/all |
@@ -48,9 +50,9 @@ Think Scrivener or Ulysses, but free and open source.
 | Composition mode | ✅ | Distraction-free full-screen writing |
 | Compile presets | 🔜 | Save and reuse export configurations |
 | Print | ✅ | Print documents directly |
-| Import documents | ✅ | DOCX (macOS only), PDF, HTML |
+| Import documents | ✅ | DOCX (macOS only), PDF, HTML, Markdown, Plain Text |
 | Import images | ✅ | Import images and PDFs into research/media |
-| Auto backups | 🔜 | Automatic backup on close |
+| Auto backups | ✅ | Configurable automatic backups with management UI |
 | Trash folder | ✅ | Soft-delete with restore capability |
 | Document links | ✅ | Internal links between documents |
 | Keywords/tags | ✅ | Tagging system for organization |
@@ -140,7 +142,7 @@ It was a dark and stormy night...
 | Open source | Yes | No | No |
 | File format | Markdown | Proprietary | Markdown |
 | Scrivener import | Yes | — | No |
-| AI assistance | BYOK | No | Paid |
+| AI assistance | On-device + BYOK | No | Paid |
 
 ## Roadmap
 
@@ -173,7 +175,8 @@ It was a dark and stormy night...
 
 **Phase 5: AI Integration** ✅
 - [x] AI text generation service
-- [x] Custom API key support (OpenAI, Anthropic)
+- [x] Custom API key support (OpenAI, Anthropic, Google Gemini)
+- [x] On-device AI via Apple Foundation Models
 - [x] Chapter generation and rewriting assistance
 
 **Phase 6: Rich Text & Polish** ✅
@@ -200,20 +203,20 @@ It was a dark and stormy night...
 - [x] Trash folder (soft-delete with restore)
 - [x] Composition mode (distraction-free writing)
 - [x] Print documents
-- [x] Import documents (Word, PDF, HTML)
+- [x] Import documents (Word, PDF, HTML, Markdown, Plain Text)
 - [x] Import images
-- [ ] Auto backups
+- [x] Auto backups with management UI
+- [x] Text-to-speech (ElevenLabs integration)
 - [ ] Snapshot comparison/diff view
 
 ## Current Priorities (Q1 2026)
 
-The app is now focused on launch polish and stability.
+The app is focused on launch polish and stability. AI migration to Apple Foundation Models is complete.
 
 - **Performance pass** across large projects and long-form documents
 - **Accessibility audit** (VoiceOver, Dynamic Type, keyboard navigation)
 - **iOS DOCX import parity** with macOS
-- **AI expansion** with Apple Foundation Models and writing suggestions
-- **Launch readiness**: App Store assets, website updates, and bug bash
+- **Launch readiness**: App Store assets, screenshots, metadata, and bug bash
 
 For detailed execution planning, see:
 

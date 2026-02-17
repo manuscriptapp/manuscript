@@ -64,6 +64,17 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 - ~~Import DOCX~~ ✅ (macOS-only)
 - ~~Export EPUB~~ ✅
 - ~~Writing goals/targets~~ ✅
+- ~~Import Markdown/TXT~~ ✅
+- ~~Import PDF/HTML~~ ✅
+- ~~Export HTML~~ ✅
+- ~~Export Scrivener 3~~ ✅
+- ~~Favorites collection~~ ✅
+- ~~Keywords & collections~~ ✅
+- ~~Media attachments~~ ✅
+- ~~Native print~~ ✅
+- ~~Backup management~~ ✅
+- ~~Text-to-speech~~ ✅
+- ~~On-device AI~~ ✅
 - Version comparison (diff view)
 
 ---
@@ -74,11 +85,10 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 
 | Asset | Size | Status |
 |-------|------|:------:|
-| iOS App Icon | 1024x1024 | 🔴 |
-| macOS App Icon | 1024x1024 (with transparency) | 🔴 |
-| iOS Spotlight | 120x120 | 🔴 |
-| iOS Settings | 87x87 | 🔴 |
-| macOS 16pt - 512pt set | All sizes | 🔴 |
+| iOS App Icon | 1024x1024 (single source) | 🟢 |
+| macOS App Icon | 1024x1024 (single source) | 🟢 |
+
+*Using Xcode 15+ single-source icon format — individual sizes auto-generated.*
 
 ### Screenshots
 
@@ -95,15 +105,16 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 | Item | Status | Notes |
 |------|:------:|-------|
 | App name | 🟢 | "Manuscript" |
-| Subtitle | 🔴 | Max 30 characters |
-| Description | 🔴 | Full App Store description |
-| Keywords | 🔴 | 100 characters max |
-| Privacy policy URL | 🔴 | Required |
-| Support URL | 🔴 | Required |
-| Marketing URL | 🟡 | manuscriptapp.github.io |
-| Category | 🔴 | Productivity or Reference |
+| Subtitle | 🟡 | Draft: "Your Story, Your Files" (22 chars) |
+| Description | 🟡 | Draft in APP_STORE_REVIEW.md |
+| Keywords | 🟡 | Draft: writing,novel,screenplay,markdown,scrivener,author,manuscript,book,editor,export |
+| Privacy policy URL | 🟢 | manuscriptapp.github.io/manuscript/privacy |
+| Support URL | 🟢 | manuscriptapp.github.io/manuscript/support |
+| Marketing URL | 🟢 | manuscriptapp.github.io/manuscript |
+| Category | 🟡 | Primary: Productivity, Secondary: Reference |
 | Age rating | 🔴 | Complete questionnaire |
-| Copyright | 🔴 | "© 2026 Manuscript" |
+| Copyright | 🟡 | "© 2026 Manuscript" |
+| Release notes | 🟢 | See meta/RELEASE_NOTES.md |
 
 ---
 
@@ -113,12 +124,13 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 
 | Task | Status | Notes |
 |------|:------:|-------|
-| Set bundle identifier | 🔴 | com.dahlsjoo.manuscript |
+| Set bundle identifier | 🟢 | com.dahlsjoo.manuscript |
 | Configure App Groups | 🔴 | For CloudKit sync |
-| Enable iCloud capability | 🔴 | CloudKit container |
-| Set minimum deployment | 🟢 | iOS 17.0 / macOS 14.0 |
-| Configure entitlements | 🔴 | App sandbox, iCloud |
+| Enable iCloud capability | 🟢 | CloudKit container enabled |
+| Set minimum deployment | 🟢 | iOS 18.0 / macOS 15.0 |
+| Configure entitlements | 🟢 | App sandbox, iCloud, network client |
 | Archive builds | 🔴 | Test release builds |
+| Xcode Cloud CI | 🟢 | ci_scripts configured |
 
 ### Code Signing
 
@@ -132,10 +144,10 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 
 | Task | Status | Notes |
 |------|:------:|-------|
-| Unit tests passing | 🔴 | Create basic test suite |
+| Unit tests passing | 🟡 | Basic import tests added |
 | UI tests for critical paths | 🔴 | Document creation, editing |
 | Test on physical devices | 🔴 | iPhone, iPad, Mac |
-| Test on oldest supported OS | 🔴 | iOS 17.0, macOS 14.0 |
+| Test on oldest supported OS | 🔴 | iOS 18.0, macOS 15.0 |
 | TestFlight beta | 🔴 | External testing |
 
 ---
@@ -147,9 +159,11 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 | README.md | 🟢 | Root |
 | CONTRIBUTING.md | 🟢 | Root |
 | LICENSE | 🟢 | Root (MPL-2.0) |
-| Privacy Policy | 🔴 | docs/ or external |
-| Terms of Service | 🔴 | docs/ or external |
+| Privacy Policy | 🟢 | docs/privacy.html |
+| Terms of Service | 🟢 | docs/terms.html |
+| Support page | 🟢 | docs/support.html |
 | User guide/Help | 🔴 | In-app or docs/ |
+| Release notes | 🟢 | meta/RELEASE_NOTES.md |
 
 ---
 
@@ -157,9 +171,9 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 
 | Task | Status | Notes |
 |------|:------:|-------|
-| Landing page | 🟡 | docs/index.html |
-| Feature showcase | 🔴 | Screenshots, descriptions |
-| Download links | 🔴 | App Store badges |
+| Landing page | 🟢 | docs/index.html — live with feature showcase and comparison table |
+| Feature showcase | 🟢 | Included in landing page |
+| Download links | 🔴 | App Store badges (pending submission) |
 | Press kit | 🔴 | Logos, screenshots |
 
 ---
@@ -170,14 +184,15 @@ Before clicking "Submit for Review":
 
 - [ ] All crashes resolved
 - [ ] No placeholder content
-- [ ] All URLs working
-- [ ] Privacy policy accessible
-- [ ] App icon finalized
+- [x] All URLs working (privacy, terms, support)
+- [x] Privacy policy accessible
+- [x] App icon finalized
 - [ ] Screenshots capture actual app
 - [ ] Metadata complete
 - [ ] Test account provided (if needed)
-- [ ] Export compliance answered
+- [x] Export compliance answered
 - [ ] Content rights confirmed
+- [ ] AI transparency disclosure completed
 
 ---
 
@@ -187,7 +202,7 @@ Before clicking "Submit for Review":
 |------|-------|
 | Monitor crash reports | App Store Connect |
 | Respond to reviews | Within 24 hours |
-| Social media announcement | Twitter, Reddit |
+| Social media announcement | Twitter, Reddit, Discord |
 | Update website | Add download buttons |
 | Monitor analytics | Track downloads, retention |
 
@@ -203,4 +218,4 @@ Before clicking "Submit for Review":
 
 ---
 
-*Last updated: January 27, 2026*
+*Last updated: February 17, 2026*

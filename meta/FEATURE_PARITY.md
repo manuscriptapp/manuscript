@@ -132,7 +132,8 @@ Manuscript vs Scrivener vs Ulysses.
 
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
-| Import DOCX | ✅ | ✅ | ⚡ |
+| Import DOCX | ✅ | ✅ | ⚡ macOS only |
+| Import Plain Text | ✅ | ✅ | ✅ |
 | Import PDF | ✅ | ❌ | ✅ |
 | Import Markdown | ✅ | ✅ | ✅ |
 | Import HTML | ✅ | ✅ | ✅ |
@@ -152,9 +153,9 @@ Note: Manuscript DOCX import is currently macOS-only; iOS support is pending.
 | Cloud sync | Dropbox | iCloud | ✅ iCloud Drive |
 | iOS sync | ✅ | ✅ | ✅ |
 | Sync status indicator | ✅ | ✅ | ✅ macOS |
-| Auto backup | ✅ | ✅ | 🔜 |
-| Backup on close | ✅ | ❌ | 🔜 |
-| Manual backup/export | ✅ | ✅ | 🔜 |
+| Auto backup | ✅ | ✅ | ✅ |
+| Backup on close | ✅ | ❌ | ✅ |
+| Manual backup/export | ✅ | ✅ | ✅ |
 
 ---
 
@@ -163,9 +164,10 @@ Note: Manuscript DOCX import is currently macOS-only; iOS support is pending.
 | Feature | Scrivener | Ulysses | Manuscript |
 |---|:-:|:-:|:-:|
 | AI assistant | ❌ | Paid | ✅ |
-| On-device AI | ❌ | ❌ | 🔜 |
-| Cloud AI (BYOK) | ❌ | ❌ | ✅ |
+| On-device AI | ❌ | ❌ | ✅ Apple Foundation Models |
+| Cloud AI (BYOK) | ❌ | ❌ | ✅ OpenAI, Anthropic, Gemini |
 | Per-project config | ❌ | ❌ | ✅ |
+| Text-to-speech | ❌ | ❌ | ✅ ElevenLabs |
 
 ---
 
@@ -198,7 +200,7 @@ Note: Manuscript DOCX import is currently macOS-only; iOS support is pending.
 
 1. **Free** — No purchase, no subscription
 2. **Open source** — MPL-2.0, full source available
-3. **BYOK AI** — Use your own API keys (OpenAI, Anthropic)
+3. **AI** — On-device Apple Foundation Models + BYOK cloud AI (OpenAI, Anthropic, Gemini)
 4. **iCloud Drive sync** — Free, automatic
 5. **SwiftUI** — Modern, native framework
 6. **Standard files** — Markdown, no lock-in
@@ -206,4 +208,4 @@ Note: Manuscript DOCX import is currently macOS-only; iOS support is pending.
 
 ---
 
-*Last updated: February 5, 2026*
+*Last updated: February 17, 2026*

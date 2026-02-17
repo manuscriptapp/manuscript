@@ -95,9 +95,32 @@ Manuscript/
 - **DocumentGroupLaunchScene** - Custom document launch experience on iOS with branded background, template picker, and decorative accessories
 - **NewDocumentButton** - Template-based document creation with async continuation pattern
 
+## App Store Changelog (ASC) Skill
+
+Use the `/app-store-changelog` skill to generate App Store release notes. It collects git commits since the last tag, triages them for user impact, and drafts benefit-focused "What's New" bullets.
+
+**Invoke:** `/app-store-changelog` (or ask to "use asc cli" / "generate release notes")
+
+**What it does:**
+1. Collects commits and touched files since the last git tag
+2. Triages changes into New / Improved / Fixed categories
+3. Drops internal-only work (CI, refactors, dependency bumps)
+4. Drafts short, benefit-focused App Store release notes
+5. Updates `meta/RELEASE_NOTES.md` and related metadata files
+
+**Key files it reads/writes:**
+- `meta/RELEASE_NOTES.md` — Current release notes
+- `meta/APP_STORE_REVIEW.md` — App Store description, keywords, metadata
+- `meta/PRE_LAUNCH_CHECKLIST.md` — Launch readiness tracking
+
 ## Key Documentation
 
 - `meta/FEATURE_PARITY.md` - Feature matrix comparing Manuscript vs Scrivener vs Ulysses
+- `meta/ACTION_PLAN.md` - Development roadmap and sprint progress
+- `meta/APP_STORE_REVIEW.md` - App Store submission requirements and metadata
+- `meta/PRE_LAUNCH_CHECKLIST.md` - Launch readiness checklist
+- `meta/RELEASE_NOTES.md` - Current version release notes
+- `meta/SOFT_LAUNCH_PLAN.md` - Phased launch strategy
 - `CONTRIBUTING.md` - Development setup and PR process
 - `LICENSE` - MPL-2.0
 

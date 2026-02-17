@@ -31,26 +31,31 @@ Thank you for your interest in contributing to Manuscript! This document provide
 ## Development Setup
 
 ### Requirements
-- Xcode 15 or later
-- iOS 17+ / macOS 14+ SDK
+- Xcode 16.0+
+- iOS 18.0+ / macOS 15.0+ SDK
 - Swift 5.9+
 
 ### Building
 1. Clone the repository
-2. Open the appropriate Xcode project:
-   - `iOS/Manuscript.xcodeproj` for iOS
-   - `macOS/Manuscript.xcodeproj` for macOS
-3. Build and run
+2. Open `Manuscript/Manuscript.xcodeproj`
+3. Select your target platform (iOS or macOS) from the scheme selector
+4. Build and run (⌘R)
+
+The project is a single multi-platform SwiftUI app supporting both iOS and macOS from one codebase.
 
 ### Project Structure
 ```
 manuscript/
-├── iOS/                    # iOS app
-├── macOS/                  # macOS app
-├── Shared/                 # Shared code between platforms
-├── Examples/               # Example .manuscript projects
-├── website/                # GitHub Pages marketing site
-└── Docs/                   # Documentation
+├── Manuscript/
+│   ├── Manuscript.xcodeproj  # Multi-platform Xcode project
+│   └── Manuscript/           # Main app code
+│       ├── Models/           # Data models
+│       ├── ViewModels/       # View models (MVVM)
+│       ├── Views/            # SwiftUI views
+│       │   └── Platform/     # Platform-specific views (iOS/macOS)
+│       └── Services/         # Business logic and services
+├── docs/                     # Marketing website (GitHub Pages)
+└── meta/                     # Internal docs and planning
 ```
 
 ## Code Guidelines
@@ -64,8 +69,8 @@ manuscript/
 ### Architecture
 - Use SwiftUI for UI components
 - Follow MVVM pattern where applicable
-- Keep platform-specific code in respective folders
-- Shared logic goes in `Shared/`
+- Platform-specific UI in `Views/Platform/`; shared logic elsewhere
+- Use `#if os(macOS)` / `#if os(iOS)` for conditional compilation
 
 ### Testing
 - Write tests for new functionality

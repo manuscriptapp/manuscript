@@ -1,6 +1,6 @@
 # Manuscript Action Plan
 
-*Last updated: February 10, 2026*
+*Last updated: February 17, 2026*
 
 This document outlines the prioritized next steps for Manuscript development. **Near feature parity with Scrivener achieved.**
 
@@ -29,18 +29,22 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 - ✅ Read mode (distraction-free reading)
 - ✅ Trash folder (soft-delete with restore)
 - ✅ Export: PDF, DOCX, EPUB, Markdown, Plain Text, HTML, Scrivener
-- ✅ Import: DOCX (macOS only), PDF, HTML
+- ✅ Import: DOCX (macOS only), PDF, HTML, Markdown, Plain Text
 - ✅ Import images (as media items)
 - ✅ Keywords/tags system
 - ✅ Favorites
 - ✅ Document links
 - ✅ Collections/filtered views
+- ✅ Apple Foundation Models (on-device AI, replaces Ollama)
+- ✅ AnyLanguageModel unified AI library (OpenAI, Anthropic, Gemini, Apple)
+- ✅ ElevenLabs text-to-speech integration
+- ✅ Automatic backup management
+- ✅ Markdown and plain text import
 
 **Remaining:**
 - Performance optimization
 - Accessibility audit
 - iOS DOCX import support
-- Apple Foundation Models integration
 - Writing suggestions
 - Grammar/style checking
 - App Store assets + marketing site update
@@ -194,10 +198,12 @@ Manuscript has achieved near-complete feature parity with Scrivener. Most core f
 
 ## Sprint 10: Launch Prep (Current)
 
-### AI Enhancements (Already Partially Complete)
+### AI Enhancements
 - [x] AI text generation service
-- [x] Custom API key support (OpenAI, Anthropic)
-- [ ] Apple Foundation Models integration
+- [x] Custom API key support (OpenAI, Anthropic, Google Gemini)
+- [x] Apple Foundation Models integration (on-device, default provider)
+- [x] AnyLanguageModel unified library
+- [x] ElevenLabs text-to-speech
 - [ ] Writing suggestions
 - [ ] Grammar/style checking
 
@@ -245,6 +251,10 @@ Keywords/Tags              ✅ DONE
 Document Links             ✅ DONE
 Collections/Filtered Views ✅ DONE
 Favorites                  ✅ DONE
+Apple Foundation Models    ✅ DONE
+Text-to-Speech (ElevenLabs)✅ DONE
+Auto Backups               ✅ DONE
+Import Markdown/TXT        ✅ DONE
 ```
 
 ---
@@ -328,3 +338,4 @@ If we fall behind, cut in this order:
 | Jan 22, 2026 | Updated: Rich text, comments, drag-drop, inline renaming, Scrivener import all complete |
 | Jan 27, 2026 | Major update: Find & replace, split editor, corkboard, outliner, snapshots, trash folder, export formats, writing targets, iCloud sync all complete |
 | Feb 4, 2026 | Completed: PDF/HTML import, image import, keywords/tags, collections, document links, favorites, HTML export |
+| Feb 17, 2026 | Completed: Apple Foundation Models (on-device AI), AnyLanguageModel unified library, ElevenLabs TTS, auto backups, Markdown/TXT import, brown accent theme, UI polish |

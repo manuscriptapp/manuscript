@@ -2,9 +2,9 @@
 
 A comprehensive guide for Manuscript's App Store submission, covering Apple's 2025-2026 requirements and specific action items.
 
-**Last Updated:** February 10, 2026
+**Last Updated:** February 17, 2026
 **Target Submission:** TBD
-**Current Readiness:** ~35-40%
+**Current Readiness:** ~50-55%
 
 ---
 
@@ -25,10 +25,10 @@ This is the execution plan to move from the current state to "Ready to Submit." 
 
 | Gate | Owner | Deliverable | Status | Exit Criteria |
 |------|-------|-------------|:------:|---------------|
-| Legal | Team | Public Privacy Policy + Terms URLs | 🔴 | Both pages are live and linked in App Store Connect |
+| Legal | Team | Public Privacy Policy + Terms URLs | 🟢 | Both pages are live at manuscriptapp.github.io (privacy.html, terms.html, support.html) |
 | Product metadata | Team | Final name, subtitle, keywords, description | 🟡 | Copy finalized, reviewed against implemented features |
 | Visual assets | Team | iPhone + iPad + Mac screenshots | 🔴 | All required sizes exported with approved marketing captions |
-| Review metadata | Team | Age rating, support URL, marketing URL | 🔴 | Questionnaire completed and no required field missing |
+| Review metadata | Team | Age rating, support URL, marketing URL | 🟡 | Support URL live; age rating questionnaire still needed |
 | Release quality | Team | Smoke-tested release build | 🟡 | No blocker bugs on iPhone, iPad, macOS |
 | Submission operations | Team | TestFlight build + notes | 🔴 | External-ready build uploaded and validated |
 
@@ -58,8 +58,8 @@ This is the execution plan to move from the current state to "Ready to Submit." 
 |-------------|-------|:------:|
 | Privacy Manifest (PrivacyInfo.xcprivacy) | Required since Spring 2024 | 🟢 |
 | SDK Privacy Manifests | For all third-party SDKs | 🔴 |
-| AI Transparency (if applicable) | Effective Nov 13, 2025 | N/A |
-| Explicit consent for data sharing | If using third-party AI | N/A |
+| AI Transparency (if applicable) | Effective Nov 13, 2025 | 🔴 |
+| Explicit consent for data sharing | If using third-party AI | 🟡 |
 
 ### Age Ratings (New as of July 2025)
 
@@ -120,7 +120,7 @@ This is the execution plan to move from the current state to "Ready to Submit." 
 |---------|---------|:------:|
 | iOS Deployment Target | 18.0 | ✓ |
 | macOS Deployment Target | 15.0 | ✓ |
-| Marketing Version | 1.0.1 | ✓ |
+| Marketing Version | 1.0.2 | ✓ |
 | Bundle ID | com.dahlsjoo.manuscript | Needs registration |
 | Swift Version | 5.0 | ✓ |
 | Code Signing | Automatic | ✓ |
@@ -241,23 +241,34 @@ WRITE WITH CONFIDENCE
 - Your files, your control. Markdown-based format you own forever
 - No required accounts, no subscriptions, no cloud lock-in
 - iCloud sync keeps your work safe across all your Apple devices
+- Automatic backups protect your manuscripts
 
 ORGANIZE YOUR STORY
 - Chapters, scenes, and documents in a familiar binder structure
 - Character and location databases with custom fields
 - Corkboard view for visual story planning
 - Outliner for structured organization
+- Keywords, collections, and document links for richer connections
+- Favorites for instant access to key documents
+- Trash folder keeps deleted items recoverable
 
 WRITE DISTRACTION-FREE
 - Focus mode hides everything but your words
 - Dark mode for late-night writing sessions
 - Writing targets to track your daily progress
 - Comments and notes without cluttering your manuscript
+- Read Aloud with text-to-speech voice support
 
-EXPORT ANYWHERE
-- Compile to PDF, EPUB, Markdown, or DOCX
-- Import from Scrivener to continue your work
+IMPORT & EXPORT
+- Import from Scrivener, Word (DOCX), PDF, HTML, Markdown, and plain text
+- Attach images and PDFs directly to your manuscripts
+- Export to PDF, EPUB, HTML, Markdown, or Scrivener 3 format
 - Print directly from the app
+
+AI WRITING ASSISTANCE
+- On-device AI powered by Apple Foundation Models — private by default
+- Optional cloud AI with OpenAI and Anthropic Claude models
+- Requires your own API key — no hidden data sharing
 
 OPEN SOURCE
 Manuscript is open source under the MPL-2.0 license. View the code, contribute, or fork it at github.com/manuscriptapp/manuscript
@@ -267,8 +278,9 @@ Manuscript is open source under the MPL-2.0 license. View the code, contribute, 
 
 **Draft:**
 ```
-writing,novel,screenplay,markdown,scrivener,author,manuscript,book,editor,distraction-free
+writing,novel,screenplay,markdown,scrivener,author,manuscript,book,editor,export
 ```
+(100 chars exactly — "distraction-free" swapped for "export" to capture import/export searches)
 
 #### 3.3 Subtitle (30 characters max)
 
@@ -479,9 +491,10 @@ Use a consistent visual system across all device classes:
 
 - **Manuscript has no accounts** - Account deletion requirement doesn't apply
 - **Manuscript has no IAP currently** - Restore Purchases requirement doesn't apply
-- **Manuscript has no AI features** - AI transparency guidelines don't apply
+- **Manuscript has AI features** - On-device via Apple Foundation Models (default) and optional cloud AI (OpenAI, Claude) with user-provided API keys. AI transparency disclosure required.
 - **Open source consideration** - Being open source (MPL-2.0) is a marketing advantage
 
 ---
 
 *Document created: January 28, 2026*
+*Last updated: February 17, 2026*
