@@ -4,7 +4,7 @@ A comprehensive guide for Manuscript's App Store submission, covering Apple's 20
 
 **Last Updated:** February 17, 2026
 **Target Submission:** TBD
-**Current Readiness:** ~50-55%
+**Current Readiness:** ~65-70%
 
 ---
 
@@ -26,9 +26,9 @@ This is the execution plan to move from the current state to "Ready to Submit." 
 | Gate | Owner | Deliverable | Status | Exit Criteria |
 |------|-------|-------------|:------:|---------------|
 | Legal | Team | Public Privacy Policy + Terms URLs | 🟢 | Both pages are live at manuscriptapp.github.io (privacy.html, terms.html, support.html) |
-| Product metadata | Team | Final name, subtitle, keywords, description | 🟡 | Copy finalized, reviewed against implemented features |
+| Product metadata | Team | Final name, subtitle, keywords, description | 🟢 | Name: Manuscript, Subtitle: "Your Story, Your Files", keywords and description finalized in this doc |
 | Visual assets | Team | iPhone + iPad + Mac screenshots | 🔴 | All required sizes exported with approved marketing captions |
-| Review metadata | Team | Age rating, support URL, marketing URL | 🟡 | Support URL live; age rating questionnaire still needed |
+| Review metadata | Team | Age rating, support URL, marketing URL | 🟡 | Support + marketing URLs live; age rating questionnaire still needed in App Store Connect |
 | Release quality | Team | Smoke-tested release build | 🟡 | No blocker bugs on iPhone, iPad, macOS |
 | Submission operations | Team | TestFlight build + notes | 🔴 | External-ready build uploaded and validated |
 
@@ -57,9 +57,9 @@ This is the execution plan to move from the current state to "Ready to Submit." 
 | Requirement | Notes | Status |
 |-------------|-------|:------:|
 | Privacy Manifest (PrivacyInfo.xcprivacy) | Required since Spring 2024 | 🟢 |
-| SDK Privacy Manifests | For all third-party SDKs | 🔴 |
-| AI Transparency (if applicable) | Effective Nov 13, 2025 | 🔴 |
-| Explicit consent for data sharing | If using third-party AI | 🟡 |
+| SDK Privacy Manifests | RichTextKit and AnyLanguageModel — verify manifests before submission | 🔴 |
+| AI Transparency (if applicable) | Effective Nov 13, 2025 — on-device default, cloud AI opt-in with user API key | 🟡 |
+| Explicit consent for data sharing | Cloud AI requires user-provided API key; no automatic data sharing | 🟢 |
 
 ### Age Ratings (New as of July 2025)
 
@@ -130,6 +130,7 @@ This is the execution plan to move from the current state to "Ready to Submit." 
 | Package | Version | Privacy Manifest |
 |---------|---------|:----------------:|
 | RichTextKit | >= 1.0.0 | 🔴 Needs verification |
+| AnyLanguageModel | latest | 🔴 Needs verification |
 
 ---
 
@@ -284,10 +285,11 @@ writing,novel,screenplay,markdown,scrivener,author,manuscript,book,editor,export
 
 #### 3.3 Subtitle (30 characters max)
 
-**Options:**
+**Selected:** "Your Story, Your Files" (22 chars)
+
+Other options considered:
 - "Write Without Limits" (19 chars)
 - "Native Writing for Authors" (26 chars)
-- "Your Story, Your Files" (22 chars)
 
 #### 3.4 Category Selection
 
@@ -491,7 +493,7 @@ Use a consistent visual system across all device classes:
 
 - **Manuscript has no accounts** - Account deletion requirement doesn't apply
 - **Manuscript has no IAP currently** - Restore Purchases requirement doesn't apply
-- **Manuscript has AI features** - On-device via Apple Foundation Models (default) and optional cloud AI (OpenAI, Claude) with user-provided API keys. AI transparency disclosure required.
+- **Manuscript has AI features** - On-device via Apple Foundation Models (default) and optional cloud AI (OpenAI, Claude) with user-provided API keys. AI transparency disclosure required. Implementation: on-device is private by default; cloud AI is opt-in and requires the user to provide their own API key (no data shared without explicit action).
 - **Open source consideration** - Being open source (MPL-2.0) is a marketing advantage
 
 ---

@@ -76,6 +76,7 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 - ~~Text-to-speech~~ ✅
 - ~~On-device AI~~ ✅
 - Version comparison (diff view)
+- Typewriter scrolling
 
 ---
 
@@ -105,15 +106,15 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 | Item | Status | Notes |
 |------|:------:|-------|
 | App name | 🟢 | "Manuscript" |
-| Subtitle | 🟡 | Draft: "Your Story, Your Files" (22 chars) |
-| Description | 🟡 | Draft in APP_STORE_REVIEW.md |
-| Keywords | 🟡 | Draft: writing,novel,screenplay,markdown,scrivener,author,manuscript,book,editor,export |
+| Subtitle | 🟢 | "Your Story, Your Files" (22 chars) |
+| Description | 🟢 | Finalized in APP_STORE_REVIEW.md |
+| Keywords | 🟢 | writing,novel,screenplay,markdown,scrivener,author,manuscript,book,editor,export (100 chars) |
 | Privacy policy URL | 🟢 | manuscriptapp.github.io/manuscript/privacy |
 | Support URL | 🟢 | manuscriptapp.github.io/manuscript/support |
 | Marketing URL | 🟢 | manuscriptapp.github.io/manuscript |
-| Category | 🟡 | Primary: Productivity, Secondary: Reference |
-| Age rating | 🔴 | Complete questionnaire |
-| Copyright | 🟡 | "© 2026 Manuscript" |
+| Category | 🟢 | Primary: Productivity, Secondary: Reference |
+| Age rating | 🔴 | Complete questionnaire in App Store Connect |
+| Copyright | 🟢 | "© 2026 Manuscript" |
 | Release notes | 🟢 | See meta/RELEASE_NOTES.md |
 
 ---
@@ -130,7 +131,7 @@ Based on FEATURE_PARITY.md, these are required for a viable writing app:
 | Set minimum deployment | 🟢 | iOS 18.0 / macOS 15.0 |
 | Configure entitlements | 🟢 | App sandbox, iCloud, network client |
 | Archive builds | 🔴 | Test release builds |
-| Xcode Cloud CI | 🟢 | ci_scripts configured |
+| Xcode Cloud CI | 🟢 | ci_scripts configured next to xcodeproj |
 
 ### Code Signing
 
@@ -192,7 +193,7 @@ Before clicking "Submit for Review":
 - [ ] Test account provided (if needed)
 - [x] Export compliance answered
 - [ ] Content rights confirmed
-- [ ] AI transparency disclosure completed
+- [ ] AI transparency disclosure completed (on-device default + opt-in cloud with user API key)
 
 ---
 
