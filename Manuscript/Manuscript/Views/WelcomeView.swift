@@ -387,6 +387,25 @@ struct WelcomeView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
 
+                Button {
+                    if let url = URL(string: "https://discord.gg/YfwuChK2t6") {
+                        #if os(macOS)
+                        NSWorkspace.shared.open(url)
+                        #else
+                        UIApplication.shared.open(url)
+                        #endif
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "bubble.left.and.bubble.right")
+                            .font(.system(size: 12))
+                        Text("Discord")
+                            .font(.footnote)
+                    }
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+
                 Spacer()
 
                 Text("Open source · MPL-2.0")

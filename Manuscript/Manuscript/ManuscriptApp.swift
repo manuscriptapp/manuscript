@@ -959,7 +959,7 @@ struct ManuscriptApp: App {
                     recentDocumentsManager: recentDocumentsManager,
                     notificationManager: notificationManager
                 )
-                .frame(width: 850, height: 500)
+                .frame(width: 850, height: recentDocumentsManager.recentDocuments.isEmpty ? 520 : 600)
                 .containerBackground(.ultraThinMaterial, for: .window)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
             }
